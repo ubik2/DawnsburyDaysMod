@@ -1,0 +1,31 @@
+<Project>
+    <PropertyGroup>
+        <!-- All mods must have this target framework, platform and platform target.-->
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <Platform>x64</Platform>
+        <PlatformTarget>x64</PlatformTarget>
+        <NoWarn>1998</NoWarn> <!-- Dawnsbury Days uses many async methods, and you often won't want to make any await calls in them. -->
+        <WarningsAsErrors>0618</WarningsAsErrors> <!-- Makes the "You're using obsolete stuff." warning into an error so that you're aware when Dawnsbury Days code is going to be changed. -->
+		<DawnsburyInstallFolder>C:/Program Files (x86)/Steam/steamapps/common/Dawnsbury Days</DawnsburyInstallFolder>
+	</PropertyGroup>
+    <!-- Dawnsbury Studios uses the following item group to interact with Dawnsbury Days source code. You don't have access to the source code so comment it out. -->
+    <!--    Comment the following code out:
+    <ItemGroup>
+        <ProjectReference Include="../../Maingame/Dawnsbury Days.csproj"/>
+    </ItemGroup>
+	 -->
+    <Target Name="CopyToGameModsFolder" AfterTargets="Build" Condition="'$(InstallIntoDevelopmentEnvironment)' == 'true'">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="../../Maingame/bin/$(Configuration)/win-x64/CustomMods" />
+    </Target>    
+    <!-- Use the Dawnsbury Days.exe file that's in the Data subfolder — that's the assembly that contains all of Dawnsbury Days code. Do not use the Dawnsbury Days.exe file
+      that's in the parent folder. That is merely a launcher which doesn't contain any effective code. Uncomment the following code and adjust the destination folder so that
+      it points to the CustomMods folder in the installation directory: -->
+       <ItemGroup>
+            <Reference Include="$(DawnsburyInstallFolder)/Data/Dawnsbury Days.dll" />
+            <Reference Include="$(DawnsburyInstallFolder)/Data/Common.dll" />
+            <Reference Include="$(DawnsburyInstallFolder)/Data/MonoGame.Framework.dll" />
+        </ItemGroup>
+        <Target Name="CopyToGameModsFolder" AfterTargets="Build"> 
+            <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DawnsburyInstallFolder)/CustomMods" />
+        </Target>
+</Project>
