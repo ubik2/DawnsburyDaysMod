@@ -18,7 +18,7 @@ using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.Animations;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 
-namespace Dawnsbury.Mods.Spellbook.RemasteredSpells
+namespace Dawnsbury.Mods.Spellbook.RemasterSpells
 {
     internal class FocusSpells
     {

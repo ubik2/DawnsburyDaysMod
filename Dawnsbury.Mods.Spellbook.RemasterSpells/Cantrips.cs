@@ -13,7 +13,7 @@ using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 
-namespace Dawnsbury.Mods.Spellbook.RemasteredSpells;
+namespace Dawnsbury.Mods.Spellbook.RemasterSpells;
 
 public class Cantrips
 {

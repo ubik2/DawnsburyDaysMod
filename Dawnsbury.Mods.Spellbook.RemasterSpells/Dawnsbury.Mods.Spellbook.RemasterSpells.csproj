@@ -3,10 +3,6 @@
       <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
     <Import Project="../Dawnsbury.Mod.targets" />
-    <ItemGroup>
-      <Compile Remove="CausticBlast.cs" />
-      <Compile Remove="ElectricArc.cs" />
-    </ItemGroup>
     <Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
     </Target>
 </Project>

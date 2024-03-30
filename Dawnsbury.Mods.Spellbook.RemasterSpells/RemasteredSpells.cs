@@ -1,9 +1,9 @@
 ﻿using Dawnsbury.Modding;
 
-namespace Dawnsbury.Mods.Spellbook.RemasteredSpells
+namespace Dawnsbury.Mods.Spellbook.RemasterSpells
 {
 
-    public class RemasteredSpells
+    public class RemasterSpells
     {
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
