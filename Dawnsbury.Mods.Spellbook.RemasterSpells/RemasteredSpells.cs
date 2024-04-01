@@ -9,7 +9,9 @@ namespace Dawnsbury.Mods.Spellbook.RemasterSpells
         public static void LoadMod()
         {
             Cantrips.RegisterSpells();
+            Level1Spells.RegisterSpells();
             FocusSpells.RegisterSpells();
+            Feats.ReplaceExistingFeats();
         }
     }
 }
