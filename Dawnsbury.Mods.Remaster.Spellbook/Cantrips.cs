@@ -14,7 +14,7 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 
-namespace Dawnsbury.Mods.Spellbook.RemasterSpells;
+namespace Dawnsbury.Mods.Remaster.Spellbook;
 
 public class Cantrips
 {
@@ -24,7 +24,7 @@ public class Cantrips
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
-            return Spells.CreateModern(IllustrationName.AcidSplash, "Caustic Blast", new[] { Trait.Acid, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal },
+            return Spells.CreateModern(IllustrationName.AcidSplash, "Caustic Blast", new[] { Trait.Acid, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.RemasterTrait },
                 "You fling a large glob of acid that immediately detonates, spraying nearby creatures.",
                 "Creatures in the area take " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d8 acid damage with a basic Reflex save; " +
                 "on a critical failure, the creature also takes " + S.HeightenedVariable(1 + heightenIncrements, 1) + " persistent acid damage." +
@@ -49,7 +49,7 @@ public class Cantrips
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal },
+            return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.RemasterTrait },
                 "An arc of lightning leaps from one target to another.",
                 "Each target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 electricity damage with a basic Reflex save." +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d4."),
@@ -98,7 +98,7 @@ public class Cantrips
 
 
             CombatAction combatAction =
-             Spells.CreateModern(IllustrationName.TelekineticProjectile, "Telekinetic Projectile", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult },
+             Spells.CreateModern(IllustrationName.TelekineticProjectile, "Telekinetic Projectile", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.RemasterTrait },
                 "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target.",
                 "Make a spell attack roll against the target's AC. If you hit, you deal " + damageText + " bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled. " + ampedEffect + "No specific traits or magic properties of the hurled item affect the attack or the damage." +
                 S.FourDegreesOfSuccess(criticalSuccessEffect, successEffect, null, null) +

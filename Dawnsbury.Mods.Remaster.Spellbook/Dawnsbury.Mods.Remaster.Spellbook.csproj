@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <Platforms>AnyCPU;x64</Platforms>
+      <Nullable>enable</Nullable>
+	</PropertyGroup>
+    <Import Project="../Dawnsbury.Mod.targets" />
+    <Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
+    </Target>
+</Project>
