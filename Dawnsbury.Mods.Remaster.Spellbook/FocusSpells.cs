@@ -28,7 +28,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 const int heightenStep = 1;
                 int heightenIncrements = spellLevel - 1;
-                return Spells.CreateModern(IllustrationName.FireRay, "Fire Ray", new[] { Trait.Uncommon, Trait.Attack, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Manipulate, RemasterSpells.RemasterTrait },
+                return Spells.CreateModern(IllustrationName.FireRay, "Fire Ray", new[] { Trait.Uncommon, Trait.Attack, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster },
                     "A blazing band of fire arcs through the air, lighting your opponent and the ground they stand upon on fire.",
                     "Make a spell attack roll against the target's AC. The ray deals " + S.HeightenedVariable(2 + 2 * heightenIncrements, 2) + "d6 fire damage on a hit (or double damage on a critical hit).\n" +
                     "On any result other than a critical failure, the ground in the target's space catches fire, dealing " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 fire damage to each creature that ends its turn in one of the squares." +

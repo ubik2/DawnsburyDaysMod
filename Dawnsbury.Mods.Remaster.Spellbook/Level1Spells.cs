@@ -33,7 +33,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         public static CombatAction Bless(int level, bool inCombat, IllustrationName illustration, bool isBless)
         {
-            return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", new[] { Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.RemasterTrait },
+            return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", new[] { Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                 isBless ? "Blessings from beyond help your companions strike true." :
                     "You fill the minds of your enemies with doubt.",
                 isBless ? "You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane." :
