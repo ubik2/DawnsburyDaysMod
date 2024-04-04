@@ -14,11 +14,26 @@ using Dawnsbury.Core.Animations;
 using Microsoft.Xna.Framework;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Modding;
+using Dawnsbury.Display.Text;
+using Dawnsbury.Core.Mechanics.Damage;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
+using Dawnsbury.Core.Roller;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
     internal class Level1Spells
     {
+        // The following spells are excluded because they aren't useful enough in gameplay
+        // * Air Bubble
+        // * Alarm
+        // * Ant Haul
+        // * Charm
+        // * Cleanse Cuisine (formerly Purify Food and Drink)
+        // * Create Water
+        // * Disguise Magic
         public static void RegisterSpells()
         {
             ModManager.ReplaceExistingSpell(SpellId.Bless, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -28,6 +43,125 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             ModManager.ReplaceExistingSpell(SpellId.Bane, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Bless(spellLevel, inCombat, IllustrationName.Bane, false);
+            }));
+
+            // Renamed from Burning Hands. Updated traits and description.
+            ModManager.RegisterNewSpell("BreatheFire", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.BurningHands, "Breathe Fire", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "A gout of flame sprays from your mouth.",
+                    "You deal " + S.HeightenedVariable(2 * spellLevel, 2) + "d6 fire damage to creatures in the area with a basic Reflex save." +
+                    S.HeightenedDamageIncrease(spellLevel, inCombat, "2d6"),
+                    Target.FifteenFootCone(), spellLevel, SpellSavingThrow.Basic(Defense.Reflex)).WithSoundEffect(SfxName.Fireball).WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(t.OwnerAction.SpellLevel * 2) * 3.5f)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, 2 * spellLevel + "d6", DamageKind.Fire);
+                });
+            }));
+
+            // Renamed from Color Spray. Updated traits and short description.
+            ModManager.RegisterNewSpell("DizzyingColors", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.ColorSpray, "Dizzying Colors", new[] { Trait.Concentrate, Trait.Illusion, Trait.Incapacitation, Trait.Manipulate, Trait.Visual, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You unleash a swirling multitude of colors that overwhelms creatures based on their Will saves.",
+                    "Each target makes a Will save.\n\n{b}Critical success{/b} The creature is unaffected.\n{b}Success{/b} The creature is dazzled for 1 round.\n{b}Failure{/b} The creature is stunned 1, blinded for 1 round, and dazzled for the rest of the encounter.\n{b}Critical failure{/b} The creature is stunned for 1 round and blinded for the rest of the encounter.",
+                    Target.FifteenFootCone(), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.MagicMissile).WithProjectileCone(IllustrationName.Pixel, 25, ProjectileKind.ColorSpray)
+                .WithGoodness((Target t, Creature a, Creature d) => a.AI.ColorSpray(d))
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    switch (checkResult)
+                    {
+                        case CheckResult.Success:
+                            target.AddQEffect(QEffect.Dazzled().WithExpirationAtStartOfSourcesTurn(caster, 1));
+                            break;
+                        case CheckResult.Failure:
+                            target.AddQEffect(QEffect.Dazzled().WithExpirationNever());
+                            target.AddQEffect(QEffect.Blinded().WithExpirationAtStartOfSourcesTurn(caster, 1));
+                            target.AddQEffect(QEffect.Stunned(1));
+                            break;
+                        case CheckResult.CriticalFailure:
+                            target.AddQEffect(QEffect.Blinded().WithExpirationNever());
+                            target.AddQEffect(QEffect.Stunned(3));
+                            break;
+                    }
+                });
+            }));
+
+            // Ray of Enfeeblement wasn't included, and this remastered version is useful.
+            ModManager.RegisterNewSpell("Enfeeble", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Enfeebled, "Enfeeble", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You sap the target's strength, depending on its Fortitude save.",
+                    S.FourDegreesOfSuccess("The target is unaffected.", "The target is enfeebled 1 until the start of your next turn.",
+                                           "The target is enfeebled 2 for 1 minute.", "The target is enfeebled 3 for 1 minute."),
+                    Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Necromancy)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    switch (checkResult)
+                    {
+                        case CheckResult.Success:
+                            target.AddQEffect(QEffect.Enfeebled(1).WithExpirationAtStartOfSourcesTurn(caster, 1));
+                            break;
+                        case CheckResult.Failure:
+                            target.AddQEffect(QEffect.Enfeebled(2).WithExpirationNever());
+                            break;
+                        case CheckResult.CriticalFailure:
+                            target.AddQEffect(QEffect.Enfeebled(3).WithExpirationNever());
+                            break;
+                    }
+                });
+            }));
+
+            // Renamed from Magic Missile. Updated traits and short description.
+            ModManager.RegisterNewSpell("ForceBarrage", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                Func<CreatureTarget> func = () => Target.Ranged(24, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 3.5f, tg.OwnerAction));
+                return Spells.CreateModern(IllustrationName.MagicMissile, "Force Barrage", new[] { Trait.Concentrate, Trait.Force, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You fire a shard of solidified magic toward a creature that you can see",
+                    "{b}Range{/b} 120 feet\n{b}Targets{/b} 1, 2 or 3 creatures\n\nYou send up to three darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.){/i}\n\nYou can spend 1–3 actions on this spell:\n{icon:Action} You send out 1 dart.\n{icon:TwoActions}You send out 2 darts.\n{icon:ThreeActions}You send out 3 darts.{/i}", 
+                    Target.DependsOnActionsSpent(Target.MultipleCreatureTargets(func()).WithOverriddenTargetLine("1 creature", plural: false), Target.MultipleCreatureTargets(func(), func()).WithOverriddenTargetLine("1 or 2 creatures", plural: true), Target.MultipleCreatureTargets(func(), func(), func()).WithOverriddenTargetLine("1, 2 or 3 creatures", plural: true)), spellLevel, null).WithActionCost(-1).WithSoundEffect(SfxName.MagicMissile)
+                .WithProjectileCone(IllustrationName.MagicMissile, 15, ProjectileKind.Ray)
+                .WithCreateVariantDescription((int actionCost, SpellVariant? variant) => (actionCost != 1) ? ("You send out " + actionCost + " darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.)") : "You send out 1 dart of force. It automatically hits and deals 1d4+1 force damage.")
+                .WithEffectOnChosenTargets(async delegate (CombatAction action, Creature caster, ChosenTargets targets)
+                {
+                    List<Task> list = new List<Task>();
+                    foreach (Creature chosenCreature in targets.ChosenCreatures)
+                    {
+                        list.Add(caster.Battle.SpawnOverairProjectileParticlesAsync(10, caster.Occupies, chosenCreature.Occupies, Color.White, IllustrationName.MagicMissile));
+                    }
+
+                    await Task.WhenAll(list);
+                    Dictionary<Creature, int> dictionary = new Dictionary<Creature, int>();
+                    foreach (Creature chosenCreature2 in targets.ChosenCreatures)
+                    {
+                        if (!dictionary.TryAdd(chosenCreature2, 1))
+                        {
+                            dictionary[chosenCreature2]++;
+                        }
+                    }
+
+                    foreach (KeyValuePair<Creature, int> item4 in dictionary)
+                    {
+                        List<DiceFormula> list2 = new List<DiceFormula>();
+                        for (int i = 0; i < item4.Value; i++)
+                        {
+                            list2.Add(DiceFormula.FromText("1d4+1", "Magic missile"));
+                        }
+
+                        await caster.DealDirectDamage(new DamageEvent(action, item4.Key, CheckResult.Success, list2.Select((DiceFormula formula) => new KindedDamage(formula, DamageKind.Force)).ToArray()));
+                    }
+                })
+                .WithTargetingTooltip(delegate (CombatAction power, Creature creature, int index)
+                {
+                    string text7 = index switch
+                    {
+                        0 => "first",
+                        1 => "second",
+                        2 => "third",
+                        _ => index + "th",
+                    };
+                    return "Send the " + text7 + " magic missile at " + creature?.ToString() + ". (" + (index + 1) + "/" + power.SpentActions + ")";
+                });
             }));
         }
 

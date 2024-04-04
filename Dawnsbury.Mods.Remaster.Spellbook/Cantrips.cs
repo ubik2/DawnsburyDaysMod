@@ -82,12 +82,11 @@ public class Cantrips
 
         ModManager.ReplaceExistingSpell(SpellId.DivineLance, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
             return Spells.CreateModern(IllustrationName.DivineLance, "Divine Lance", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, RemasterSpells.Trait.Remaster },
                 "You unleash a beam of divine energy.",
                 "Make a ranged spell attack against the target's AC. On a hit, the target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 spirit damage (double damage on a critical hit)." +
-                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d4."),
+                S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
                 Target.Ranged(12), spellLevel, null)
             .WithSpellAttackRoll()
             .WithSoundEffect(SfxName.DivineLance)
@@ -102,12 +101,11 @@ public class Cantrips
 
         ModManager.ReplaceExistingSpell(SpellId.ElectricArc, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
             return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                 "An arc of lightning leaps from one target to another.",
                 "Each target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 electricity damage with a basic Reflex save." +
-                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d4."),
+                S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
                 Target.MultipleCreatureTargets(Target.Ranged(6), Target.Ranged(6)).WithMinimumTargets(1).WithMustBeDistinct()
                     .WithSimultaneousAnimation()
                     .WithOverriddenTargetLine("1 or 2 enemies", plural: true), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
@@ -190,7 +188,6 @@ public class Cantrips
         ModManager.ReplaceExistingSpell(SpellId.TelekineticProjectile, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             bool amped = spellInformation.PsychicAmpInformation?.Amped ?? false;
-            const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
             string ampedEffect = "";
             string criticalSuccessEffect = "You deal double damage.";
@@ -198,7 +195,7 @@ public class Cantrips
             string diceExpression = (2 + heightenIncrements) + "d6";
             string damageText = diceExpression;
             CreatureTarget creatureTarget = Target.Ranged(6);
-            string heightenedEffect = "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d6.";
+            string heightenedEffect = S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6");
 
             if (spellInformation.PsychicAmpInformation != null)
             {
@@ -215,7 +212,7 @@ public class Cantrips
                 if (!inCombat)
                 {
                     heightenedEffect += "\n\n{b}Amp{/b} On a success, you push the target 5 feet away from you, and on a critical success, you push the target 10 feet away from you in addition to dealing double damage.";
-                    heightenedEffect += "\n\n{b}Amp Heightened (+" + heightenStep + "){/b} The damage increases by 2d6 instead of 1d6.";
+                    heightenedEffect += "\n\n{b}Amp Heightened (+1){/b} The damage increases by 2d6 instead of 1d6.";
                 }
             }
 
@@ -279,13 +276,12 @@ public class Cantrips
         
         ModManager.RegisterNewSpell("VitalityLash", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
             // Using Positive instead of Vitality here, since otherwise I'd need to update creatures
             return Spells.CreateModern(IllustrationName.DisruptUndead, "Vitality Lash", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Positive, Trait.Divine, Trait.Primal, RemasterSpells.Trait.Remaster },
                 "You demolish the target's corrupted essence with energy from Creation's Forge.",
                 "You deal " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 vitality damage with a basic Fortitude save. If the creature critically fails the save, it is also enfeebled 1 until the start of your next turn." +
-                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d6."),
+                S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
                 Target.Ranged(6).WithAdditionalConditionOnTargetCreature((Creature _, Creature t) => { return t.HasTrait(Trait.Undead) ? Usability.Usable : Usability.CommonReasons.TargetIsNotUndead; }), 
                 spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.DivineLance)
@@ -302,13 +298,12 @@ public class Cantrips
 
         ModManager.RegisterNewSpell("VoidWarp", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
             // Using Negative instead of Void here, since otherwise I'd need to update creatures
             return Spells.CreateModern(IllustrationName.Enervation, "Void Warp", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Negative, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                 "You call upon the Void to harm life force.",
                 "The target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 void damage with a basic Fortitude save. On a critical failure, the target is also enfeebled 1 until the start of your next turn." +
-                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d4."),
+                S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
                 Target.Ranged(6).WithAdditionalConditionOnTargetCreature((Creature _, Creature t) => { return t.IsLivingCreature ? Usability.Usable : Usability.CommonReasons.TargetIsNotAlive; }),
                 spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.DivineLance)
