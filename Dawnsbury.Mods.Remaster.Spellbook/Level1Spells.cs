@@ -21,6 +21,8 @@ using Dawnsbury.Core.Roller;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using Humanizer;
+using Dawnsbury.Core.Mechanics.Treasure;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -34,6 +36,32 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Cleanse Cuisine (formerly Purify Food and Drink)
         // * Create Water
         // * Disguise Magic
+        // * Gentle Landing (formerly Feather Fall)
+        // * Illusory Disguise
+        // * Illusory Object
+        // * Item Facade
+        // * Jump
+        // * Lock
+        // * Mending
+        // * Mindlink
+        // * Pest Form - this was replaced with Insect Form, since the exploration aspects aren't useful
+        // * Pet Cache
+        // * Sleep
+        // * Tailwind (formerly Longstrider) - Fleet Step is generally better in game, but we could give this the mage armor treatment for level 2
+        // * Vanishing Tracks
+        // * Ventriloquism
+        // The following spells are excluded because of their difficulty
+        // * Ill Omen
+        // * Phantasmal Minion
+        // * Summon Construct
+        // * Summon Fey
+        // * Summon Plant of Fungus
+        // * Summon Undead
+        // The following are in limbo
+        // ? Gust of Wind
+        // ? Harm/Heal - these are already in game, but could be modified for vitality/void instead of positive/negative
+        // ? Infuse Vitality
+        // ? Spirit Link
         public static void RegisterSpells()
         {
             ModManager.ReplaceExistingSpell(SpellId.Bless, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -118,7 +146,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 Func<CreatureTarget> func = () => Target.Ranged(24, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 3.5f, tg.OwnerAction));
                 return Spells.CreateModern(IllustrationName.MagicMissile, "Force Barrage", new[] { Trait.Concentrate, Trait.Force, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You fire a shard of solidified magic toward a creature that you can see",
-                    "{b}Range{/b} 120 feet\n{b}Targets{/b} 1, 2 or 3 creatures\n\nYou send up to three darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.){/i}\n\nYou can spend 1–3 actions on this spell:\n{icon:Action} You send out 1 dart.\n{icon:TwoActions}You send out 2 darts.\n{icon:ThreeActions}You send out 3 darts.{/i}", 
+                    "{b}Range{/b} 120 feet\n{b}Targets{/b} 1, 2 or 3 creatures\n\nYou send up to three darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.){/i}\n\nYou can spend 1–3 actions on this spell:\n{icon:Action} You send out 1 dart.\n{icon:TwoActions}You send out 2 darts.\n{icon:ThreeActions}You send out 3 darts.{/i}",
                     Target.DependsOnActionsSpent(Target.MultipleCreatureTargets(func()).WithOverriddenTargetLine("1 creature", plural: false), Target.MultipleCreatureTargets(func(), func()).WithOverriddenTargetLine("1 or 2 creatures", plural: true), Target.MultipleCreatureTargets(func(), func(), func()).WithOverriddenTargetLine("1, 2 or 3 creatures", plural: true)), spellLevel, null).WithActionCost(-1).WithSoundEffect(SfxName.MagicMissile)
                 .WithProjectileCone(IllustrationName.MagicMissile, 15, ProjectileKind.Ray)
                 .WithCreateVariantDescription((int actionCost, SpellVariant? variant) => (actionCost != 1) ? ("You send out " + actionCost + " darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.)") : "You send out 1 dart of force. It automatically hits and deals 1d4+1 force damage.")
@@ -163,6 +191,414 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     return "Send the " + text7 + " magic missile at " + creature?.ToString() + ". (" + (index + 1) + "/" + power.SpentActions + ")";
                 });
             }));
+
+            // Goblin Pox
+            ModManager.RegisterNewSpell("GoblinPox", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.SuddenBlight, "Goblin Pox", new[] { Trait.Concentrate, RemasterSpells.Trait.Disease, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "Your touch afflicts the target with goblin pox, an irritating allergenic rash.",
+                    "The target must attempt a Fortitude save. " +
+                    S.FourDegreesOfSuccess("The target is unaffected.", "The target is sickened 1.",
+                                           "The target is afflicted with goblin pox at stage 1.", "The target is afflicted with goblin pox at stage 2."),
+                    Target.AdjacentCreature(), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Necromancy)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("Spellcasting source is null");
+                    }
+                    int afflictionLevel = checkResult switch
+                    {
+                        CheckResult.CriticalSuccess => 0,
+                        CheckResult.Success => 0,
+                        CheckResult.Failure => 1,
+                        CheckResult.CriticalFailure => 2,
+                        _ => throw new Exception("Unknown result"),
+                    };
+                    if (afflictionLevel == 0)
+                    {
+                        if (checkResult == CheckResult.Success)
+                        {
+                            target.AddQEffect(QEffect.Sickened(1, spell.SpellcastingSource.GetSpellSaveDC()));
+                        }
+                    }
+                    else
+                    {
+                        Affliction affliction = GoblinPoxAffliction(caster, spell.SpellcastingSource.GetSpellSaveDC());
+                        CombatAction diseaseAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new Trait[1] { RemasterSpells.Trait.Disease }, "", Target.Self());
+                        await target.AddAffliction(affliction.MaximumStage, EnterStage, new QEffect(affliction.Name + ", Stage", affliction.StagesDescription, ExpirationCondition.Never, caster, IllustrationName.AcidSplash)
+                        {
+                            Id = affliction.Id,
+                            Value = afflictionLevel,
+                            StateCheck = affliction.StateCheck,
+                            StartOfSourcesTurn = async delegate (QEffect qfAffliction)
+                            {
+                                CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, diseaseAction, Defense.Fortitude, (Creature? _) => affliction.DC);
+                                Affliction.AdjustValue(qfAffliction, startOfTurnResult, affliction.MaximumStage);
+                                if (qfAffliction.Value > 0)
+                                {
+                                    await EnterStage(qfAffliction);
+                                }
+                            }
+                        }.WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        async Task EnterStage(QEffect qEffect)
+                        {
+                            // This is strange, but it seems to do the right thing. We'll trigger the StartOfSourcesTurn delegate on the next turn.
+                            qEffect.WithExpirationAtStartOfSourcesTurn(caster, 2);
+                            return;
+                        }
+                    }
+                });
+            }));
+
+            // Mystic Armor (formerly Mage Armor)
+            ModManager.RegisterNewSpell("MysticArmor", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                CombatAction mageArmor = Spells.CreateModern(IllustrationName.MageArmor, "Mystic Armor", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "You ward yourself with shimmering magical energy, gaining a +1 item bonus to AC and a maximum Dexterity modifier of +5.",
+                    "While wearing mystic armor, you use your unarmored proficiency to calculate your AC." +
+                    "\n\n{b}Special{/b} You can cast this spell as a free action at the beginning of the encounter.", Target.Self().WithAdditionalRestriction((Creature self) => (!self.HasEffect(QEffectId.MageArmor) && !self.PersistentUsedUpResources.CastMageArmor) ? null : "You're already wearing {i}mystic armor{/i}."), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(2)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    caster.AddQEffect(QEffect.MageArmor());
+                    caster.PersistentUsedUpResources.CastMageArmor = true;
+                });
+                mageArmor.WhenCombatBegins = delegate (Creature self)
+                {
+                    Creature self2 = self;
+                    self2.AddQEffect(new QEffect
+                    {
+                        StartOfCombat = async delegate
+                        {
+                            if (!self2.PersistentUsedUpResources.CastMageArmor && await self2.Battle.AskForConfirmation(self2, IllustrationName.MageArmor, "Do you want to cast {i}mage armor{/i} as a free action?", "Cast {i}mage armor{/i}"))
+                            {
+                                await self2.Battle.GameLoop.FullCast(mageArmor);
+                            }
+                        }
+                    });
+                };
+                return mageArmor;
+            }));
+
+            // Phantom Pain
+            ModManager.RegisterNewSpell("PhantomPain", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.MageArmor, "Phantom Pain", new[] { Trait.Concentrate, Trait.Illusion, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "Illusory pain wracks the target, dealing " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 mental damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent mental damage with a Will save.",
+                    S.FourDegreesOfSuccess("The target is unaffected.",
+                                           "The target takes full initial damage but no persistent damage, and the spell ends immediately.",
+                                           "The target takes full initial and persistent damage, and the target is sickened 1. If the target recovers from being sickened, the persistent damage ends and the spell ends.",
+                                           "As failure, but the target is sickened 2."),
+                    Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will))
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    if (checkResult != CheckResult.CriticalSuccess)
+                    {
+                        await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (2 * spellLevel) + "d4", DamageKind.Mental);
+                        if ((checkResult == CheckResult.Failure || checkResult == CheckResult.CriticalFailure) && (spell.SpellcastingSource != null)) 
+                        {
+                            QEffect persistentDamage = QEffect.PersistentDamage(spellLevel + "d4", DamageKind.Mental);
+                            QEffect sickenedEffect = QEffect.Sickened(checkResult == CheckResult.CriticalFailure ? 2 : 1, spell.SpellcastingSource.GetSpellSaveDC());
+                            sickenedEffect.WhenExpires = (_) => { sickenedEffect.Owner.RemoveAllQEffects(qEffect => qEffect == persistentDamage); };
+                            target.AddQEffect(persistentDamage);
+                            target.AddQEffect(sickenedEffect);
+                        }
+                    }
+                });
+            }));
+
+            // Protection
+            ModManager.RegisterNewSpell("Protection", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.MageArmor, "Protection", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You ward a creature against harm.",
+                    "The target gains a +1 status bonus to Armor Class and saving throws.",
+                    Target.AdjacentFriendOrSelf(), spellLevel, null)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    target.AddQEffect(new QEffect("Protection", "You have a +1 static bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.MageArmor)
+                    {
+                        DoNotShowUpOverhead = true,
+                        BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null),
+                        CountsAsABuff = true
+                    });
+                });
+
+                // Helper function
+                bool CheckDefense(Defense defense) {
+                    return defense switch
+                    {
+                        Defense.AC => true,
+                        Defense.Fortitude => true,
+                        Defense.Reflex => true,
+                        Defense.Will => true,
+                        _ => false
+                    };
+                }
+            }));
+
+            // Runic Body (formerly Magic Fang)
+            ModManager.RegisterNewSpell("RunicBody", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                static bool IsValidTargetForRunicBody(Item? item)
+                {
+                    if (item != null && item.HasTrait(Trait.Unarmed) && item.WeaponProperties != null)
+                    {
+                        if (item.WeaponProperties.DamageDieCount > 1)
+                        {
+                            return item.WeaponProperties.ItemBonus <= 1;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                return Spells.CreateModern(IllustrationName.MagicWeapon, "Runic Body", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "Glowing runes appear on the target’s body.",
+                    "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.", 
+                    Target.AdjacentFriendOrSelf()
+                .WithAdditionalConditionOnTargetCreature((Creature a, Creature d) => IsValidTargetForRunicBody(d.UnarmedStrike) ? Usability.Usable : Usability.CommonReasons.TargetIsNotPossibleForComplexReason), spellLevel, null)
+                .WithSoundEffect(SfxName.MagicWeapon)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    Item? item = target.UnarmedStrike;
+                    if (item != null && item.WeaponProperties != null)
+                    {
+                        item.WeaponProperties.DamageDieCount = 2;
+                        item.WeaponProperties.ItemBonus = 1;
+                    }
+                    // Expiration is long enough that we don't need to worry about restoring the item.
+                    // I create a buff icon, since otherwise it's not clear that your fist is buffed.
+                    target.AddQEffect(new QEffect("Runic Body", "Glowing runes appear on the target’s body.") { Illustration = IllustrationName.MagicWeapon, CountsAsABuff = true });
+                });
+            }));
+
+            // Runic Weapon (formerly Magic Weapon)
+            ModManager.RegisterNewSpell("RunicWeapon", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                static bool IsValidTargetForMagicWeapon(Item item)
+                {
+                    if (item.HasTrait(Trait.Weapon) && item.WeaponProperties != null)
+                    {
+                        if (item.WeaponProperties.DamageDieCount > 1)
+                        {
+                            return item.WeaponProperties.ItemBonus <= 1;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                return Spells.CreateModern(IllustrationName.MagicWeapon, "Runic Weapon", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "The weapon glimmers with magic as temporary runes carve down its length.",
+                    "The target becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two. The target becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two.",
+                    Target.AdjacentFriendOrSelf()
+                .WithAdditionalConditionOnTargetCreature((Creature a, Creature d) => (!d.HeldItems.Any(IsValidTargetForMagicWeapon)) ? Usability.CommonReasons.TargetIsNotMagicWeaponTarget : Usability.Usable), spellLevel, null)
+                .WithSoundEffect(SfxName.MagicWeapon)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    Item item;
+                    switch (target.HeldItems.Count(IsValidTargetForMagicWeapon))
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            item = target.HeldItems.First(IsValidTargetForMagicWeapon);
+                            break;
+                        default:
+                            item = ((await target.Battle.AskForConfirmation(caster, IllustrationName.MagicWeapon, "Which weapon would you like to enchant?", target.HeldItems[0].Name, target.HeldItems[1].Name)) ? target.HeldItems[0] : target.HeldItems[1]);
+                            break;
+                    }
+
+                    item.Name = "+1 striking " + EnumHumanizeExtensions.Humanize((Enum)item.BaseItemName);
+                    if (item.WeaponProperties != null)
+                    {
+                        item.WeaponProperties.DamageDieCount = 2;
+                        item.WeaponProperties.ItemBonus = 1;
+                    }
+                    target.AddQEffect(new QEffect
+                    {
+                        CountsAsABuff = true
+                    });
+
+                });
+            }));
+
+            // Spider Sting
+            ModManager.RegisterNewSpell("SpiderSting", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.VenomousSnake256, "Spider Sting", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "You magically duplicate a spider's venomous sting.",
+                    "You deal 1d4 piercing damage to the touched creature and afflict it with spider venom. The target must attempt a Fortitude save. " +
+                    S.FourDegreesOfSuccess("The target is unaffected.", "The target takes 1d4 poison damage.",
+                                           "The target is afflicted with spider venom at stage 1.", "The target is afflicted with spider venom at stage 2."),
+                    Target.AdjacentCreature(), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Necromancy)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("Spellcasting source is null");
+                    }
+                    int afflictionLevel = checkResult switch
+                    {
+                        CheckResult.CriticalSuccess => 0,
+                        CheckResult.Success => 0,
+                        CheckResult.Failure => 1,
+                        CheckResult.CriticalFailure => 2,
+                        _ => throw new Exception("Unknown result"),
+                    };
+                    if (afflictionLevel == 0)
+                    {
+                        if (checkResult == CheckResult.Success)
+                        {
+                            await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, new[] { new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison) }, false, false));
+                        }
+                    }
+                    else
+                    {
+                        Affliction affliction = CreateSpiderVenom(target, spell.SpellcastingSource.GetSpellSaveDC());
+                        CombatAction afflictionAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new Trait[1] { Trait.Poison }, "", Target.Self());
+                        await target.AddAffliction(affliction.MaximumStage, EnterStage, new QEffect(affliction.Name + ", Stage", affliction.StagesDescription, ExpirationCondition.Never, caster, IllustrationName.AcidSplash)
+                        {
+                            Id = affliction.Id,
+                            Value = afflictionLevel,
+                            StateCheck = affliction.StateCheck,
+                            StartOfSourcesTurn = async delegate (QEffect qfAffliction)
+                            {
+                                CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, afflictionAction, Defense.Fortitude, (Creature? _) => affliction.DC);
+                                Affliction.AdjustValue(qfAffliction, startOfTurnResult, affliction.MaximumStage);
+                                if (qfAffliction.Value > 0)
+                                {
+                                    await EnterStage(qfAffliction);
+                                }
+                            }
+                        }.WithExpirationAtStartOfSourcesTurn(caster, 4));
+                        async Task EnterStage(QEffect qEffect)
+                        {
+                            string? text = affliction.PoisonDamage(qEffect.Value);
+                            if (text != null)
+                            {
+                                DiceFormula damage = DiceFormula.FromText(text, spell.Name);
+                                await afflictionAction.Owner.DealDirectDamage(afflictionAction, damage, qEffect.Owner, CheckResult.Failure, DamageKind.Poison);
+                            }
+                            return;
+                        }
+                    }
+                });
+            }));
+
+
+            // Sure Strike (formerly True Strike)
+            ModManager.RegisterNewSpell("SureStrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.TrueStrike, "Sure Strike", new[] { Trait.Concentrate, Trait.Fortune, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "A glimpse into the future ensures your next blow strikes true.",
+                    "The next time you make an attack roll before the end of your turn, roll the attack twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden.",
+                    Target.Self(), spellLevel, null)
+                .WithActionCost(1).WithSoundEffect(SfxName.PositivePing)
+                .WithEffectOnSelf(delegate (Creature self)
+                {
+                    self.AddQEffect(new QEffect("Sure Strike", "The next time you make an attack roll before the end of your turn, roll the attack twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden.", ExpirationCondition.ExpiresAtEndOfSourcesTurn, self, IllustrationName.TrueStrike)
+                    {
+                        CountsAsABuff = true,
+                        Id = QEffectId.TrueStrike,
+                        DoNotShowUpOverhead = true,
+                        ProvideFortuneEffect = (bool isSavingThrow) => (!isSavingThrow) ? "Sure Strike" : null,
+                        AfterYouMakeAttackRoll = delegate (QEffect qfSelf, CheckBreakdownResult result)
+                        {
+                            qfSelf.ExpiresAt = ExpirationCondition.Immediately;
+                        }
+                    });
+                });
+            }));
+
+            // Thunderstrike (formerly Shocking Grasp)
+            // The extra effect on targets wearing metal armor or made of metal is not implemented
+            ModManager.RegisterNewSpell("Thunderstrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.ShockingGrasp, "Thunderstrike", new[] { Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "You call down a tendril of lightning that cracks with thunder, dealing " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 sonic damage to the target with a basic Reflex save.",
+                    // "A target wearing metal armor or made of metal takes a –1 circumstance bonus to its save, and if damaged by the spell is clumsy 1 for 1 round."
+                    S.HeightenedDamageIncrease(1, true, "1d12 electricity and 1d4 sonic"),
+                    Target.Ranged(24), spellLevel, SpellSavingThrow.Standard(Defense.Reflex))
+                .WithSoundEffect(SfxName.ShockingGrasp)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult,
+                        new KindedDamage(DiceFormula.FromText(spellLevel + "d12", spell.Name), DamageKind.Electricity),
+                        new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Sonic));
+                });
+            }));
+        }
+
+        private static Affliction GoblinPoxAffliction(Creature source, int dc)
+        {
+            // This expiration is unexpected. I don't get called if I don't use the WithExpirationAtStartOfSourcesTurn, since
+            // we really only call it when we're about to expire. However, I suspect the decrement and potential removal happens
+            // after this is called, so if I use 1 round, it will get removed. Instead, I set it to 2 rounds.
+            return new Affliction(QEffectId.SlowingVenom, "Goblin Pox", dc,
+                "{b}Stage 1{/b} sickened 1; {b}Stage 2{/b} sickened 1 and slowed 1; {b}Stage 3{/b} sickened 1 and the creature can't reduce its sickened value below 1.", 3, (int stage) => null,
+                delegate (QEffect qfDisease)
+            {
+                if (qfDisease.Value == 1)
+                {
+                    qfDisease.Owner.AddQEffect(QEffect.Sickened(1, dc));
+                }
+                else if (qfDisease.Value == 2)
+                {
+                    qfDisease.Owner.AddQEffect(QEffect.Sickened(1, dc));
+                    if (!qfDisease.Owner.HasEffect(QEffectId.Slowed)) { 
+                        qfDisease.Owner.AddQEffect(QEffect.Slowed(1).WithExpirationAtStartOfSourcesTurn(source, 1));
+                    }
+                }
+                else if (qfDisease.Value == 3)
+                {
+                    qfDisease.Owner.AddQEffect(Sickened(1));
+                    qfDisease.ExpiresAt = ExpirationCondition.Never;
+                }
+            });
+        }
+
+        // This isn't the same as the Spider Venom defined in the Afflictions
+        public static Affliction CreateSpiderVenom(Creature source, int dc)
+        {
+            return new Affliction(QEffectId.SpiderVenom, "Spider Venom", dc, "{b}Stage 1{/b} 1d4 poison damage and enfeebled 1; {b}Stage 2{/b} 1d4 poison damage and enfeebled 2", 2, delegate (int stage)
+            {
+                switch (stage)
+                {
+                    case 1:
+                    case 2:
+                        return "1d4";
+                    default:
+                        throw new Exception("Unknown stage.");
+                }
+            }, delegate (QEffect qfPoison)
+            {
+                if (qfPoison.Value == 1)
+                {
+                    qfPoison.Owner.AddQEffect(QEffect.Enfeebled(1).WithExpirationEphemeral());
+                }
+                else if (qfPoison.Value == 2)
+                {
+                    qfPoison.Owner.AddQEffect(QEffect.Enfeebled(2).WithExpirationEphemeral());
+                }
+            });
+        }
+
+        // Get a Sickened effect that can't be reduced.
+        private static QEffect Sickened(int value)
+        {
+            QEffect qEffect = new QEffect("Sickened", "You take a status penalty equal to the value to all your checks and DCs.\n\nYou can't drink elixirs or potions, or be administered elixirs or potions unless you're unconscious.", ExpirationCondition.Never, null, IllustrationName.Sickened)
+            {
+                Id = QEffectId.Sickened,
+                Key = "Sickened",
+                Value = value,
+                BonusToAllChecksAndDCs = (QEffect qf) => new Bonus(-qf.Value, BonusType.Status, "sickened"),
+                PreventTakingAction = (CombatAction ca) => (ca.ActionId != ActionId.Drink) ? null : "You're sickened.",
+                CountsAsADebuff = true
+            };
+            qEffect.PreventTargetingBy = (CombatAction ca) => (ca.ActionId != ActionId.Administer || qEffect.Owner.HasEffect(QEffectId.Unconscious)) ? null : "sickened";
+            return qEffect;
         }
 
         public static CombatAction Bless(int level, bool inCombat, IllustrationName illustration, bool isBless)
