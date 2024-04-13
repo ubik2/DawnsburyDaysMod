@@ -316,7 +316,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     Target.AdjacentFriendOrSelf(), spellLevel, null)
                 .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
                 {
-                    target.AddQEffect(new QEffect("Protection", "You have a +1 static bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.MageArmor)
+                    // As usual for Dawnsbury, we treat 1 minute as not expiring.
+                    target.AddQEffect(new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.MageArmor)
                     {
                         DoNotShowUpOverhead = true,
                         BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null),
@@ -486,7 +487,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 });
             }));
-
 
             // Sure Strike (formerly True Strike)
             ModManager.RegisterNewSpell("SureStrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
