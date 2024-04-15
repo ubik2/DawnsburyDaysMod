@@ -26,7 +26,7 @@ using Dawnsbury.Core.Mechanics.Treasure;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
-    internal class Level1Spells
+    public static class Level1Spells
     {
         // The following spells are excluded because they aren't useful enough in gameplay
         // * Air Bubble

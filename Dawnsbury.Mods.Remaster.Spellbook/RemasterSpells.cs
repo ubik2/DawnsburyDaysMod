@@ -21,8 +21,9 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         public static void LoadMod()
         {
             Cantrips.RegisterSpells();
-            Level1Spells.RegisterSpells();
             FocusSpells.RegisterSpells();
+            Level1Spells.RegisterSpells();
+            Level2Spells.RegisterSpells();
             RenameTrait(Core.Mechanics.Enumerations.Trait.Positive, "Vitality");
             RenameTrait(Core.Mechanics.Enumerations.Trait.Negative, "Void");
         }

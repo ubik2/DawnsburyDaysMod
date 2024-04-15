@@ -21,7 +21,7 @@ using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
-    internal class FocusSpells
+    public static class FocusSpells
     {
         public static void RegisterSpells()
         {
