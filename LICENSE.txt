@@ -1,1 +1,3 @@
-See the section Licensing in the main README file.
+See the section Licensing in the main [README](https://github.com/dawnsbury/dawnsbury-days-example-mods/blob/master/README.md) file.
+
+The code in this repository is based heavily on decompiled code from the Dawnsbury Days code, and should be covered by the same license.
