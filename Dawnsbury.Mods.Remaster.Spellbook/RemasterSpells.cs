@@ -12,6 +12,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             public static Core.Mechanics.Enumerations.Trait Sanctified = ModManager.RegisterTrait("Sanctified");
             public static Core.Mechanics.Enumerations.Trait Spirit = ModManager.RegisterTrait("Spirit");
             public static Core.Mechanics.Enumerations.Trait Disease = ModManager.RegisterTrait("Disease");
+            public static Core.Mechanics.Enumerations.Trait Revelation = ModManager.RegisterTrait("Revelation");
             // These are aliases. We'll rename them below.
             public static Core.Mechanics.Enumerations.Trait Vitality = Core.Mechanics.Enumerations.Trait.Positive;
             public static Core.Mechanics.Enumerations.Trait Void = Core.Mechanics.Enumerations.Trait.Negative;

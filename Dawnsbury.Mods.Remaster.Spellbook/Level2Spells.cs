@@ -70,7 +70,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             ModManager.RegisterNewSpell("AcidGrip", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = (spellLevel - 2) / 2;
-
                 return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", new[] { Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "An ephemeral, taloned hand grips the target, burning it with magical acid.",
                     "The target takes " + S.HeightenedVariable(2 + 2 * heightenIncrements, 2) + "d8 acid damage plus " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 persistent acid damage depending on its Reflex save. A creature taking persistent damage from this spell takes a –10-foot status bonus to its Speeds." +
@@ -204,7 +203,38 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // False Vitality (handle like Mystic Armor)
+            ModManager.RegisterNewSpell("FalseVitality", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                CombatAction falseVitality = Spells.CreateModern(IllustrationName.Soothe, "False Vitality", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You augment your flesh with the energies typically used to manipulate the undead.",
+                    "You gain 10 temporary Hit Points." +
+                    "\n\n{b}Special{/b} You can cast this spell as a free action at the beginning of the encounter.", Target.Self(), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(2)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    caster.GainTemporaryHP(10);
+                    // Add a marker so we don't prompt them to cast it more than once
+                    caster.AddQEffect(new QEffect("False Vitality", "").WithExpirationAtStartOfOwnerTurn());
+                });
+                falseVitality.WhenCombatBegins = delegate (Creature caster)
+                {
+                    caster.AddQEffect(new QEffect
+                    {
+                        StartOfCombat = async delegate
+                        {
+                            if (!caster.QEffects.Any((qEffect) => qEffect.Name == "False Vitality") &&
+                                await caster.Battle.AskForConfirmation(caster, IllustrationName.Soothe, "Do you want to cast {i}false vitality{/i} as a free action?", "Cast {i}false vitality{/i}"))
+                            {
+                                await caster.Battle.GameLoop.FullCast(falseVitality);
+                            }
+                        }
+                    });
+                };
+                return falseVitality;
+            }));
+
             // Floating Flame (formerly Flaming Sphere)
+#if FLOATING_FLAME
+#endif
 
             // Laughing Fit (formerly Hideous Laughter)
             ModManager.RegisterNewSpell("LaughingFit", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -332,26 +362,98 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Revealing Light (formerly Faerie Fire)
+            ModManager.RegisterNewSpell("RevealingLight", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.AncientDust, "Revealing Light", new[] { Trait.Concentrate, Trait.Light, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "A wave of magical light washes over the area.",
+                    "You choose the appearance of the light, such as colorful, heatless flames or sparkling motes. A creature affected by revealing light is dazzled. If the creature was invisible, it becomes concealed instead. If the creature was already concealed for any other reason, it is no longer concealed." +
+                    S.FourDegreesOfSuccess("The target is unaffected.", "The light affects the creature for 2 rounds.", "The light affects the creature for 1 minute.", "The light affects the creature for 10 minutes."),
+                    Target.Burst(24, 2), spellLevel, SpellSavingThrow.Standard(Defense.Reflex)).WithSoundEffect(SfxName.AncientDust)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    switch (checkResult)
+                    {
+                        case CheckResult.CriticalSuccess:
+                            break;
+                        case CheckResult.Success:
+                            target.AddQEffect(QEffect.Dazzled().WithExpirationAtStartOfSourcesTurn(caster, 2));
+                            break;
+                        case CheckResult.Failure:
+                        case CheckResult.CriticalFailure:
+                            target.AddQEffect(QEffect.Dazzled().WithExpirationNever());
+                            break;
+                    }
+                    if (checkResult <= CheckResult.Success) {
+                        // This isn't perfect, but it's mostly right.
+                        if (target.HasEffect(QEffectId.Invisible)) {
+                            QEffect invisibleEffect = target.QEffects.First((qEffect) => qEffect.Id == QEffectId.Invisible);
+                            target.RemoveAllQEffects((qEffect) => qEffect.Id == QEffectId.Invisible);
+                            target.AddQEffect(new QEffect("Concealed", "You are concealed. {i}(Everyone has an extra 20% miss chance against you.){/i}", invisibleEffect.ExpiresAt, caster, (Illustration)IllustrationName.Blur)
+                            {
+                                RoundsLeft = invisibleEffect.RoundsLeft,
+                                CountsAsABuff = true,
+                                Id = QEffectId.Blur
+                            }); 
+                        }
+                    }
+                });
+            }));
+
             // See the Unseen (formerly See Invisible)
+            ModManager.RegisterNewSpell("SeeTheUnseen", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Seek, "See the Unseen", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Revelation, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "Your gaze pierces through illusions and finds invisible creatures and spirits.",
+                    "You can see invisible creatures as though they weren't invisible, although their features are blurred, making them concealed and difficult to identify. You can also see incorporeal creatures, like ghosts, phased through an object from within 10 feet of an object's surface as blurry shapes seen through those objects. Subtler clues also grant you a +2 status bonus to checks you make to disbelieve illusions.",
+                    Target.Self(), spellLevel, null).WithSoundEffect(SfxName.BitOfLuck)
+                .WithEffectOnSelf((target) => 
+                {
+                    // I don't have any good hooks into HiddenRules.DetermineHidden, so instead, I'll just give myself Blind-Fight
+                    target.AddQEffect(new QEffect("See the Unseen", "Your gaze pierces through illusions and finds invisible creatures and spirits.")
+                    {
+                        Id = QEffectId.BlindFight,
+                        CountsAsABuff = true
+                    }.WithExpirationNever());
+                });
+            }));
 
-            // Spiritual Armament (formerly Spiritual Weapon)
-            //ModManager.RegisterNewSpell("SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
-            //{
-            //    return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
-            //        "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it.",
-            //        "Attempt a spell attack roll against the target's AC, dealing 2d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well.",
-            //        Target.Ranged(24), spellLevel, null).WithSpellAttackRoll().WithSoundEffect(SfxName.PureEnergyRelease)
-            //    .WithProjectileCone(IllustrationName.SpiritualWeapon, 0, ProjectileKind.None)
-            //    .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
-            //    {
-            //        Action<QEffect> attackAction = (qEffect) =>
-            //        {
+            // Spiritual Armament(formerly Spiritual Weapon)
+#if SPIRITUAL_ARMAMENT
+            ModManager.RegisterNewSpell("SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                async Task PerformSpiritualArmamentAttack(CombatAction spell, Creature caster, Creature target)
+                {
+                    CombatAction strike = new CombatAction(caster, IllustrationName.SpiritualWeapon, "Spiritual Armament", spell.Traits.ToArray(),
+                        "Attack with Spiritual Armament", Target.Ranged(24)).WithSpellAttackRoll().WithActionCost(0).WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                        {
+                        });
+                    strike.SpellcastingSource = spell.SpellcastingSource;
+                    strike.SpellId = SpellId.SpiritualWeapon;
+                    await strike.AllExecute();
+                }
+                return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it.",
+                    "Attempt a spell attack roll against the target's AC, dealing 2d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well.",
+                    Target.Ranged(24), spellLevel, null).WithSpellAttackRoll().WithSoundEffect(SfxName.PureEnergyRelease)
+                .WithProjectileCone(IllustrationName.SpiritualWeapon, 0, ProjectileKind.None)
+                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+                {
 
-            //        };
-            //        QEffect qEffect = new QEffect("Spiritual Armament", "Sustaining Spiritual Armament", ExpirationCondition.ExpiresAtStartOfSourcesTurn, caster, IllustrationName.SpiritualWeapon);
-            //        //caster.AddQEffect(QEffect.Sustaining(spell, effect, attackAction());
-            //    });
-            //}));
+                    Action<QEffect> attackAction = (qEffect) =>
+                    {
+                        CombatAction strike = new CombatAction(caster, IllustrationName.SpiritualWeapon, "Spiritual Armament", spell.Traits.ToArray(),
+    "Attack with Spiritual Armament", Target.Ranged(24)).WithSpellAttackRoll().WithActionCost(0).WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+    {
+    });
+                        strike.SpellcastingSource = spell.SpellcastingSource;
+                        strike.SpellId = SpellId.SpiritualWeapon;
+                        await strike.AllExecute();
+                    };
+                    QEffect qEffect = new QEffect("Spiritual Armament", "Sustaining Spiritual Armament", ExpirationCondition.ExpiresAtStartOfSourcesTurn, caster, IllustrationName.SpiritualWeapon);
+                    caster.AddQEffect(QEffect.Sustaining(spell, qEffect, attackAction);
+                });
+            }));
+#endif
 
             // Stupefy (formerly Touch of Idiocy)
             ModManager.RegisterNewSpell("Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -377,6 +479,29 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 });
             }));
+        }
+
+        // Variant of QEffect.Sustaining that lets you sustain on the first turn
+        private static QEffect SustainingHelper(CombatAction sustainedSpell, QEffect sustainedEffect, Action<QEffect>? onSustain = null)
+        {
+            return new QEffect("Sustaining " + sustainedSpell.Name, "You're sustaining an effect and it will expire if you don't sustain it every turn.", ExpirationCondition.Never, null, IllustrationName.CastASpell)
+            {
+                Id = QEffectId.Sustaining,
+                DoNotShowUpOverhead = true,
+                ProvideContextualAction = (QEffect qf) => new ActionPossibility(new CombatAction(qf.Owner, sustainedSpell.Illustration, "Sustain " + sustainedSpell.Name, new[] { Trait.Concentrate, Trait.SustainASpell, Trait.Basic },
+                "The duration of " + sustainedSpell.Name + " continues until the end of your next turn.", Target.Self((Creature self, AI ai) => ai.ShouldSustain(sustainedSpell))).WithEffectOnSelf(delegate
+                {
+                    sustainedEffect.CannotExpireThisTurn = true;
+                    onSustain?.Invoke(sustainedEffect);
+                })).WithPossibilityGroup("Maintain an activity"),
+                StateCheck = delegate (QEffect qf)
+                {
+                    if (sustainedEffect.Owner.Destroyed || !sustainedEffect.Owner.HasEffect(sustainedEffect))
+                    {
+                        qf.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                }
+            };
         }
     }
 }

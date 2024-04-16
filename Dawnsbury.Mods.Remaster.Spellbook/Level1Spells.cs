@@ -225,7 +225,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     else
                     {
                         Affliction affliction = GoblinPoxAffliction(caster, spell.SpellcastingSource.GetSpellSaveDC());
-                        CombatAction diseaseAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new Trait[1] { RemasterSpells.Trait.Disease }, "", Target.Self());
+                        CombatAction diseaseAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new[] { RemasterSpells.Trait.Disease }, "", Target.Self());
                         await target.AddAffliction(affliction.MaximumStage, EnterStage, new QEffect(affliction.Name + ", Stage", affliction.StagesDescription, ExpirationCondition.Never, caster, IllustrationName.AcidSplash)
                         {
                             Id = affliction.Id,
@@ -310,14 +310,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Protection
             ModManager.RegisterNewSpell("Protection", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.MageArmor, "Protection", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.ForbiddingWard, "Protection", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You ward a creature against harm.",
                     "The target gains a +1 status bonus to Armor Class and saving throws.",
                     Target.AdjacentFriendOrSelf(), spellLevel, null)
                 .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
                 {
                     // As usual for Dawnsbury, we treat 1 minute as not expiring.
-                    target.AddQEffect(new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.MageArmor)
+                    target.AddQEffect(new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.ForbiddingWard)
                     {
                         DoNotShowUpOverhead = true,
                         BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null),
@@ -354,7 +354,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     return false;
                 }
 
-                return Spells.CreateModern(IllustrationName.MagicWeapon, "Runic Body", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.KineticRam, "Runic Body", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "Glowing runes appear on the target’s body.",
                     "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.", 
                     Target.AdjacentFriendOrSelf()
@@ -370,7 +370,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                     // Expiration is long enough that we don't need to worry about restoring the item.
                     // I create a buff icon, since otherwise it's not clear that your fist is buffed.
-                    target.AddQEffect(new QEffect("Runic Body", "Glowing runes appear on the target’s body.") { Illustration = IllustrationName.MagicWeapon, CountsAsABuff = true });
+                    target.AddQEffect(new QEffect("Runic Body", "Glowing runes appear on the target’s body.") { Illustration = IllustrationName.KineticRam, CountsAsABuff = true });
                 });
             }));
 
@@ -606,11 +606,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", new[] { Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                 isBless ? "Blessings from beyond help your companions strike true." :
                     "You fill the minds of your enemies with doubt.",
-                isBless ? "You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane." :
-                    "Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract bless.",            
+                "{b}Area{/b} 15-foot emanation\n\n" +
+                (isBless ? "You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane." :
+                    "Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract bless."),            
                 Target.Self(), level, null).WithSoundEffect(isBless ? SfxName.Bless : SfxName.Fear).WithEffectOnSelf(async delegate (CombatAction action, Creature self)
             {
-                CombatAction action2 = action;
                 int initialRadius = isBless ? 3 : 2;
                 AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(isBless ? IllustrationName.BlessCircle : IllustrationName.BaneCircle, initialRadius);
                 QEffect qEffect = new QEffect(isBless ? "Bless" : "Bane", "[this condition has no description]", ExpirationCondition.Never, self, IllustrationName.None)
@@ -694,7 +694,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                     }
                                     else if (!item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBane))
                                     {
-                                        CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(item3, action2, Defense.Will);
+                                        CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(item3, action, Defense.Will);
                                         item3.AddQEffect(new QEffect(ExpirationCondition.Never)
                                         {
                                             Id = QEffectId.RolledAgainstBane,
