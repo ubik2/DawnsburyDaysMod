@@ -30,11 +30,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         static void RenameTrait(Core.Mechanics.Enumerations.Trait trait, string newName)
         {
-            // It looks like the timing of these trait properties doesn't work the same as a workshop mod
-            if (TraitExtensions.TraitProperties.TryGetValue(trait, out TraitProperties? properties))
-            {
-                TraitExtensions.TraitProperties[trait] = new TraitProperties(newName, properties.Relevant, properties.RulesText, properties.RelevantForShortBlock);
-            }
+            TraitProperties? properties = TraitExtensions.GetTraitProperties(trait);
+            TraitExtensions.TraitProperties[trait] = new TraitProperties(newName, properties.Relevant, properties.RulesText, properties.RelevantForShortBlock);
         }        
     }
 }
