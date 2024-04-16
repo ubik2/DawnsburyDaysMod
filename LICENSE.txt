@@ -1,3 +1,5 @@
-See the section Licensing in the main [README](https://github.com/dawnsbury/dawnsbury-days-example-mods/blob/master/README.md) file.
+See the section Licensing in the sample mod README at https://github.com/dawnsbury/dawnsbury-days-example-mods/blob/master/README.md
 
 The code in this repository is based heavily on decompiled code from the Dawnsbury Days code, and should be covered by the same license.
+
+Textual descriptions and game mechanics are taken from Pathfinder Second Edition, and are covered by the ORC license.
