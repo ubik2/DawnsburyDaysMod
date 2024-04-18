@@ -512,7 +512,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             };
         }
 
-
         private static Creature CreateIllusoryObject(IllustrationName illustration, string name)
         {
             List<Trait> traits = new List<Trait>() { Trait.IllusoryObject };
@@ -555,11 +554,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         }
 
         /// <summary>
-        /// This is essentially the same a ProxySpells.CreateFlamingSphereSpell, but the floating flame damages anyone whose square it passes through.
+        ///  Floating Flame spell
         /// </summary>
         /// <param name="spellLevel"></param>
         /// <returns></returns>
-        public static CombatAction CreateFloatingFlameSpell(int spellLevel)
+        private static CombatAction CreateFloatingFlameSpell(int spellLevel)
         {
             return Spells.CreateModern(IllustrationName.FlamingSphere, "Floating Flame", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                 "You create a fire that burns without fuel and moves to your commands.",
