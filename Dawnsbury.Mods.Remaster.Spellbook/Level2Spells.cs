@@ -20,6 +20,12 @@ using Dawnsbury.Core.Tiles;
 using System.Collections.Generic;
 using System.Linq;
 using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Core.Animations.Movement;
+using Dawnsbury.Core.CharacterBuilder.Spellcasting;
+using System.Threading.Tasks;
+using Dawnsbury.Core.Creatures.Parts;
+using Microsoft.Xna.Framework;
+using Dawnsbury.Core.Intelligence;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -73,9 +79,9 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", new[] { Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "An ephemeral, taloned hand grips the target, burning it with magical acid.",
                     "The target takes " + S.HeightenedVariable(2 + 2 * heightenIncrements, 2) + "d8 acid damage plus " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 persistent acid damage depending on its Reflex save. A creature taking persistent damage from this spell takes a –10-foot status bonus to its Speeds." +
-                    S.FourDegreesOfSuccess("The creature is unaffected.", 
+                    S.FourDegreesOfSuccess("The creature is unaffected.",
                         "The creature takes half damage and no persistent damage, and the claw moves it up to 5 feet in a direction of your choice.",
-                        "The creature takes full damage and persistent damage, and the claw moves it up to 10 feet in a direction of your choice.", 
+                        "The creature takes full damage and persistent damage, and the claw moves it up to 10 feet in a direction of your choice.",
                         "The creature takes double damage and full persistent damage, and the claw moves it up to 20 feet in a direction of your choice."),
                     // S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+2){/b} The initial damage increases by 2d8, and the persistent acid damage increases by 1d6."),
                     Target.Ranged(24), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
@@ -121,7 +127,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 .WithEffectOnChosenTargets(async delegate (CombatAction spell, Creature caster, ChosenTargets targets)
                 {
                     string damageDice = (spell.SpentActions > 1) ? (2 * spellLevel + "d6") : (spellLevel + "d6");
-                    foreach (Creature target in targets.GetTargetCreatures()) 
+                    foreach (Creature target in targets.GetTargetCreatures())
                     {
                         await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, targets.CheckResults[target], damageDice, DamageKind.Fire);
                     }
@@ -233,8 +239,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Floating Flame (formerly Flaming Sphere)
-#if FLOATING_FLAME
-#endif
+            ModManager.RegisterNewSpell("Flaming Sphere", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return CreateFloatingFlameSpell(spellLevel);
+            }));
 
             // Laughing Fit (formerly Hideous Laughter)
             ModManager.RegisterNewSpell("LaughingFit", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -327,7 +335,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.SoundBurst, "Noise Blast", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "A cacophonous noise blasts out dealing " + S.HeightenedVariable(spellLevel, 2) + "d10 sonic damage.",
-                    "Each creature must attempt a Fortitude save." + 
+                    "Each creature must attempt a Fortitude save." +
                     S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.", "The creature takes full damage is deafened for 1 round.", "The creature takes double damage and is deafened for 1 minute, and stunned 1."),
                     Target.Burst(6, 2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
                 .WithSoundEffect(SfxName.SoundBurst)
@@ -351,7 +359,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.Barkskin, "Oaken Resilience", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "The target's skin becomes tough, with a consistency like bark or wood.",
-                    "The target gains resistance 2 to bludgeoning and piercing damage and weakness 3 to fire. After the target takes fire damage, it can Dismiss the spell as a free action triggered by taking the damage; doing so doesn't reduce the fire damage the target was dealt.", 
+                    "The target gains resistance 2 to bludgeoning and piercing damage and weakness 3 to fire. After the target takes fire damage, it can Dismiss the spell as a free action triggered by taking the damage; doing so doesn't reduce the fire damage the target was dealt.",
                     Target.AdjacentFriendOrSelf((Target tg, Creature a, Creature d) => (a == d && !a.HasEffect(QEffectId.Barkskin) && !a.HasEffect(QEffectId.EndedBarkskin)) ? 15 : int.MinValue), spellLevel, null).WithSoundEffect(SfxName.ArmorDon)
                 .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
                 {
@@ -393,7 +401,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                 RoundsLeft = invisibleEffect.RoundsLeft,
                                 CountsAsABuff = true,
                                 Id = QEffectId.Blur
-                            }); 
+                            });
                         }
                     }
                 });
@@ -406,7 +414,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "Your gaze pierces through illusions and finds invisible creatures and spirits.",
                     "You can see invisible creatures as though they weren't invisible, although their features are blurred, making them concealed and difficult to identify. You can also see incorporeal creatures, like ghosts, phased through an object from within 10 feet of an object's surface as blurry shapes seen through those objects. Subtler clues also grant you a +2 status bonus to checks you make to disbelieve illusions.",
                     Target.Self(), spellLevel, null).WithSoundEffect(SfxName.BitOfLuck)
-                .WithEffectOnSelf((target) => 
+                .WithEffectOnSelf((target) =>
                 {
                     // I don't have any good hooks into HiddenRules.DetermineHidden, so instead, I'll just give myself Blind-Fight
                     target.AddQEffect(new QEffect("See the Unseen", "Your gaze pierces through illusions and finds invisible creatures and spirits.")
@@ -459,7 +467,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             ModManager.RegisterNewSpell("Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.TouchOfIdiocy, "Stupefy", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
-                    "You dull the target's mind, depending on its Will save.", 
+                    "You dull the target's mind, depending on its Will save.",
                     S.FourDegreesOfSuccess("The target is unaffected.", "The target is stupefied 1 until the start of your next turn.", "The target is stupefied 2 for 1 minute.", "The target is stupefied 3 for 1 minute."),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.Mental)
                 .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
@@ -502,6 +510,122 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 }
             };
+        }
+
+
+        private static Creature CreateIllusoryObject(IllustrationName illustration, string name)
+        {
+            List<Trait> traits = new List<Trait>() { Trait.IllusoryObject };
+            Defenses defenses = new Defenses(0, 0, 0, 0);
+            Abilities abilities = new Abilities(0, 0, 0, 0, 0, 0);
+            Skills skills = new Skills();
+            return new Creature(illustration, name, traits, 1, 0, 10, defenses, 1, abilities, skills).AddQEffect(QEffect.Flying());
+        }
+
+        // Targets an accessible and available tile within a specified distance.
+        private static TileTarget RangedTileTarget(int distance)
+        {
+            return new TileTarget(delegate (Creature caster, Tile tile)
+            {
+                if (!tile.AlwaysBlocksMovement)
+                {
+                    Tile occupies = caster.Occupies;
+                    if (occupies != null && occupies.DistanceTo(tile) <= distance)
+                    {
+                        return (int)caster.Occupies.HasLineOfEffectToIgnoreLesser(tile) < 4;
+                    }
+                }
+
+                return false;
+            }, null);
+        }
+
+        // Applies the damage effect and temporary invulnerability to the target.
+        private async static Task PerformFlamingSphereAttack(CombatAction spell, Creature caster, Creature target, string damage)
+        {
+            if (!target.QEffects.Any((qEffect) => qEffect.Name == "Floating Flame Immunity"))
+            {
+                CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(target, spell, Defense.Reflex);
+                if (checkResult != CheckResult.CriticalSuccess)
+                {
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, damage, DamageKind.Fire);
+                    target.AddQEffect(new QEffect("Floating Flame Immunity", "A given creature can take damage from {i}floating flame{/i} only once per round.").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                }
+            }
+        }
+
+        /// <summary>
+        /// This is essentially the same a ProxySpells.CreateFlamingSphereSpell, but the floating flame damages anyone whose square it passes through.
+        /// </summary>
+        /// <param name="spellLevel"></param>
+        /// <returns></returns>
+        public static CombatAction CreateFloatingFlameSpell(int spellLevel)
+        {
+            return Spells.CreateModern(IllustrationName.FlamingSphere, "Floating Flame", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                "You create a fire that burns without fuel and moves to your commands.",
+                "The flame deals 3d6 fire damage to each creature in the square in which it appears, with a basic Reflex save. When you Sustain this spell, you can levitate the flame up to 10 feet. It then deals damage to each creature whose space it shared at any point during its flight. This uses the same damage and save, and you roll the damage once each time you Sustain. A given creature can take damage from floating flame only once per round.",
+                RangedTileTarget(6), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+            .WithSoundEffect(SfxName.RejuvenatingFlames).WithProjectileCone((Illustration)IllustrationName.SpiritualWeapon, 0, ProjectileKind.None)
+            .WithEffectOnChosenTargets(async delegate (CombatAction spell, Creature caster, ChosenTargets targets)
+            {
+                string damage = "3d6";
+                Creature spellObject = CreateIllusoryObject(IllustrationName.FlamingSphere256, "Floating Flame");
+                if (targets.ChosenTile == null)
+                {
+                    return;
+                }
+                caster.Battle.SpawnIllusoryCreature(spellObject, targets.ChosenTile);
+                if (targets.ChosenTile.PrimaryOccupant != null)
+                {
+                    await PerformFlamingSphereAttack(spell, caster, targets.ChosenTile.PrimaryOccupant, damage);
+                }
+                caster.AddQEffect(new QEffect("Floating Flame", "You're sustaining a floating flame which you can use to deal fire damage. You must Sustain it each turn or it will go away.", ExpirationCondition.ExpiresAtEndOfSourcesTurn, caster, IllustrationName.FlamingSphere)
+                {
+                    DoNotShowUpOverhead = true,
+                    WhenExpires = (qEffect) =>
+                    {
+                        spellObject.Occupies.Overhead("expired", Color.Blue);
+                        spellObject.DeathScheduledForNextStateCheck = true;
+                    },
+                    CannotExpireThisTurn = true,
+                    ProvideContextualAction = (qEffect) =>
+                    {
+                        PathTarget newTarget = new PathTarget(spellObject.Occupies, 2);
+                        newTarget.SetOwnerAction(new CombatAction(caster, IllustrationName.None, "Floating Flame", spell.Traits.ToArray(), "---", Target.Self()).WithActionCost(1));
+                        string name = !qEffect.CannotExpireThisTurn ? "Sustain, move and damage" : "Move and damage";
+                        string description = !qEffect.CannotExpireThisTurn ? "The duration of the spell continues until the end of your next turn." : "";
+                        description += "Move the Floating Flame 10-feet and damage any creatures whose space it shared at any point during its movement.";
+                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.FlamingSphere256, name, new[] { Trait.Concentrate, Trait.SustainASpell, Trait.Spell, Trait.AlwaysHits }, description, newTarget)
+                        {
+                            SpellId = SpellId.FlamingSphere,
+                            SpellcastingSource = spell.SpellcastingSource
+                        }.WithEffectOnChosenTargets(async delegate (CombatAction combatAction, Creature self, ChosenTargets chosenTargets)
+                        {
+                            qEffect.CannotExpireThisTurn = true;
+                            foreach (Tile tile in chosenTargets.ChosenTiles)
+                            {
+                                await spellObject.MoveTo(tile, spell, new MovementStyle()
+                                {
+                                    Shifting = true,
+                                    MaximumSquares = 1000,
+                                    ShortestPath = true,
+                                    Insubstantial = true
+                                });
+                                if (tile.PrimaryOccupant != null)
+                                {
+                                    await PerformFlamingSphereAttack(spell, caster, tile.PrimaryOccupant, damage);
+                                }
+                            }
+                        }).WithSpellSavingThrow(new Defense?(Defense.Reflex))).WithPossibilityGroup("Maintain an activity");
+                    },
+                    StateCheck = (qEffect) =>
+                    {
+                        if (qEffect.Owner.Actions.CanTakeActions())
+                            return;
+                        qEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                });
+            });
         }
     }
 }
