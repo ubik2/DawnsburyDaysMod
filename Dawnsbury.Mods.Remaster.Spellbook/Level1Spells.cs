@@ -519,7 +519,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 return Spells.CreateModern(IllustrationName.ShockingGrasp, "Thunderstrike", new[] { Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "You call down a tendril of lightning that cracks with thunder, dealing " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 sonic damage to the target with a basic Reflex save.",
                     // "A target wearing metal armor or made of metal takes a –1 circumstance bonus to its save, and if damaged by the spell is clumsy 1 for 1 round."
-                    S.HeightenedDamageIncrease(1, true, "1d12 electricity and 1d4 sonic"),
+                    S.HeightenedDamageIncrease(spellLevel, inCombat, "1d12 electricity and 1d4 sonic"),
                     Target.Ranged(24), spellLevel, SpellSavingThrow.Standard(Defense.Reflex))
                 .WithSoundEffect(SfxName.ShockingGrasp)
                 .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
