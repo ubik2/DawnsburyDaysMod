@@ -278,7 +278,7 @@ public class Cantrips
         {
             int heightenIncrements = spellLevel - 1;
             // Using Positive instead of Vitality here, since otherwise I'd need to update creatures
-            return Spells.CreateModern(IllustrationName.DisruptUndead, "Vitality Lash", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Positive, Trait.Divine, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.DisruptUndead, "Vitality Lash", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Vitality, Trait.Divine, Trait.Primal, RemasterSpells.Trait.Remaster },
                 "You demolish the target's corrupted essence with energy from Creation's Forge.",
                 "You deal " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 vitality damage with a basic Fortitude save. If the creature critically fails the save, it is also enfeebled 1 until the start of your next turn." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
@@ -300,7 +300,7 @@ public class Cantrips
         {
             int heightenIncrements = spellLevel - 1;
             // Using Negative instead of Void here, since otherwise I'd need to update creatures
-            return Spells.CreateModern(IllustrationName.Enervation, "Void Warp", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Negative, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.Enervation, "Void Warp", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Void, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                 "You call upon the Void to harm life force.",
                 "The target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 void damage with a basic Fortitude save. On a critical failure, the target is also enfeebled 1 until the start of your next turn." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),

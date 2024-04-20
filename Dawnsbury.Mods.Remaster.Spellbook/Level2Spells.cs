@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Dawnsbury.Core.Creatures.Parts;
 using Microsoft.Xna.Framework;
 using Dawnsbury.Core.Intelligence;
+using Dawnsbury.Auxiliary;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -66,7 +67,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Silence
         // The following are in limbo
         // * Clear Mind
-        // * Entangling Flora (from Entangle)
         // * Illusory Creature
         // * Share Life
         // * Sound Body
@@ -205,6 +205,85 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
                     List<QEffect> list = (List<QEffect>)qSustainMultipleEffect.Tag;
                     list.Add(qEffect);
+                });
+            }));
+
+            // Entangling Flora (formerly Entangle)
+            ModManager.RegisterNewSpell("EntanglingFlora", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.FlourishingFlora, "Entangling Flora", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "Plants and fungi burst out or quickly grow, entangling creatures.",
+                    "All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it’s also immobilized for 1 round. Creatures can attempt to Escape to remove these effects." + "\n\n{i}Dismiss Entangling Flora is in Other maneuvers menu.{/i}",
+                    Target.Burst(24, 4), spellLevel, null).WithSoundEffect(SfxName.Boneshaker)
+                .WithEffectOnChosenTargets(async delegate (CombatAction spell, Creature caster, ChosenTargets targets)
+                {
+                    List<TileQEffect> effects = new List<TileQEffect>();
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("SpellcastingSource should not be null");
+                    }
+                    int spellDC = spell.SpellcastingSource.GetSpellSaveDC();
+                    foreach (Tile tile in targets.ChosenTiles)
+                    {
+                        TileQEffect item = new TileQEffect(tile)
+                        {
+                            StateCheck = delegate
+                            {
+                                tile.DifficultTerrain = true;
+                            },
+                            AfterCreatureBeginsItsTurnHere = async delegate (Creature creature)
+                            {
+                                CheckResult checkResult = CommonSpellEffects.RollSavingThrow(creature, CombatAction.CreateSimple(creature, "Push Through Entangling Flora"), Defense.Reflex, (_) => spellDC);
+                                QEffect? entangledEffect = null;
+                                if (checkResult == CheckResult.Failure)
+                                {
+                                    if (!creature.QEffects.Any((qEffect) => qEffect.Name == "slowed by Entangling Flora" || (qEffect.Id == QEffectId.Immobilized && qEffect.Source == caster)))
+                                    {
+                                        entangledEffect = new QEffect("slowed by Entangling Flora", "-10-foot circumstance penalty to Speeds", ExpirationCondition.Never, caster, IllustrationName.FlourishingFlora)
+                                        {
+                                            BonusToAllSpeeds = (_) => new Bonus(-2, BonusType.Circumstance, spell.Name, false),
+                                            CountsAsADebuff = true
+                                        };
+                                    }
+                                }
+                                else if (checkResult == CheckResult.CriticalFailure)
+                                {
+                                    // If we are already slowed, remove that effect
+                                    creature.RemoveAllQEffects((qEffect) => qEffect.Name == "slowed by Entangling Flora" || (qEffect.Id == QEffectId.Immobilized && qEffect.Source == caster));
+                                    entangledEffect = QEffect.Immobilized().WithExpirationNever();
+                                    entangledEffect.Source = caster;
+                                }
+                                if (entangledEffect != null)
+                                {
+                                    entangledEffect.ProvideContextualAction = (qEffect) => EscapeAction(creature, qEffect, spell.SpellcastingSource);
+                                    entangledEffect.StateCheck = (qEffect) =>
+                                    {
+                                        // Remove the effect when the creature leaves the area
+                                        if (!targets.ChosenTiles.Contains(creature.Occupies))
+                                        {
+                                            qEffect.ExpiresAt = ExpirationCondition.Immediately;
+                                        }
+                                    };
+                                    creature.AddQEffect(entangledEffect);
+                                }
+                            },
+                            Illustration = (new[] { IllustrationName.Spiderweb1, IllustrationName.Spiderweb2, IllustrationName.Spiderweb3, IllustrationName.Spiderweb4 }).GetRandom(),
+                            ExpiresAt = ExpirationCondition.Never
+                        };
+                        effects.Add(item);
+                        tile.QEffects.Add(item);
+                    }
+
+                    caster.AddQEffect(new QEffect
+                    {
+                        ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ? null : new ActionPossibility(new CombatAction(caster, IllustrationName.FlourishingFlora, "Dismiss Entangling Flora", new[] { Trait.Concentrate }, "Dismiss this effect.", Target.Self()).WithEffectOnSelf(delegate
+                        {
+                            foreach (TileQEffect tileEffect in effects)
+                            {
+                                tileEffect.ExpiresAt = ExpirationCondition.Immediately;
+                            }
+                        }))
+                    });
                 });
             }));
 
@@ -426,42 +505,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Spiritual Armament(formerly Spiritual Weapon)
-#if SPIRITUAL_ARMAMENT
             ModManager.RegisterNewSpell("SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                async Task PerformSpiritualArmamentAttack(CombatAction spell, Creature caster, Creature target)
-                {
-                    CombatAction strike = new CombatAction(caster, IllustrationName.SpiritualWeapon, "Spiritual Armament", spell.Traits.ToArray(),
-                        "Attack with Spiritual Armament", Target.Ranged(24)).WithSpellAttackRoll().WithActionCost(0).WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
-                        {
-                        });
-                    strike.SpellcastingSource = spell.SpellcastingSource;
-                    strike.SpellId = SpellId.SpiritualWeapon;
-                    await strike.AllExecute();
-                }
-                return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
-                    "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it.",
-                    "Attempt a spell attack roll against the target's AC, dealing 2d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well.",
-                    Target.Ranged(24), spellLevel, null).WithSpellAttackRoll().WithSoundEffect(SfxName.PureEnergyRelease)
-                .WithProjectileCone(IllustrationName.SpiritualWeapon, 0, ProjectileKind.None)
-                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
-                {
-
-                    Action<QEffect> attackAction = (qEffect) =>
-                    {
-                        CombatAction strike = new CombatAction(caster, IllustrationName.SpiritualWeapon, "Spiritual Armament", spell.Traits.ToArray(),
-    "Attack with Spiritual Armament", Target.Ranged(24)).WithSpellAttackRoll().WithActionCost(0).WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
-    {
-    });
-                        strike.SpellcastingSource = spell.SpellcastingSource;
-                        strike.SpellId = SpellId.SpiritualWeapon;
-                        await strike.AllExecute();
-                    };
-                    QEffect qEffect = new QEffect("Spiritual Armament", "Sustaining Spiritual Armament", ExpirationCondition.ExpiresAtStartOfSourcesTurn, caster, IllustrationName.SpiritualWeapon);
-                    caster.AddQEffect(QEffect.Sustaining(spell, qEffect, attackAction);
-                });
+                return CreateSpiritualArmamentSpell(spellId, spellLevel);
             }));
-#endif
 
             // Stupefy (formerly Touch of Idiocy)
             ModManager.RegisterNewSpell("Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -625,6 +672,96 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 });
             });
+        }
+
+        private async static Task PerformSpiritualArmamentAttack(CombatAction spell, Creature caster, Creature target, CheckResult checkResult, string diceExpression)
+        {
+            IEnumerable<DamageKind> damageKinds = new List<DamageKind>();
+            if (caster.PrimaryItem != null && caster.PrimaryItem.HasTrait(Trait.Weapon)) {
+                damageKinds = damageKinds.Union(caster.PrimaryItem.DetermineDamageKinds());
+            }
+            if (caster.SecondaryItem != null && caster.SecondaryItem.HasTrait(Trait.Weapon))
+            {
+                damageKinds = damageKinds.Union(caster.SecondaryItem.DetermineDamageKinds());
+            }
+            if (caster.HasTrait(Trait.Cleric))
+            {
+                // TODO: this should be Spirit, potentially with Holy or Unholy depending on the caster
+                damageKinds = damageKinds.Union(new List<DamageKind> { DamageKind.Good });
+            }
+            DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageKinds.ToArray());
+            await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, diceExpression, damageKind);
+        }
+
+        /// <summary>
+        ///  Spiritual Armament spell
+        /// </summary>
+        /// <param name="spellLevel"></param>
+        /// <returns></returns>
+        private static CombatAction CreateSpiritualArmamentSpell(SpellId spellId, int spellLevel)
+        {
+            int heightenIncrements = (spellLevel - 2) / 2;
+            string damage = (2 + heightenIncrements) + "d8";
+            return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it.",
+                "Attempt a spell attack roll against the target's AC, dealing " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well.\n\n" +
+                "Each time you Sustain the spell, you can repeat the attack against any creature within 120 feet.",
+                Target.Ranged(24), spellLevel, null)
+            .WithSoundEffect(SfxName.RejuvenatingFlames).WithProjectileCone(IllustrationName.SpiritualWeapon, 0, ProjectileKind.None).WithSpellAttackRoll()
+            .WithEffectOnSelf(async delegate (CombatAction spell, Creature caster)
+            {
+                caster.AddQEffect(new QEffect("Spiritual Armament", "You have a spiritual armament which you can use to attack. You must Sustain it each turn or it will go away.", ExpirationCondition.ExpiresAtEndOfSourcesTurn, caster, IllustrationName.SpiritualWeapon)
+                {
+                    DoNotShowUpOverhead = true,
+                    CannotExpireThisTurn = true,
+                    ProvideContextualAction = (qEffect) =>
+                    {
+                        Target newTarget = Target.Ranged(24);
+                        newTarget.SetOwnerAction(new CombatAction(caster, IllustrationName.None, "Spiritual Armament", spell.Traits.ToArray(), "---", Target.Self()).WithActionCost(1));
+                        string name = "Sustain and attack";
+                        string description = !qEffect.CannotExpireThisTurn ? "The duration of the spell continues until the end of your next turn." : "";
+                        description += "Attack a creature within 120 feet.";
+                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.SpiritualWeapon, name, new[] { Trait.Attack, Trait.Concentrate, Trait.SustainASpell, Trait.Spell }, description, newTarget)
+                        {
+                            SpellId = spellId,
+                            SpellcastingSource = spell.SpellcastingSource
+                        }.WithSpellAttackRoll()
+                        .WithEffectOnSelf((_) => { qEffect.CannotExpireThisTurn = true; })
+                        .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) { await PerformSpiritualArmamentAttack(spell, caster, target, checkResult, damage); })
+                        ).WithPossibilityGroup("Maintain an activity");
+                    },
+                    StateCheck = (qEffect) =>
+                    {
+                        if (qEffect.Owner.Actions.CanTakeActions())
+                            return;
+                        qEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                });
+            })
+            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) { await PerformSpiritualArmamentAttack(spell, caster, target, checkResult, damage); });
+        }
+
+        private static ActionPossibility EscapeAction(Creature creature, QEffect qEffect, SpellcastingSource source)
+        {
+            CombatAction combatAction = new CombatAction(creature, IllustrationName.Escape, "Escape from " + qEffect.Name, new[] { Trait.Attack, Trait.AttackDoesNotTargetAC },
+                "Acrobatics check or Athletics check aganst the Spell DC of the effect restraining you.", Target.Self((_, ai) => ai.EscapeFrom(qEffect.Source ?? creature)))
+            {
+                ActionId = ActionId.Escape
+            };
+            ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.BestRoll(Checks.SkillCheck(Skill.Athletics), Checks.SkillCheck(Skill.Acrobatics)), Checks.FlatDC(source.GetSpellSaveDC()));
+            return new ActionPossibility(combatAction.WithActiveRollSpecification(activeRollSpecification).WithSoundEffect(combatAction.Owner.HasTrait(Trait.Female) ? SfxName.TripFemale : SfxName.TripMale)
+                .WithEffectOnEachTarget((async (spell, creature, d, checkResult) =>
+                {
+                    switch (checkResult)
+                    {
+                        case CheckResult.Success:
+                            qEffect.ExpiresAt = ExpirationCondition.Immediately;
+                            break;
+                        case CheckResult.CriticalSuccess:
+                            qEffect.ExpiresAt = ExpirationCondition.Immediately;
+                            break;
+                    }
+                })));
         }
     }
 }

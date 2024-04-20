@@ -70,7 +70,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 }
                 else if (canStillMoveOnDiagonal || from.X == tile.X || from.Y == tile.Y)
                 {
-                    caster.Battle.Log("start location: " + from.X + "," + from.Y + "; next target = " + tile.X + "," + tile.Y);
                     return true;
                 }
                 else
