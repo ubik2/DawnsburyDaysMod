@@ -52,16 +52,26 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Make the legacy version of the spell inaccessable by removing the casting traditions
             ModManager.ReplaceExistingSpell(legacySpellId, minimumSpellLevel, delegate (Creature? creature, int spellLevel, bool inCombat, SpellInformation spellInformation)
             {
-                CombatAction result = createSpellInstance(legacySpellId, creature, spellLevel, inCombat, spellInformation);
-                IEnumerable<Core.Mechanics.Enumerations.Trait> filteredTraits = result.Traits.Where((trait) => trait switch {
+                CombatAction? existingSpell = minimumSpellLevel switch
+                {
+                    0 => Core.CharacterBuilder.FeatsDb.Spellbook.Cantrips.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
+                    1 => Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
+                    2 => Core.CharacterBuilder.FeatsDb.Spellbook.Level2Spells.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
+                    _ => null
+                };
+                if (existingSpell == null)
+                {
+                    throw new Exception("Invalid Spell: " + legacySpellId);
+                }
+                IEnumerable<Core.Mechanics.Enumerations.Trait> filteredTraits = existingSpell.Traits.Where((trait) => trait switch {
                     Core.Mechanics.Enumerations.Trait.Arcane => false,
                     Core.Mechanics.Enumerations.Trait.Divine => false,
                     Core.Mechanics.Enumerations.Trait.Occult => false,
                     Core.Mechanics.Enumerations.Trait.Primal => false,
                     _ => true
                 });
-                result.Traits = new Traits(filteredTraits, result);
-                return result;
+                existingSpell.Traits = new Traits(filteredTraits, existingSpell);
+                return existingSpell;
             });
 #endif
             return ModManager.RegisterNewSpell(remasterName, minimumSpellLevel, createSpellInstance);
