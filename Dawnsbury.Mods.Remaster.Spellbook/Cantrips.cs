@@ -34,7 +34,9 @@ public class Cantrips
         // The following spells are from RoE, and I consider them low priority
         // * Slashing Gust
         // * Timber
-        ModManager.RegisterNewSpell("CausticBlast", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        
+        // Caustic Blast (formerly Acid Splash)
+        RemasterSpells.ReplaceLegacySpell(SpellId.AcidSplash, "CausticBlast", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
@@ -117,7 +119,8 @@ public class Cantrips
             });
         }));
 
-        ModManager.RegisterNewSpell("Frostbite", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        // Frostbite (formerly Ray of Frost)
+        RemasterSpells.ReplaceLegacySpell(SpellId.RayOfFrost, "Frostbite", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -137,7 +140,6 @@ public class Cantrips
                 }
             });
         }));
-
 
         ModManager.RegisterNewSpell("GougingClaw", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
@@ -163,7 +165,8 @@ public class Cantrips
         }));
 
 
-        ModManager.RegisterNewSpell("Ignition", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        // Ignition (formerly Produce Flame)
+        RemasterSpells.ReplaceLegacySpell(SpellId.ProduceFlame, "Ignition", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -244,6 +247,7 @@ public class Cantrips
 
         }));
 
+        // Tangle Vine (formerly Tanglefoot)
         ModManager.RegisterNewSpell("TangleVine", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int duration = spellLevel >= 2 ? 2 : 1;
@@ -274,7 +278,8 @@ public class Cantrips
             });
         }));
         
-        ModManager.RegisterNewSpell("VitalityLash", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        // Vitality Lash (formerly Disrupt Undead)
+        RemasterSpells.ReplaceLegacySpell(SpellId.DisruptUndead, "VitalityLash", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             // Using Positive instead of Vitality here, since otherwise I'd need to update creatures
@@ -296,7 +301,8 @@ public class Cantrips
             });
         }));
 
-        ModManager.RegisterNewSpell("VoidWarp", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        // Void Warp (formerly Chill Touch)
+        RemasterSpells.ReplaceLegacySpell(SpellId.ChillTouch, "VoidWarp", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             // Using Negative instead of Void here, since otherwise I'd need to update creatures

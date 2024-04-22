@@ -3,6 +3,10 @@
       <Platforms>AnyCPU;x64</Platforms>
       <Nullable>enable</Nullable>
 	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <Import Project="../Dawnsbury.Mod.targets" />
     <Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
     </Target>

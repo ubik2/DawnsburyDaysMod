@@ -74,7 +74,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Renamed from Burning Hands. Updated traits and description.
-            ModManager.RegisterNewSpell("BreatheFire", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.BurningHands, "BreatheFire", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.BurningHands, "Breathe Fire", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "A gout of flame sprays from your mouth.",
@@ -88,7 +88,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Renamed from Color Spray. Updated traits and short description.
-            ModManager.RegisterNewSpell("DizzyingColors", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.ColorSpray, "DizzyingColors", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ColorSpray, "Dizzying Colors", new[] { Trait.Concentrate, Trait.Illusion, Trait.Incapacitation, Trait.Manipulate, Trait.Visual, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You unleash a swirling multitude of colors that overwhelms creatures based on their Will saves.",
@@ -141,7 +141,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Renamed from Magic Missile. Updated traits and short description.
-            ModManager.RegisterNewSpell("ForceBarrage", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.MagicMissile, "ForceBarrage", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 Func<CreatureTarget> func = () => Target.Ranged(24, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 3.5f, tg.OwnerAction));
                 return Spells.CreateModern(IllustrationName.MagicMissile, "Force Barrage", new[] { Trait.Concentrate, Trait.Force, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
@@ -252,7 +252,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Mystic Armor (formerly Mage Armor)
-            ModManager.RegisterNewSpell("MysticArmor", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.MageArmor, "MysticArmor", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 CombatAction mageArmor = Spells.CreateModern(IllustrationName.MageArmor, "Mystic Armor", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "You ward yourself with shimmering magical energy, gaining a +1 item bonus to AC and a maximum Dexterity modifier of +5.",
@@ -308,7 +308,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Protection
-            ModManager.RegisterNewSpell("Protection", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            ModManager.ReplaceExistingSpell(SpellId.Protection, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ForbiddingWard, "Protection", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You ward a creature against harm.",
@@ -375,7 +375,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Runic Weapon (formerly Magic Weapon)
-            ModManager.RegisterNewSpell("RunicWeapon", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.MagicWeapon, "RunicWeapon", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 static bool IsValidTargetForMagicWeapon(Item item)
                 {
@@ -489,7 +489,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Sure Strike (formerly True Strike)
-            ModManager.RegisterNewSpell("SureStrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.TrueStrike, "SureStrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.TrueStrike, "Sure Strike", new[] { Trait.Concentrate, Trait.Fortune, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "A glimpse into the future ensures your next blow strikes true.",
@@ -514,7 +514,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
             // Thunderstrike (formerly Shocking Grasp)
             // The extra effect on targets wearing metal armor or made of metal is not implemented
-            ModManager.RegisterNewSpell("Thunderstrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.ShockingGrasp, "Thunderstrike", 1, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ShockingGrasp, "Thunderstrike", new[] { Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "You call down a tendril of lightning that cracks with thunder, dealing " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 sonic damage to the target with a basic Reflex save.",

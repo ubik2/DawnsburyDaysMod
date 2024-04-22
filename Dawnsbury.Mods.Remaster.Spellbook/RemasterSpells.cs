@@ -1,5 +1,13 @@
 ﻿using Dawnsbury.Modding;
+using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
+using Dawnsbury.Core.CharacterBuilder.Spellcasting;
+using Dawnsbury.Core.CombatActions;
+using Dawnsbury.Core.Creatures;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -33,6 +41,30 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         {
             TraitProperties? properties = TraitExtensions.GetTraitProperties(trait);
             TraitExtensions.TraitProperties[trait] = new TraitProperties(newName, properties.Relevant, properties.RulesText, properties.RelevantForShortBlock);
-        }        
+        }
+        public static SpellId ReplaceLegacySpell(SpellId legacySpellId, string remasterName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
+        {
+            if (legacySpellId.ToString() == remasterName)
+            {
+                throw new ArgumentException("Unable to replace a legacy spell with another spell with the same name.");
+            }
+#if HIDE_LEGACY
+            // Make the legacy version of the spell inaccessable by removing the casting traditions
+            ModManager.ReplaceExistingSpell(legacySpellId, minimumSpellLevel, delegate (Creature? creature, int spellLevel, bool inCombat, SpellInformation spellInformation)
+            {
+                CombatAction result = createSpellInstance(legacySpellId, creature, spellLevel, inCombat, spellInformation);
+                IEnumerable<Core.Mechanics.Enumerations.Trait> filteredTraits = result.Traits.Where((trait) => trait switch {
+                    Core.Mechanics.Enumerations.Trait.Arcane => false,
+                    Core.Mechanics.Enumerations.Trait.Divine => false,
+                    Core.Mechanics.Enumerations.Trait.Occult => false,
+                    Core.Mechanics.Enumerations.Trait.Primal => false,
+                    _ => true
+                });
+                result.Traits = new Traits(filteredTraits, result);
+                return result;
+            });
+#endif
+            return ModManager.RegisterNewSpell(remasterName, minimumSpellLevel, createSpellInstance);
+        }
     }
 }

@@ -25,7 +25,6 @@ using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using System.Threading.Tasks;
 using Dawnsbury.Core.Creatures.Parts;
 using Microsoft.Xna.Framework;
-using Dawnsbury.Core.Intelligence;
 using Dawnsbury.Auxiliary;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
@@ -73,7 +72,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         public static void RegisterSpells()
         {
             // Renamed from Acid Arrow. Updated traits, description, and functionality
-            ModManager.RegisterNewSpell("AcidGrip", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.AcidArrow, "AcidGrip", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = (spellLevel - 2) / 2;
                 return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", new[] { Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
@@ -103,7 +102,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 });
             }));
 
-            // ScorchingRay => Blazing Bolts
+            // Blazing Bolts (formerly Scorching Ray)
             ModManager.RegisterNewSpell("BlazingBolt", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 Func<CreatureTarget> func = () => Target.Ranged(12, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 14f, tg.OwnerAction));
@@ -148,7 +147,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Calm (formerly Calm Emotions)
-            ModManager.RegisterNewSpell("Calm", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.CalmEmotions, "Calm", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.CalmEmotions, "Calm", new[] { Trait.Concentrate, Trait.Emotion, Trait.Incapacitation, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You forcibly calm creatures in the area, soothing them into a nonviolent state; each creature must attempt a Will save.",
@@ -318,13 +317,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Floating Flame (formerly Flaming Sphere)
-            ModManager.RegisterNewSpell("Flaming Sphere", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "Flaming Sphere", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return CreateFloatingFlameSpell(spellLevel);
             }));
 
             // Laughing Fit (formerly Hideous Laughter)
-            ModManager.RegisterNewSpell("LaughingFit", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.HideousLaughter, "LaughingFit", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.HideousLaughter, "Laughing Fit", new[] { Trait.Concentrate, Trait.Emotion, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "The target is overtaken with uncontrollable laughter.",
@@ -372,7 +371,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Mist (formerly Obscuring Mist)
-            ModManager.RegisterNewSpell("Mist", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.ObscuringMist, "Mist", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ObscuringMist, "Mist", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "You call forth a cloud of mist.",
@@ -410,7 +409,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Noise Blast (formerly Sound Burst)
-            ModManager.RegisterNewSpell("NoiseBlast", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.SoundBurst, "NoiseBlast", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.SoundBurst, "Noise Blast", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "A cacophonous noise blasts out dealing " + S.HeightenedVariable(spellLevel, 2) + "d10 sonic damage.",
@@ -434,7 +433,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Oaken Resilience (formerly Barkskin)
-            ModManager.RegisterNewSpell("OakenResilience", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.Barkskin, "OakenResilience", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.Barkskin, "Oaken Resilience", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "The target's skin becomes tough, with a consistency like bark or wood.",
@@ -505,13 +504,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Spiritual Armament(formerly Spiritual Weapon)
-            ModManager.RegisterNewSpell("SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.SpiritualWeapon, "SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return CreateSpiritualArmamentSpell(spellId, spellLevel);
             }));
 
             // Stupefy (formerly Touch of Idiocy)
-            ModManager.RegisterNewSpell("Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.TouchOfIdiocy, "Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.TouchOfIdiocy, "Stupefy", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You dull the target's mind, depending on its Will save.",
@@ -534,29 +533,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 });
             }));
-        }
-
-        // Variant of QEffect.Sustaining that lets you sustain on the first turn
-        private static QEffect SustainingHelper(CombatAction sustainedSpell, QEffect sustainedEffect, Action<QEffect>? onSustain = null)
-        {
-            return new QEffect("Sustaining " + sustainedSpell.Name, "You're sustaining an effect and it will expire if you don't sustain it every turn.", ExpirationCondition.Never, null, IllustrationName.CastASpell)
-            {
-                Id = QEffectId.Sustaining,
-                DoNotShowUpOverhead = true,
-                ProvideContextualAction = (QEffect qf) => new ActionPossibility(new CombatAction(qf.Owner, sustainedSpell.Illustration, "Sustain " + sustainedSpell.Name, new[] { Trait.Concentrate, Trait.SustainASpell, Trait.Basic },
-                "The duration of " + sustainedSpell.Name + " continues until the end of your next turn.", Target.Self((Creature self, AI ai) => ai.ShouldSustain(sustainedSpell))).WithEffectOnSelf(delegate
-                {
-                    sustainedEffect.CannotExpireThisTurn = true;
-                    onSustain?.Invoke(sustainedEffect);
-                })).WithPossibilityGroup("Maintain an activity"),
-                StateCheck = delegate (QEffect qf)
-                {
-                    if (sustainedEffect.Owner.Destroyed || !sustainedEffect.Owner.HasEffect(sustainedEffect))
-                    {
-                        qf.ExpiresAt = ExpirationCondition.Immediately;
-                    }
-                }
-            };
         }
 
         private static Creature CreateIllusoryObject(IllustrationName illustration, string name)
