@@ -317,7 +317,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }));
 
             // Floating Flame (formerly Flaming Sphere)
-            RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "Flaming Sphere", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "FloatingFlame", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return CreateFloatingFlameSpell(spellLevel);
             }));

@@ -1,0 +1,80 @@
+This mod implements many of the Remaster spells.
+Some of these are essentially just a rename of existing spells, but many have new functionality.
+
+[h2]Remaster Spells[/h2]
+[h3]Cantrips[/h3]
+[list]
+ [*]Caustic Blast (replaces Acid Splash)
+ [*]Daze
+ [*]Divine Lance
+ [*]Electric Arc
+ [*]Frostbite (replaces Ray of Frost)
+ [*]Gouging Claw
+ [*]Ignition (replaces Produce Flame)
+ [*]Telekinetic Projectile
+ [*]Tangle Vine
+ [*]Vitality Lash (replaces Disrupt Undead)
+ [*]Void Warp (replaces Chill Touch)
+[/list]
+
+[h3]Level 1[/h3]
+[list]
+ [*]Bane
+ [*]Bless
+ [*]Breathe Fire (replaces Burning Hands)
+ [*]Dizzying Colors (replaces Color Spray)
+ [*]Enfeeble
+ [*]Force Barrage (replaces Magic Missile)
+ [*]Goblin Pox
+ [*]Mystic Armor (replaces Mage Armor)
+ [*]Phantom Pain
+ [*]Protection
+ [*]Runic Body
+ [*]Runic Weapon (replaces Magic Weapon)
+ [*]Spider Sting
+ [*]Sure Strike (replaces Sure Strike)
+ [*]Thunderstrike (replaces Shocking Grasp)
+[/list]
+
+[h3]Level 2[/h3]
+[list]
+ [*]Acid Grip (replaces Acid Arrow)
+ [*]Blazing Bolt
+ [*]Calm (replaces Calm Emotions)
+ [*]False Vitality
+ [*]Entangling Flora
+ [*]Floating Flame (replaces Flaming Sphere)
+ [*]Laughing Fit (replaces Hideous Laughter)
+ [*]Mist (replaces Obscuring Mist)
+ [*]Noise Blast (replaces Sound Burst)
+ [*]Oaken Resilience (replaces Barkskin)
+ [*]Revealing Light
+ [*]See the Unseen
+ [*]Spiritual Armament (replaces Spiritual Weapon)
+ [*]Stupefy (replaces Touch of Idiocy)
+[/list]
+
+[h3]Focus[/h3]
+[list]
+ [*]Fire Ray
+ [*]Moonbeam
+ [*]Tempest Surge
+ [*]Touch of Undeath
+[/list]
+
+[h2]Known Issues[/h2]
+[list]
+ [*]Thunderstrike doesn't have any extra effect for foes in metal armor or made of metal.
+ [*]Floating Flame rolls damage for each target, instead of using a shared damage roll for each Sustain action.
+ [*]Revealing Light will have some unexpected interactions when Invisibility wears off before Revealing Light. Creatures will continue to be concealed.
+ [*]Moonbeam doesn't do Silver damage.
+ [*]Spirit damage will be effective against constructs. Spiritual Armament does Good damage instead of possibly Sanctified Spirit damage.
+[/list]
+
+[h2]Code[/h2]
+Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
+
+[h2]Replacements[/h2]
+When a replacement spell has a different name, the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3223762737]Remaster Spells[/url] mod leaves the legacy spell in the game.
+The [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3229964986]Remaster Spells - Hide Legacy[/url] mod hides the legacy versions of the spell. Because of this, existing characters will need to have their spells updated to work with that mod.
+If you want the remaster spells, and don't want the replaced versions, you should use both mods.

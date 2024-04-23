@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Platforms>AnyCPU;x64</Platforms>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RootNamespace>HideLegacySpells</RootNamespace>
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+	<Import Project="../Dawnsbury.Mod.targets" />
+	<Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
+	</Target>
+</Project>

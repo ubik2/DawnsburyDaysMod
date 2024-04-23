@@ -1,13 +1,10 @@
 ﻿using Dawnsbury.Modding;
-using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -42,38 +39,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             TraitProperties? properties = TraitExtensions.GetTraitProperties(trait);
             TraitExtensions.TraitProperties[trait] = new TraitProperties(newName, properties.Relevant, properties.RulesText, properties.RelevantForShortBlock);
         }
-        public static SpellId ReplaceLegacySpell(SpellId legacySpellId, string remasterName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
+        public static SpellId ReplaceLegacySpell(SpellId LegacySpellId, string remasterName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
         {
-            if (legacySpellId.ToString() == remasterName)
-            {
-                throw new ArgumentException("Unable to replace a legacy spell with another spell with the same name.");
-            }
-#if HIDE_LEGACY
-            // Make the legacy version of the spell inaccessable by removing the casting traditions
-            ModManager.ReplaceExistingSpell(legacySpellId, minimumSpellLevel, delegate (Creature? creature, int spellLevel, bool inCombat, SpellInformation spellInformation)
-            {
-                CombatAction? existingSpell = minimumSpellLevel switch
-                {
-                    0 => Core.CharacterBuilder.FeatsDb.Spellbook.Cantrips.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
-                    1 => Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
-                    2 => Core.CharacterBuilder.FeatsDb.Spellbook.Level2Spells.LoadModernSpell(legacySpellId, creature, spellLevel, inCombat, spellInformation),
-                    _ => null
-                };
-                if (existingSpell == null)
-                {
-                    throw new Exception("Invalid Spell: " + legacySpellId);
-                }
-                IEnumerable<Core.Mechanics.Enumerations.Trait> filteredTraits = existingSpell.Traits.Where((trait) => trait switch {
-                    Core.Mechanics.Enumerations.Trait.Arcane => false,
-                    Core.Mechanics.Enumerations.Trait.Divine => false,
-                    Core.Mechanics.Enumerations.Trait.Occult => false,
-                    Core.Mechanics.Enumerations.Trait.Primal => false,
-                    _ => true
-                });
-                existingSpell.Traits = new Traits(filteredTraits, existingSpell);
-                return existingSpell;
-            });
-#endif
             return ModManager.RegisterNewSpell(remasterName, minimumSpellLevel, createSpellInstance);
         }
     }

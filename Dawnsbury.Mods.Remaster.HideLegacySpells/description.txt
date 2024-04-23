@@ -1,0 +1,44 @@
+This mod hides the Legacy spells that have a Remaster version with a different name.
+This will likely require you to update spell selections for the starting characters (or any characters in your saved game).
+
+[h2]Hidden Spells[/h2]
+[h3]Cantrips[/h3]
+[list]
+ [*]Acid Splash (replaced by Caustic Blast)
+ [*]Ray of Frost (replaced by Frostbite)
+ [*]Produce Flame (replaced by Ignition)
+ [*]Disrupt Undead (replaced by Vitality Lash)
+ [*]Chill Touch (replaced by Void Warp)
+[/list]
+
+[h3]Level 1[/h3]
+[list]
+ [*]Burning Hands (replaced by Breathe Fire)
+ [*]Color Spray (replaced by Dizzying Colors)
+ [*]Magic Missile (replaced by Force Barrage)
+ [*]Mage Armor (replaced by Mystic Armor)
+ [*]Magic Weapon (replaced by Runic Weapon)
+ [*]True Strike (replaced by Sure Strike)
+ [*]Shocking Grasp (replaced by Thunderstrike)
+[/list]
+
+[h3]Level 2[/h3]
+[list]
+ [*]Acid Arrow (replaced by Acid Grip)
+ [*]Calm Emotions (replaced by Calm)
+ [*]Flaming Sphere (replaced by Floating Flame)
+ [*]Hideous Laughter (replaced by Laughing Fit)
+ [*]Obscuring Mist (replaced by Mist)
+ [*]Sound Burst (replaced by Noise Blast)
+ [*]Barkskin (replaced by Oaken Resilience)
+ [*]Spiritual Weapon (replaced by Spiritual Armament)
+ [*]Touch of Idiocy (replaced by Stupefy)
+[/list]
+
+[h2]Code[/h2]
+Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
+
+[h2]Replacements[/h2]
+When a replacement spell has a different name, the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3223762737]Remaster Spells[/url] mod leaves the legacy spell in the game.
+The [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3229964986]Remaster Spells - Hide Legacy[/url] mod hides the legacy versions of the spell. Because of this, existing characters will need to have their spells updated to work with that mod.
+If you want the remaster spells, and don't want the replaced versions, you should use both mods.
