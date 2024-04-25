@@ -202,7 +202,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         caster.AddQEffect(qSustainMultipleEffect);
                     }
 
-                    List<QEffect> list = (List<QEffect>)qSustainMultipleEffect.Tag;
+                    List<QEffect> list = (List<QEffect>)qSustainMultipleEffect.Tag!;
                     list.Add(qEffect);
                 });
             }));
