@@ -69,6 +69,8 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Revealing Light will have some unexpected interactions when Invisibility wears off before Revealing Light. Creatures will continue to be concealed.
  [*]Moonbeam doesn't do Silver damage.
  [*]Spirit damage will be effective against constructs. Spiritual Armament does Good damage instead of possibly Sanctified Spirit damage.
+ [*]Sorcerer Bloodlines and Deities have not been updated to reference the new spells.
+ [*]Wizard schools have not been updated, and since Remaster spells don't have the school trait, they won't qualify for these school slots.
 [/list]
 
 [h2]Code[/h2]

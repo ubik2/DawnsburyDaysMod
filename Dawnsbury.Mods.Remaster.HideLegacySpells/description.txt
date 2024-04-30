@@ -38,6 +38,11 @@ This will likely require you to update spell selections for the starting charact
 [h2]Code[/h2]
 Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
 
+[h2]Known Issues[/h2]
+[list]
+ [*]Cleric deity spells have not been changed, so if they reference a hidden spell, that will not be available to prepare.
+[/list]
+
 [h2]Replacements[/h2]
 When a replacement spell has a different name, the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3223762737]Remaster Spells[/url] mod leaves the legacy spell in the game.
 The [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3229964986]Remaster Spells - Hide Legacy[/url] mod hides the legacy versions of the spell. Because of this, existing characters will need to have their spells updated to work with that mod.
