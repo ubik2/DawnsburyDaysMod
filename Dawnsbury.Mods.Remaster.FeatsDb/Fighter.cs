@@ -1,10 +1,10 @@
-﻿using Dawnsbury.Core.CharacterBuilder.Feats;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Core.Mechanics.Core;
@@ -15,7 +15,6 @@ using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Core;
-using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 {
@@ -23,7 +22,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
     {
         public static IEnumerable<Feat> LoadAll()
         {
-            yield return new TrueFeat(ModManager.RegisterFeatName("Slam Down"), 4, "You make an attack to knock a foe off balance, then follow up immediately with a sweep to topple them.",
+            yield return new TrueFeat(RemasterFeats.FeatName.SlamDown, 4, "You make an attack to knock a foe off balance, then follow up immediately with a sweep to topple them.",
                                      "Make a melee Strike. If it hits and deals damage, you can attempt an Athletics check to Trip the creature you hit. If you’re wielding a two-handed melee weapon, you can ignore Trip's requirement that you have a hand free. Both attacks count toward your multiple attack penalty, but the penalty doesn't increase until after you've made both of them.",
                                      new[] { Trait.Fighter, Trait.Flourish })
                 .WithActionCost(2)
