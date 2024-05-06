@@ -1,10 +1,11 @@
 ﻿using Dawnsbury.Modding;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
-using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
-using System;
+using Dawnsbury.IO;
+using Dawnsbury.Core.CharacterBuilder.Spellcasting;
+using System.Reflection;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -23,15 +24,36 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             public static Core.Mechanics.Enumerations.Trait Void = Core.Mechanics.Enumerations.Trait.Negative;
         }
 
+        public static IReadOnlyDictionary<string, SpellId> NewSpells { get => newSpells; }
+        public static IReadOnlyDictionary<SpellId, SpellId> SpellReplacements { get => replacementSpells; }
+
+        private static Dictionary<string, SpellId> newSpells = new Dictionary<string, SpellId>();
+        private static Dictionary<SpellId, SpellId> replacementSpells = new Dictionary<SpellId, SpellId>();
+
+        private static bool initialized = false;
+        
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            Cantrips.RegisterSpells();
-            FocusSpells.RegisterSpells();
-            Level1Spells.RegisterSpells();
-            Level2Spells.RegisterSpells();
-            RenameTrait(Core.Mechanics.Enumerations.Trait.Positive, "Vitality");
-            RenameTrait(Core.Mechanics.Enumerations.Trait.Negative, "Void");
+            // Should be single threaded here, so we can just use a variable.
+            if (!initialized)
+            {
+                Cantrips.RegisterSpells();
+                FocusSpells.RegisterSpells();
+                Level1Spells.RegisterSpells();
+                Level2Spells.RegisterSpells();
+                RenameTrait(Core.Mechanics.Enumerations.Trait.Positive, "Vitality");
+                RenameTrait(Core.Mechanics.Enumerations.Trait.Negative, "Void");
+                initialized = true;
+                GeneralLog.Log("Loaded RemasterSpells mod");
+
+                // Our featsdb mod requires this mod to be loaded, so it will have skipped its load functionality.
+                // Now that we're loaded, we can reload that mod.
+                if (TryLoadDeferredMod("Dawnsbury.Mods.Remaster.FeatsDb"))
+                {
+                    GeneralLog.Log("Loaded deferred mod: " + "Dawnsbury.Mods.Remaster.FeatsDb");
+                }
+            }
         }
 
         static void RenameTrait(Core.Mechanics.Enumerations.Trait trait, string newName)
@@ -39,9 +61,65 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             TraitProperties? properties = TraitExtensions.GetTraitProperties(trait);
             TraitExtensions.TraitProperties[trait] = new TraitProperties(newName, properties.Relevant, properties.RulesText, properties.RelevantForShortBlock);
         }
-        public static SpellId ReplaceLegacySpell(SpellId LegacySpellId, string remasterName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
+
+        public static SpellId ReplaceLegacySpell(SpellId legacySpellId, string remasterName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
         {
-            return ModManager.RegisterNewSpell(remasterName, minimumSpellLevel, createSpellInstance);
+            SpellId spellId = ModManager.RegisterNewSpell(remasterName, minimumSpellLevel, createSpellInstance);
+            newSpells.Add(remasterName, spellId);
+            replacementSpells.Add(legacySpellId, spellId);
+            return spellId;
+        }
+
+        public static SpellId RegisterNewSpell(string technicalSpellName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
+        {
+            SpellId spellId = ModManager.RegisterNewSpell(technicalSpellName, minimumSpellLevel, createSpellInstance);
+            newSpells.Add(technicalSpellName, spellId);
+            return spellId;
+        }
+
+        /// <remarks>
+        /// <see cref="RemasterSpells.GetUpdatedSpellId(SpellId)"/> is called via reflection.
+        /// </remarks>
+        public static SpellId GetUpdatedSpellId(SpellId spellId)
+        {
+            if (replacementSpells.TryGetValue(spellId, out SpellId replacementSpellId))
+            {
+                return replacementSpellId;
+            }
+            else
+            {
+                return spellId;
+            }
+        }
+
+        // Tricky code to handle module dependencies.
+        // Specifically, the feat 
+
+        private static Assembly? GetMod(string assemblyName)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault((Assembly assembly) => assembly.GetName().Name == assemblyName);
+        }
+
+        private static bool TryLoadDeferredMod(string modName)
+        {
+            // Are they also using the specified mod? If so, we can load that now (it will have been deferred if we tried to load it first).
+            Assembly? featsMod = GetMod(modName);
+            bool foundMethod = false;
+            if (featsMod != null)
+            {
+                foreach (Type type in featsMod.GetTypes())
+                {
+                    foreach (MethodInfo method in type.GetMethods())
+                    {
+                        if (method.GetCustomAttribute<DawnsburyDaysModMainMethodAttribute>() != null)
+                        {
+                            _ = method.Invoke(null, BindingFlags.Static | BindingFlags.Public, null, null, null);
+                            foundMethod = true;
+                        }
+                    }
+                }
+            }
+            return foundMethod;
         }
     }
 }

@@ -72,7 +72,7 @@ public class Cantrips
                 Target.Ranged(12), spellLevel, SpellSavingThrow.Basic(Defense.Will))
             .WithSoundEffect(SfxName.Mental)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(1 + heightenIncrements) * 3.5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (1 + heightenIncrements) + "d6", DamageKind.Mental);
                 if (checkResult == CheckResult.CriticalFailure)
@@ -93,7 +93,7 @@ public class Cantrips
             .WithSpellAttackRoll()
             .WithSoundEffect(SfxName.DivineLance)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 2.5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 // For now, just do the better of good or untyped. We don't have core support for Spirit damage type
                 DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Good, DamageKind.Untyped });
@@ -112,7 +112,7 @@ public class Cantrips
                     .WithSimultaneousAnimation()
                     .WithOverriddenTargetLine("1 or 2 enemies", plural: true), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
             .WithSoundEffect(SfxName.ElectricArc).WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)t.OwnerAction.SpellLevel * 5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 DiceFormula diceFormula = DiceFormula.FromText((2 + heightenIncrements) + "d4", "Electric Arc");
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, diceFormula, DamageKind.Electricity);
@@ -131,7 +131,7 @@ public class Cantrips
                 Target.Ranged(12), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.RayOfFrost)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)t.OwnerAction.SpellLevel * 5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d4", DamageKind.Cold);
                 if (checkResult == CheckResult.CriticalSuccess)
@@ -141,7 +141,7 @@ public class Cantrips
             });
         }));
 
-        ModManager.RegisterNewSpell("GougingClaw", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("GougingClaw", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -153,7 +153,7 @@ public class Cantrips
             .WithSpellAttackRoll()
             .WithSoundEffect(SfxName.ZombieAttack)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 3.5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Slashing, DamageKind.Piercing });
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d6", damageKind);
@@ -177,7 +177,7 @@ public class Cantrips
                 Target.Ranged(6), spellLevel, null)
             .WithSpellAttackRoll().WithSoundEffect(SfxName.FireRay)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)t.OwnerAction.SpellLevel * 5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 string dieSize = caster.DistanceTo(target) == 1 ? "d6" : "d4";
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + dieSize, DamageKind.Fire);
@@ -229,7 +229,7 @@ public class Cantrips
                 creatureTarget, spellLevel, null)
             .WithSpellAttackRoll().WithSoundEffect(SfxName.PhaseBolt)
             .WithGoodness((Target _, Creature _, Creature _) => 7f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 if (checkResult >= CheckResult.Success)
                 {
@@ -248,7 +248,7 @@ public class Cantrips
         }));
 
         // Tangle Vine (formerly Tanglefoot)
-        ModManager.RegisterNewSpell("TangleVine", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("TangleVine", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int duration = spellLevel >= 2 ? 2 : 1;
             string durationText = spellLevel >= 2 ? "2 rounds" : "1 round";
@@ -261,7 +261,7 @@ public class Cantrips
                 Target.Ranged(6), spellLevel, null)
             .WithSpellAttackRoll().WithSoundEffect(SfxName.Trip)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)t.OwnerAction.SpellLevel * 5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 if (checkResult == CheckResult.CriticalSuccess)
                 {
@@ -291,7 +291,7 @@ public class Cantrips
                 spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.DivineLance)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 3.5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d6", DamageKind.Positive);
                 if (checkResult == CheckResult.CriticalFailure)
@@ -314,7 +314,7 @@ public class Cantrips
                 spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.DivineLance)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 2.5f)
-            .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult checkResult)
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d4", DamageKind.Negative);
                 if (checkResult == CheckResult.CriticalFailure)

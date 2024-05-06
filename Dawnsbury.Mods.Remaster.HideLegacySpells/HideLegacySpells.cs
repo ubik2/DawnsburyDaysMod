@@ -1,8 +1,7 @@
 ﻿using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.IO;
 using Dawnsbury.Modding;
-using System;
-using System.Linq;
 
 namespace Dawnsbury.Mods.Remaster.HideLegacySpells
 {
@@ -19,11 +18,13 @@ namespace Dawnsbury.Mods.Remaster.HideLegacySpells
             };
             ModManager.RegisterActionOnEachSpell((spell) =>
             {
-                if (legacySpells.Contains(spell.SpellId))
+                if (legacySpells.Contains(spell.SpellId) && !spell.Traits.Contains(Trait.SpellCannotBeChosenInCharacterBuilder))
                 {
                     spell.Traits.Add(Trait.SpellCannotBeChosenInCharacterBuilder);
                 }
             });
+
+            GeneralLog.Log("Loaded HideLegacySpells mod");
         }
     }
 }

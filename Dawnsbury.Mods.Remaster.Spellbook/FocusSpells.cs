@@ -6,8 +6,6 @@ using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core;
-using System.Collections.Generic;
-using System.Linq;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Auxiliary;
 using Dawnsbury.Core.Tiles;
@@ -44,7 +42,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The ray's initial damage increases by 2d6, and the fire damage dealt by the burning space increases by 1d6."),
                     Target.Ranged(12), spellLevel, null).WithSpellAttackRoll().WithSoundEffect(SfxName.FireRay)
                 .WithProjectileCone(IllustrationName.FireRay, 15, ProjectileKind.Ray)
-                .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
+                .WithEffectOnEachTarget(async (CombatAction action, Creature caster, Creature target, CheckResult checkResult) =>
                 {
                     await CommonSpellEffects.DealAttackRollDamage(action, caster, target, checkResult, (2 + 2 * heightenIncrements) + "d6", DamageKind.Fire);
                     if (checkResult != CheckResult.CriticalFailure)
@@ -76,7 +74,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         QEffect cleanupEffect = new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
                             Source = caster,
-                            WhenExpires = delegate
+                            WhenExpires = (_) =>
                             {
                                 foreach (TileQEffect tileEffect in listOfDependentEffects.ToList())
                                 {
@@ -98,7 +96,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "Make a spell attack roll. The beam of light deals " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 fire damage." + S.FourDegreesOfSuccess("The beam deals double damage, and the target is dazzled for 1 minute.", "The beam deals full damage, and the target is dazzled for 1 round.", null, null) +
                     S.HeightenedDamageIncrease(1, inCombat, "1d6"),
                     Target.Ranged(24), spellLevel, null).WithSpellAttackRoll().WithSoundEffect(SfxName.MagicMissile)
-                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult result)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult result) =>
                 {
                     await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, result, (2 + heightenIncrements) + "d6", DamageKind.Fire);
                     if (result >= CheckResult.Success)
@@ -126,7 +124,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "The target must attempt a Fortitude save." + S.FourDegreesOfSuccess("The target is unaffected.", "The target takes half damage.", "The target takes full damage, and vitality effects heal it only half as much as normal for 1 round.", "The target takes double damage, and vitality effects heal it only half as much as normal for 1 minute.") +
                     S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
                     Target.Melee().WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude)).WithActionCost(1).WithSoundEffect(SfxName.ChillTouch)
-                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult result)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult result) =>
                 {
                     await CommonSpellEffects.DealBasicDamage(spell, caster, target, result, spell.SpellLevel + "d6", DamageKind.Negative);
                     if (result <= CheckResult.Failure)
@@ -151,7 +149,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "The storm deals " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage to the target with a basic Reflex save. On a failure, the target is also clumsy 2 for 1 round." +
                     S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The initial damage increases by 1d12."),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Basic(Defense.Reflex)).WithSoundEffect(SfxName.ElectricBlast)
-                .WithEffectOnEachTarget(async delegate (CombatAction spell, Creature caster, Creature target, CheckResult result)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult result) =>
                 {
                     await CommonSpellEffects.DealBasicDamage(spell, caster, target, result, spellLevel + "d12", DamageKind.Electricity);
                     if (result <= CheckResult.Failure)

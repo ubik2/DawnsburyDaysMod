@@ -1,0 +1,36 @@
+This mod provides feats for the Remaster as well as implementing some feats that were not initially added.
+This doesn't remove any feats, but if you were using a legacy version, you should change your selection to the new version.
+
+[h2]Remaster Feats[/h2]
+[h3]Cleric[/h3]
+[list]
+ [*]Divine Castigation (formerly Holy Castigation)
+ [*]Panic the Dead (formerly Turn Undead)
+ [*]Warpriest's Armor
+ [*]Channel Smite
+ [*]Raise Symbol
+[/list]
+
+[h4]Internal[/h4]
+[list]
+ [*]Healing Font (updated to grant 4 font slots)
+ [*]Harmful Font (updated to grant 4 font slots)
+ [*]Cleric Deities updated to use the Remaster spells
+[/list]
+
+[h3]Fighter[/h3]
+[list]
+ [*]Slam Down
+[/list]
+
+[h2]Code[/h2]
+Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
+
+[h2]Known Issues[/h2]
+[list]
+ [*]Sanctified status is determined by Cleric alignment, but the damage is not Spirit damage.
+ [*]Holy Castigation is not hidden despite being replaced by Divine Castigation
+ [*]Turn Undead is not hidden despite being replaced by Panic the Dead
+ [*]Power Attack is not hidden despite being replaced by Vicious Swing
+[/list]
+

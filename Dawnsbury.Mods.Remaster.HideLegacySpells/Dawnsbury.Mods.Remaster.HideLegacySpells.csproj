@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<Platforms>AnyCPU;x64</Platforms>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
-	<PropertyGroup>
-		<RootNamespace>HideLegacySpells</RootNamespace>
 		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<Import Project="../Dawnsbury.Mod.targets" />
 	<Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
 	</Target>
+	<ItemGroup>
+	  <ProjectReference Include="..\Dawnsbury.Mods.Remaster.Spellbook\Dawnsbury.Mods.Remaster.Spellbook.csproj" />
+	</ItemGroup>
 </Project>

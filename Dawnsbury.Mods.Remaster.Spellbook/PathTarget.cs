@@ -1,8 +1,5 @@
 ﻿using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {

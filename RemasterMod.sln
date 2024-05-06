@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34701.34
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Remaster.Spellbook", "Dawnsbury.Mods.Remaster.Spellbook\Dawnsbury.Mods.Remaster.Spellbook.csproj", "{D45122AC-E540-4B89-A7F8-F66393171D82}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Remaster.FeatsDb", "Dawnsbury.Mods.Remaster.FeatsDb\Dawnsbury.Mods.Remaster.FeatsDb.csproj", "{8B8AA41D-399F-4947-A636-18688D9AA4A1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Remaster.HideLegacySpells", "Dawnsbury.Mods.Remaster.HideLegacySpells\Dawnsbury.Mods.Remaster.HideLegacySpells.csproj", "{035F2130-4FF1-4328-B13F-85E9E99ED4B9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Debug|x64.Build.0 = Debug|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Release|x64.ActiveCfg = Release|Any CPU
+		{D45122AC-E540-4B89-A7F8-F66393171D82}.Release|x64.Build.0 = Release|Any CPU
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Debug|x64.ActiveCfg = Debug|x64
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Debug|x64.Build.0 = Debug|x64
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Release|x64.ActiveCfg = Release|x64
+		{8B8AA41D-399F-4947-A636-18688D9AA4A1}.Release|x64.Build.0 = Release|x64
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Debug|x64.ActiveCfg = Debug|x64
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Debug|x64.Build.0 = Debug|x64
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|x64.ActiveCfg = Release|x64
+		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {45B47276-F482-4D6C-B7A4-AEB84673FB83}
+	EndGlobalSection
+EndGlobal

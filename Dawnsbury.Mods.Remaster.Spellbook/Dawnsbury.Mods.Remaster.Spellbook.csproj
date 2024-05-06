@@ -1,14 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Platforms>AnyCPU;x64</Platforms>
-        <Nullable>enable</Nullable>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<Import Project="../Dawnsbury.Mod.targets" />
-    <Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
-    </Target>
-    <ItemGroup>
-        <Reference Include="Humanizer">
-            <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\Humanizer.dll</HintPath>
-        </Reference>
-    </ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Humanizer">
+	    <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\Humanizer.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 </Project>

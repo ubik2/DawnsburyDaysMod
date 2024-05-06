@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Dawnsbury.Core;
+﻿using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CombatActions;
@@ -11,26 +9,23 @@ using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
-using FeatName = Dawnsbury.Core.CharacterBuilder.Feats.FeatName;
-using Trait = Dawnsbury.Core.Mechanics.Enumerations.Trait;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 {
+
     public static class Cleric
     {
         // The following feats are excluded because they aren't useful enough in gameplay
-        // * Premonition of Avoidance
-        // * Sacred Ground
+        // * Premonition of Avoidance - no hazards in the game
+        // * Sacred Ground - players heal entirely out of combat
 
-        // Divine Castigation (formerly Holy Castigation)
-        // Panic the Dead (formerly Turn Undead)
-        // Warpriest's Armor
-        // Channel Smite
-        // Raise Symbol
+        // The following should be addressed
+        // * Communal Healing - this can choose a secondary heal target now
+        // * Versatile Font - I think this should be doable
 
-        // Not implemented because of difficulty
+        // Not implemented because of difficulty, but I may reconsider
         // * Emblazon Armament - would need to choose weapon or shield
-        // * Divine Infusion - I didn't do infuse vitality either, but these are very similar
+        // * Divine Infusion - I didn't do the infuse vitality spell either, but these are very similar
         // * Directed Channel - need to interact with the existing variant system, but this is a second 3 action variant
         // * Restorative Strike
         public static IEnumerable<Feat> LoadAll()
@@ -44,7 +39,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             yield return new TrueFeat(RemasterFeats.FeatName.DivineCastigation, 1, "Your deity's grace doesn't extend to your sworn enemies.",
                 "When you cast a {i}harm{/i} or {i}heal{/i} spell, you can add your holy or unholy trait to it. If you do, the spell deals damage to creatures with the opposing trait, even if it wouldn’t normally damage them. The spell deals spirit damage when used this way. For example, if you are holy, you could add the holy trait to a {i}heal{/i} spell and deal spirit damage to a fiend that has the unholy trait.",
                 new[] { Trait.Cleric })
-                .WithPrerequisite((CalculatedCharacterSheetValues values) => values.NineCornerAlignment.GetTraits().Intersect(new[] { Trait.Good, Trait.Evil }).Count() > 0, "You must have a Good or Evil alignment.")
+                .WithPrerequisite((CalculatedCharacterSheetValues values) => values.NineCornerAlignment.GetTraits().Intersect(new[] { Trait.Good, Trait.Evil }).Any(), "You must have a Good or Evil alignment.")
                 .WithPermanentQEffect("Your {i}heal{/i} spells damage fiends.", (QEffect qf) =>
                 {
                     qf.Id = QEffectId.HolyCastigation;
@@ -78,9 +73,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                     qfChannelSmite.ProvideStrikeModifierAsPossibility = (Item weapon) =>
                     {
                         if (!weapon.HasTrait(Trait.Melee))
-                            return (Possibility)null;
+                            return null;
                         Creature self = qfChannelSmite.Owner;
-                        return (Possibility)ClericClassFeatures.CreateSmiteSpellcastingMenu(self, weapon, "Channel Smite");
+                        return ClericClassFeatures.CreateSmiteSpellcastingMenu(self, weapon, "Channel Smite");
 
                     };
                     creature.AddQEffect(qfChannelSmite);
@@ -111,7 +106,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                 {
                                     Illustration = IllustrationName.Shield,
                                     CountsAsABuff = true,
-                                    BonusToDefenses = (QEffect qEffect, CombatAction action, Defense defense) =>
+                                    BonusToDefenses = (QEffect qEffect, CombatAction? action, Defense defense) =>
                                     {
                                         switch (defense) {
                                             case Defense.Fortitude:
@@ -124,7 +119,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                     },
                                     AdjustSavingThrowResult = (QEffect qEffect, CombatAction action, CheckResult checkResult) =>
                                     {
-                                        if (checkResult == CheckResult.Success && (action.HasTrait(RemasterFeats.Trait.Vitality) || action.HasTrait(RemasterFeats.Trait.Void)))
+                                        // We use the old names here so we don't need to bring in symbols from the RemasterSpells mod.
+                                        if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Positive) || action.HasTrait(Trait.Negative)))
                                         {
                                             return CheckResult.CriticalSuccess;
                                         }
@@ -141,85 +137,15 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             {
                 yield return fontFeat;
             }
+
+            // Deity selection
+            foreach (Feat deitySelectionFeat in ClericClassFeatures.LoadDeitySelectionFeats())
+            {
+                yield return deitySelectionFeat;
+            }
+
+            // Update the class selection feat to reflect our updated deity list
+            ClericClassFeatures.PatchClassDeities();
         }
-
     }
-
-    //CombatAction? CreateSpellstrike(CombatAction spell)
-    //{
-    //    if (spell.Variants != null)
-    //        return (CombatAction)null;
-    //    if (spell.SubspellVariants != null)
-    //        return (CombatAction)null;
-    //    if (spell.ActionCost != 1 && spell.ActionCost != 2)
-    //        return (CombatAction)null;
-    //    if (!spell.HasTrait(Trait.Attack))
-    //        return (CombatAction)null;
-    //    CombatAction strike = qfSpellstrike.Owner.CreateStrike(weapon);
-    //    strike.Name = spell.Name;
-    //    strike.Illustration = (Illustration)new SideBySideIllustration(strike.Illustration, spell.Illustration);
-    //    strike.Traits.AddRange(spell.Traits.Except<Trait>((IEnumerable<Trait>)new Trait[4]
-    //    {
-    //        Trait.Ranged,
-    //        Trait.Prepared,
-    //        Trait.Spontaneous,
-    //        Trait.Spell
-    //    }));
-    //    strike.Traits.Add(Trait.Spellstrike);
-    //    strike.Traits.Add(Trait.Basic);
-    //    strike.ActionCost = 2;
-    //    ((CreatureTarget)strike.Target).WithAdditionalConditionOnTargetCreature((Func<Creature, Creature, Usability>)((a, d) => a.HasEffect(QEffectId.SpellstrikeDischarged) ? Usability.NotUsable("You must first recharge your Spellstrike by spending an action or casting a focus spell.") : Usability.Usable));
-    //    strike.StrikeModifiers.OnEachTarget = (Func<Creature, Creature, CheckResult, Task>)(async (a, d, result) =>
-    //    {
-    //        Steam.CollectAchievement("MAGUS");
-    //        a.Spellcasting.UseUpSpellcastingResources(spell);
-    //        if (result >= CheckResult.Success)
-    //        {
-    //            if (spell.EffectOnOneTarget != null)
-    //                await spell.EffectOnOneTarget(spell, a, d, result);
-    //            if (spell.EffectOnChosenTargets != null)
-    //                await spell.EffectOnChosenTargets(spell, a, new ChosenTargets()
-    //                {
-    //                    ChosenCreature = d,
-    //                    ChosenCreatures = {
-    //                        d
-    //                    }
-    //                });
-    //        }
-    //        a.AddQEffect(new QEffect()
-    //        {
-    //            Id = QEffectId.SpellstrikeDischarged,
-    //            AfterYouTakeAction = (Func<QEffect, CombatAction, Task>)((qfDischarge, action) =>
-    //            {
-    //                if (!action.HasTrait(Trait.Focus))
-    //                    return;
-    //                qfDischarge.ExpiresAt = ExpirationCondition.Immediately;
-    //            }),
-    //            ProvideMainAction = (Func<QEffect, Possibility>)(qfDischarge => (Possibility)(ActionPossibility)new CombatAction(qfDischarge.Owner, (Illustration)IllustrationName.Good, "Recharge Spellstrike", new Trait[2]
-    //            {
-    //                Trait.Concentrate,
-    //                Trait.Basic
-    //            }, "Recharge your Spellstrike so that you can use it again." + (qfDischarge.Owner.HasEffect(QEffectId.MagussConcentration) ? " {Blue}You gain a +1 circumstance bonus to your next attack until the end of your next turn.{/Blue}" : ""), (Target)Target.Self()).WithActionCost(1).WithSoundEffect(SfxName.AuraExpansion).WithEffectOnSelf((Func<Creature, Task>)(self2 =>
-    //            {
-    //                qfDischarge.ExpiresAt = ExpirationCondition.Immediately;
-    //                if (!self2.HasEffect(QEffectId.MagussConcentration))
-    //                    return;
-    //                self2.AddQEffect(new QEffect("Magus's Concentration", "You have +1 to your next attack roll.", ExpirationCondition.ExpiresAtEndOfSourcesTurn, self2, (Illustration)IllustrationName.Good)
-    //                {
-    //                    CannotExpireThisTurn = true,
-    //                    BonusToAttackRolls = (Func<QEffect, CombatAction, Creature, Bonus>)((qf, ca, df) => !ca.HasTrait(Trait.Attack) ? (Bonus)null : new Bonus(1, BonusType.Circumstance, "Magus's Concentration")),
-    //                    AfterYouTakeAction = (Func<QEffect, CombatAction, Task>)((qf, ca) =>
-    //                    {
-    //                        if (!ca.HasTrait(Trait.Attack))
-    //                            return;
-    //                        qf.ExpiresAt = ExpirationCondition.Immediately;
-    //                    })
-    //                });
-    //            })))
-    //        });
-    //    });
-    //    strike.Description = StrikeRules.CreateBasicStrikeDescription(strike.StrikeModifiers, additionalSuccessText: "The success effect of " + spell.Name + " is inflicted upon the target.", additionalCriticalSuccessText: "Critical spell effect.", additionalAftertext: "You can't use Spellstrike again until you recharge it by spending an action or casting a focus spell.");
-    //    return strike;
-    //}
-
 }
