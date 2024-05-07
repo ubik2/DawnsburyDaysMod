@@ -16,7 +16,8 @@ This doesn't remove any feats, but if you were using a legacy version, you shoul
  [*]Healing Font (updated to grant 4 font slots)
  [*]Harmful Font (updated to grant 4 font slots)
  [*]Cleric Deities updated to use the Remaster spells
- [*]Sorcerer bloodlines updated to use the Remaster spells
+ [*]Sorcerer Bloodlines updated to use the Remaster spells
+ [*]Wizard Curricula updated to the new version
 [/list]
 
 [h3]Fighter[/h3]
