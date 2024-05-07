@@ -16,10 +16,12 @@ This doesn't remove any feats, but if you were using a legacy version, you shoul
  [*]Healing Font (updated to grant 4 font slots)
  [*]Harmful Font (updated to grant 4 font slots)
  [*]Cleric Deities updated to use the Remaster spells
+ [*]Sorcerer bloodlines updated to use the Remaster spells
 [/list]
 
 [h3]Fighter[/h3]
 [list]
+ [*]Vicious Swing (formerly Power Attack)
  [*]Slam Down
 [/list]
 
@@ -32,5 +34,8 @@ Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url]
  [*]Holy Castigation is not hidden despite being replaced by Divine Castigation
  [*]Turn Undead is not hidden despite being replaced by Panic the Dead
  [*]Power Attack is not hidden despite being replaced by Vicious Swing
+ [*]Thief still can't add dex modifier to unarmed attacks
+ [*]Ruffian weapon restrictions for sneak attack are not updated
+ [*]Wizard curriculum for Battle Magic and Civic Wizardry have alternative cantrip selection
 [/list]
 

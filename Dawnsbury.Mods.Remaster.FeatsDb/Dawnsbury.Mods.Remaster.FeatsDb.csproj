@@ -7,4 +7,9 @@
 	<Import Project="../Dawnsbury.Mod.targets" />
     <Target Name="CopyIconToGameModsFolder" AfterTargets="Build">
     </Target>
+    <ItemGroup>
+      <Reference Include="Humanizer">
+        <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\Humanizer.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 </Project>

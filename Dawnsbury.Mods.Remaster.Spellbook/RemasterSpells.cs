@@ -6,6 +6,7 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.IO;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -14,21 +15,18 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
     {
         public class Trait
         {
-            public static Core.Mechanics.Enumerations.Trait Remaster = ModManager.RegisterTrait("Remaster");
-            public static Core.Mechanics.Enumerations.Trait Sanctified = ModManager.RegisterTrait("Sanctified");
-            public static Core.Mechanics.Enumerations.Trait Spirit = ModManager.RegisterTrait("Spirit");
-            public static Core.Mechanics.Enumerations.Trait Disease = ModManager.RegisterTrait("Disease");
-            public static Core.Mechanics.Enumerations.Trait Revelation = ModManager.RegisterTrait("Revelation");
+            public static readonly Core.Mechanics.Enumerations.Trait Remaster = ModManager.RegisterTrait("Remaster");
+            public static readonly Core.Mechanics.Enumerations.Trait Sanctified = ModManager.RegisterTrait("Sanctified");
+            public static readonly Core.Mechanics.Enumerations.Trait Spirit = ModManager.RegisterTrait("Spirit");
+            public static readonly Core.Mechanics.Enumerations.Trait Disease = ModManager.RegisterTrait("Disease");
+            public static readonly Core.Mechanics.Enumerations.Trait Revelation = ModManager.RegisterTrait("Revelation");
             // These are aliases. We'll rename them below.
-            public static Core.Mechanics.Enumerations.Trait Vitality = Core.Mechanics.Enumerations.Trait.Positive;
-            public static Core.Mechanics.Enumerations.Trait Void = Core.Mechanics.Enumerations.Trait.Negative;
+            public static readonly Core.Mechanics.Enumerations.Trait Vitality = Core.Mechanics.Enumerations.Trait.Positive;
+            public static readonly Core.Mechanics.Enumerations.Trait Void = Core.Mechanics.Enumerations.Trait.Negative;
         }
 
-        public static IReadOnlyDictionary<string, SpellId> NewSpells { get => newSpells; }
-        public static IReadOnlyDictionary<SpellId, SpellId> SpellReplacements { get => replacementSpells; }
-
-        private static Dictionary<string, SpellId> newSpells = new Dictionary<string, SpellId>();
-        private static Dictionary<SpellId, SpellId> replacementSpells = new Dictionary<SpellId, SpellId>();
+        private static readonly Dictionary<string, SpellId> newSpells = new Dictionary<string, SpellId>();
+        private static readonly Dictionary<SpellId, SpellId> replacementSpells = new Dictionary<SpellId, SpellId>();
 
         private static bool initialized = false;
         
@@ -92,6 +90,21 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             }
         }
 
+        /// <remarks>
+        /// <see cref="RemasterSpells.GetSpellIdByName(string)"/> is called via reflection.
+        /// </remarks>
+        public static SpellId GetSpellIdByName(string spellName)
+        {
+            if (newSpells.TryGetValue(spellName, out SpellId spellId))
+            {
+                return spellId;
+            }
+            else
+            {
+                throw new InvalidOperationException("The spell name was not found");
+            }
+        }
+
         // Tricky code to handle module dependencies.
         // Specifically, the feat 
 
@@ -120,6 +133,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 }
             }
             return foundMethod;
+        }
+
+        internal static string StripInitialWhitespace(string str)
+        {
+            return Regex.Replace(str, "^\\w*", "");
         }
     }
 }

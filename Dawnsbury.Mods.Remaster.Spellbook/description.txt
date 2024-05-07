@@ -60,6 +60,11 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Moonbeam
  [*]Tempest Surge
  [*]Touch of Undeath
+ [*]Protective Wards (replaces Protective Ward)
+ [*]Earthworks
+ [*]Charming Push (replaces Charming Words)
+ [*]Scramble Body
+ [*]Fortify Summoning (replaces Augment Summoning)
 [/list]
 
 [h2]Known Issues[/h2]
@@ -69,8 +74,9 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Revealing Light will have some unexpected interactions when Invisibility wears off before Revealing Light. Creatures will continue to be concealed.
  [*]Moonbeam doesn't do Silver damage.
  [*]Spirit damage will be effective against constructs. Spiritual Armament does Good damage instead of possibly Sanctified Spirit damage.
- [*]Sorcerer Bloodlines and Deities have not been updated to reference the new spells.
- [*]Wizard schools have not been updated, and since Remaster spells don't have the school trait, they won't qualify for these school slots.
+ [*]Sorcerer Bloodlines and Deities are updated in the RemasterFeats mod, but if that isn't installed, the old ones have not been updated to reference the new spells.
+ [*]Wizard schools are updated in the RemasterFeats mod, but if that isn't installed, since Remaster spells don't have the school trait, they won't qualify for the old school slots.
+ [*]Earthworks doesn't let you interact from an adjacent square to remove the effect.
 [/list]
 
 [h2]Code[/h2]

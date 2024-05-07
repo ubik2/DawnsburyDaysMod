@@ -1,5 +1,4 @@
-﻿using Dawnsbury.Core.CharacterBuilder;
-using Dawnsbury.Core.CharacterBuilder.Feats;
+﻿using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
@@ -62,7 +61,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             };
             if (newFeat.FeatName == FeatName.DraconicBloodline)
             {
-                newFeat.OnSheet += ((sheet) => sheet.AddSelectionOption(new SingleFeatSelectionOption("DraconicAncestorType", "Ancestor dragon type", 1, ((feat) => feat.HasTrait(Trait.AncestorDragonTypeFeat)))));
+                newFeat.OnSheet += (sheet) => sheet.AddSelectionOption(new SingleFeatSelectionOption("DraconicAncestorType", "Ancestor dragon type", 1, (feat) => feat.HasTrait(Trait.AncestorDragonTypeFeat)));
             }
             return newFeat;
         }

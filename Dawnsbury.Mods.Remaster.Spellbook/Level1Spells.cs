@@ -116,8 +116,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.Enfeebled, "Enfeeble", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You sap the target's strength, depending on its Fortitude save.",
-                    S.FourDegreesOfSuccess("The target is unaffected.", "The target is enfeebled 1 until the start of your next turn.",
-                                           "The target is enfeebled 2 for 1 minute.", "The target is enfeebled 3 for 1 minute."),
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target is enfeebled 1 until the start of your next turn.",
+                                           "The target is enfeebled 2 for 1 minute.", "The target is enfeebled 3 for 1 minute.")),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Necromancy)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
@@ -280,10 +280,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.MageArmor, "Phantom Pain", new[] { Trait.Concentrate, Trait.Illusion, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "Illusory pain wracks the target, dealing " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 mental damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent mental damage with a Will save.",
-                    S.FourDegreesOfSuccess("The target is unaffected.",
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.",
                                            "The target takes full initial damage but no persistent damage, and the spell ends immediately.",
                                            "The target takes full initial and persistent damage, and the target is sickened 1. If the target recovers from being sickened, the persistent damage ends and the spell ends.",
-                                           "As failure, but the target is sickened 2."),
+                                           "As failure, but the target is sickened 2.")),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will))
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
@@ -405,11 +405,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             item = target.HeldItems.First(IsValidTargetForMagicWeapon);
                             break;
                         default:
-                            item = ((await target.Battle.AskForConfirmation(caster, IllustrationName.MagicWeapon, "Which weapon would you like to enchant?", target.HeldItems[0].Name, target.HeldItems[1].Name)) ? target.HeldItems[0] : target.HeldItems[1]);
+                            item = (await target.Battle.AskForConfirmation(caster, IllustrationName.MagicWeapon, "Which weapon would you like to enchant?", target.HeldItems[0].Name, target.HeldItems[1].Name)) ? target.HeldItems[0] : target.HeldItems[1];
                             break;
                     }
 
-                    item.Name = "+1 striking " + EnumHumanizeExtensions.Humanize((Enum)item.BaseItemName);
+                    item.Name = "+1 striking " + EnumHumanizeExtensions.Humanize(item.BaseItemName);
                     if (item.WeaponProperties != null)
                     {
                         item.WeaponProperties.DamageDieCount = 2;
@@ -629,19 +629,20 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         if (qfBless?.Tag != null)
                         {
                             (int, bool) tag = ((int, bool))qfBless.Tag;
-                            return (!tag.Item2) ? new ActionPossibility(new CombatAction(qfBless.Owner, illustration, isBless ? "Increase Bless radius" : "Increase Bane radius", new Trait[1] { Trait.Concentrate }, "Increase the radius of the " + (isBless ? "bless" : "bane") + " emanation by 5 feet.", Target.Self()).WithEffectOnSelf((_) =>
-                            {
-                                int newEmanationSize = tag.Item1 + 2;
-                                qfBless.Tag = (newEmanationSize, true);
-                                auraAnimation.MoveTo(newEmanationSize);
-                                if (!isBless)
+                            return (!tag.Item2) ? new ActionPossibility(new CombatAction(qfBless.Owner, illustration, isBless ? "Increase Bless radius" : "Increase Bane radius", new Trait[1] { Trait.Concentrate }, "Increase the radius of the " + (isBless ? "bless" : "bane") + " emanation by 5 feet.", Target.Self())
+                                .WithEffectOnSelf((_) =>
                                 {
-                                    foreach (Creature item in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= newEmanationSize && cr.EnemyOf(qfBless.Owner)))
+                                    int newEmanationSize = tag.Item1 + 2;
+                                    qfBless.Tag = (newEmanationSize, true);
+                                    auraAnimation.MoveTo(newEmanationSize);
+                                    if (!isBless)
                                     {
-                                        item.RemoveAllQEffects((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBless);
+                                        foreach (Creature item in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= newEmanationSize && cr.EnemyOf(qfBless.Owner)))
+                                        {
+                                            item.RemoveAllQEffects((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBless);
+                                        }
                                     }
-                                }
-                            })).WithPossibilityGroup("Maintain an activity") : null;
+                                })).WithPossibilityGroup("Maintain an activity") : null;
                         }
                         else
                         {

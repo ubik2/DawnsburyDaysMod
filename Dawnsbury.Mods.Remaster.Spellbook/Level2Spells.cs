@@ -67,7 +67,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         public static void RegisterSpells()
         {
             // Renamed from Acid Arrow. Updated traits, description, and functionality
-            RemasterSpells.ReplaceLegacySpell(SpellId.AcidArrow, "AcidGrip", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.AcidArrow, "AcidGrip", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = (spellLevel - 2) / 2;
                 return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", new[] { Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
@@ -95,10 +95,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         await CommonSpellEffects.Slide(caster, target, moveDistance);
                     }
                 });
-            }));
+            });
 
             // Blazing Bolts (formerly Scorching Ray)
-            RemasterSpells.RegisterNewSpell("BlazingBolt", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("BlazingBolt", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 Func<CreatureTarget> func = () => Target.Ranged(12, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 14f, tg.OwnerAction));
                 return Spells.CreateModern(IllustrationName.BurningHands, "Blazing Bolt", new[] { Trait.Attack, Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
@@ -139,16 +139,16 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     };
                     return "Send the " + ordinal + " ray at " + creature?.ToString() + ". (" + (index + 1) + "/" + power.SpentActions + ")";
                 });
-            }));
+            });
 
             // Calm (formerly Calm Emotions)
-            RemasterSpells.ReplaceLegacySpell(SpellId.CalmEmotions, "Calm", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.CalmEmotions, "Calm", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.CalmEmotions, "Calm", new[] { Trait.Concentrate, Trait.Emotion, Trait.Incapacitation, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You forcibly calm creatures in the area, soothing them into a nonviolent state; each creature must attempt a Will save.",
-                    S.FourDegreesOfSuccess("The creature is unaffected.", "Calming urges impose a –1 status penalty to the creature's attack rolls.",
-                        "Any emotion effects that would affect the creature are suppressed and the creature can't use hostile actions. If the target is subject to hostility from any other creature, it ceases to be affected by {i}calm{/i}.", "As failure, but hostility doesn't end the effect."),
-                        Target.Burst(24, 2), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.PureEnergyRelease)
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The creature is unaffected.", "Calming urges impose a –1 status penalty to the creature's attack rolls.",
+                    "Any emotion effects that would affect the creature are suppressed and the creature can't use hostile actions. If the target is subject to hostility from any other creature, it ceases to be affected by {i}calm{/i}.", "As failure, but hostility doesn't end the effect.")),
+                    Target.Burst(24, 2), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.PureEnergyRelease)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult result) =>
                 {
                     QEffect qEffect;
@@ -200,10 +200,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     List<QEffect> list = (List<QEffect>)qSustainMultipleEffect.Tag!;
                     list.Add(qEffect);
                 });
-            }));
+            });
 
             // Entangling Flora (formerly Entangle)
-            RemasterSpells.RegisterNewSpell("EntanglingFlora", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("EntanglingFlora", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.FlourishingFlora, "Entangling Flora", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "Plants and fungi burst out or quickly grow, entangling creatures.",
@@ -277,10 +277,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         }))
                     });
                 });
-            }));
+            });
 
             // False Vitality (handle like Mystic Armor)
-            RemasterSpells.RegisterNewSpell("FalseVitality", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("FalseVitality", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 CombatAction falseVitality = Spells.CreateModern(IllustrationName.Soothe, "False Vitality", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You augment your flesh with the energies typically used to manipulate the undead.",
@@ -307,16 +307,16 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     });
                 };
                 return falseVitality;
-            }));
+            });
 
             // Floating Flame (formerly Flaming Sphere)
-            RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "FloatingFlame", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "FloatingFlame", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return CreateFloatingFlameSpell(spellLevel);
-            }));
+            });
 
             // Laughing Fit (formerly Hideous Laughter)
-            RemasterSpells.ReplaceLegacySpell(SpellId.HideousLaughter, "LaughingFit", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.HideousLaughter, "LaughingFit", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.HideousLaughter, "Laughing Fit", new[] { Trait.Concentrate, Trait.Emotion, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "The target is overtaken with uncontrollable laughter.",
@@ -361,10 +361,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         caster.AddQEffect(QEffect.Sustaining(spell, qEffect));
                     }
                 });
-            }));
+            });
 
             // Mist (formerly Obscuring Mist)
-            RemasterSpells.ReplaceLegacySpell(SpellId.ObscuringMist, "Mist", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.ObscuringMist, "Mist", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ObscuringMist, "Mist", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "You call forth a cloud of mist.",
@@ -397,10 +397,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         }))
                     });
                 });
-            }));
+            });
 
             // Noise Blast (formerly Sound Burst)
-            RemasterSpells.ReplaceLegacySpell(SpellId.SoundBurst, "NoiseBlast", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.SoundBurst, "NoiseBlast", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.SoundBurst, "Noise Blast", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "A cacophonous noise blasts out dealing " + S.HeightenedVariable(spellLevel, 2) + "d10 sonic damage.",
@@ -421,10 +421,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         target.AddQEffect(QEffect.Stunned(1));
                     }
                 });
-            }));
+            });
 
             // Oaken Resilience (formerly Barkskin)
-            RemasterSpells.ReplaceLegacySpell(SpellId.Barkskin, "OakenResilience", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.Barkskin, "OakenResilience", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.Barkskin, "Oaken Resilience", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "The target's skin becomes tough, with a consistency like bark or wood.",
@@ -436,10 +436,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     updatedEffect.Name = "Oaken Resilience";
                     target.AddQEffect(updatedEffect);
                 });
-            }));
+            });
 
             // Revealing Light (formerly Faerie Fire)
-            RemasterSpells.RegisterNewSpell("RevealingLight", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("RevealingLight", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.AncientDust, "Revealing Light", new[] { Trait.Concentrate, Trait.Light, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "A wave of magical light washes over the area.",
@@ -474,10 +474,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         }
                     }
                 });
-            }));
+            });
 
             // See the Unseen (formerly See Invisible)
-            RemasterSpells.RegisterNewSpell("SeeTheUnseen", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("SeeTheUnseen", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.Seek, "See the Unseen", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Revelation, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "Your gaze pierces through illusions and finds invisible creatures and spirits.",
@@ -492,20 +492,20 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         CountsAsABuff = true
                     }.WithExpirationNever());
                 });
-            }));
+            });
 
             // Spiritual Armament(formerly Spiritual Weapon)
-            RemasterSpells.ReplaceLegacySpell(SpellId.SpiritualWeapon, "SpiritualArmament", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.SpiritualWeapon, "SpiritualArmament", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return CreateSpiritualArmamentSpell(spellId, spellLevel);
-            }));
+            });
 
             // Stupefy (formerly Touch of Idiocy)
-            RemasterSpells.ReplaceLegacySpell(SpellId.TouchOfIdiocy, "Stupefy", 2, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.ReplaceLegacySpell(SpellId.TouchOfIdiocy, "Stupefy", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.TouchOfIdiocy, "Stupefy", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
                     "You dull the target's mind, depending on its Will save.",
-                    S.FourDegreesOfSuccess("The target is unaffected.", "The target is stupefied 1 until the start of your next turn.", "The target is stupefied 2 for 1 minute.", "The target is stupefied 3 for 1 minute."),
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target is stupefied 1 until the start of your next turn.", "The target is stupefied 2 for 1 minute.", "The target is stupefied 3 for 1 minute.")),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.Mental)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
@@ -523,7 +523,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             break;
                     }
                 });
-            }));
+            });
         }
 
         private static Creature CreateIllusoryObject(IllustrationName illustration, string name)
@@ -717,7 +717,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             };
             ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.BestRoll(Checks.SkillCheck(Skill.Athletics), Checks.SkillCheck(Skill.Acrobatics)), Checks.FlatDC(source.GetSpellSaveDC()));
             return new ActionPossibility(combatAction.WithActiveRollSpecification(activeRollSpecification).WithSoundEffect(combatAction.Owner.HasTrait(Trait.Female) ? SfxName.TripFemale : SfxName.TripMale)
-                .WithEffectOnEachTarget((async (spell, creature, d, checkResult) =>
+                .WithEffectOnEachTarget(async (spell, creature, d, checkResult) =>
                 {
                     switch (checkResult)
                     {
@@ -728,7 +728,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             qEffect.ExpiresAt = ExpirationCondition.Immediately;
                             break;
                     }
-                })));
+                }));
         }
     }
 }

@@ -16,6 +16,8 @@ using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.Animations;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
+using Dawnsbury.Core.Possibilities;
+using Microsoft.Xna.Framework;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -26,12 +28,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
             RegisterClericSpells();
             RegisterDruidSpells();
+            RegisterWizardSpells();
         }
 
         static void RegisterClericSpells()
         {
             // Fire Ray leaves an effect on the ground instead of persistent damage in the remaster
-            ModManager.ReplaceExistingSpell(SpellId.FireRay, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+            ModManager.ReplaceExistingSpell(SpellId.FireRay, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 const int heightenStep = 1;
                 int heightenIncrements = spellLevel - 1;
@@ -85,10 +88,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         target.AddQEffect(cleanupEffect);
                     }
                 });
-            }));
+            });
 
             // Moonbeam does a bit more damage in the remaster
-            ModManager.ReplaceExistingSpell(SpellId.Moonbeam, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+            ModManager.ReplaceExistingSpell(SpellId.Moonbeam, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = spellLevel - 1;
                 return Spells.CreateModern(IllustrationName.Moonbeam, "Moonbeam", new[] { Trait.Uncommon, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Light, Trait.Manipulate, RemasterSpells.Trait.Remaster },
@@ -114,10 +117,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         target.AddQEffect(qEffect);
                     }
                 });
-            }));
+            });
 
             // Touch of Undeath just has some wording changes to reflect the change from Positive/Negative to Vitality/Void
-            ModManager.ReplaceExistingSpell(SpellId.TouchOfUndeath, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+            ModManager.ReplaceExistingSpell(SpellId.TouchOfUndeath, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ChillTouch, "Touch of Undeath", new[] { Trait.Uncommon, Trait.Cleric, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Void },
                     "You attack the target's life force with undeath, dealing 1d6 void damage.",
@@ -136,13 +139,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         target.AddQEffect(qEffect3);
                     }
                 });
-            }));
+            });
         }
 
         static void RegisterDruidSpells()
         {
             // Tempest Surge loses the persistent damage in the remaster
-            ModManager.ReplaceExistingSpell(SpellId.TempestSurge, 1, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+            ModManager.ReplaceExistingSpell(SpellId.TempestSurge, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.TempestSurge, "Tempest Surge", new[] { Trait.Uncommon, Trait.Air, Trait.Concentrate, Trait.Druid, Trait.Electricity, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster },
                     "You surround a foe in a swirling storm of violent winds, roiling clouds, and crackling lightning.",
@@ -157,7 +160,173 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         target.AddQEffect(QEffect.Clumsy(2).WithExpirationAtStartOfSourcesTurn(caster, 1));
                     }
                 });
-            }));
+            });
+        }
+
+        static void RegisterWizardSpells()
+        {
+            // Protective Wards is essentially the same as Protective Ward
+            RemasterSpells.ReplaceLegacySpell(SpellId.ProtectiveWard, "ProtectiveWards", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Abjuration, "Protective Wards", new[] { Trait.Uncommon, Trait.Aura, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                    "You expand a ring of glyphs that shields your allies.",
+                    "You and any allies in the area gain a +1 status bonus to AC. Each time you Sustain the spell, the emanation's radius increases by 5 feet, to a maximum of 30 feet.",
+                    Target.Self(), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(1)
+                    .WithEffectOnEachTarget(async (spell, self, target, result) =>
+                    {
+                        AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(IllustrationName.BlessCircle, 1f);
+                        QEffect qEffect = new QEffect("Protective Wards", "[this condition has no description]", ExpirationCondition.ExpiresAtEndOfSourcesTurn, self, IllustrationName.None)
+                        {
+                            CannotExpireThisTurn = true,
+                            WhenExpires = (qfBless) => auraAnimation.MoveTo(0.0f),
+                            Tag = 1,
+                            ProvideContextualAction = (QEffect qfBless) =>
+                            {
+                                if (qfBless?.Tag != null)
+                                {
+                                    int tag = (int)qfBless.Tag;
+                                    if (qfBless.CannotExpireThisTurn && tag >= 6)
+                                        return null;
+                                    bool canIncreaseRadius = tag < 6;
+                                    return new ActionPossibility(new CombatAction(qfBless.Owner, IllustrationName.Abjuration, qfBless.CannotExpireThisTurn ? "Increase Protective Wards radius" : "Sustain" + (canIncreaseRadius ? " and increase Protective Wards radius" : ""), new[] { Trait.Concentrate },
+                                        (canIncreaseRadius ? "Increase the radius of the Protective Wards emanation by 5 feet." : "") + (!qfBless.CannotExpireThisTurn ? "\n\nThis will also extend the duration of the spell until the end of your next turn." : ""), Target.Self())
+                                        .WithEffectOnSelf((_) =>
+                                        {
+                                            qfBless.CannotExpireThisTurn = true;
+                                            if (!canIncreaseRadius)
+                                            {
+                                                return;
+                                            }
+                                            int emanationRange = tag + 1;
+                                            qfBless.Tag = emanationRange;
+                                            auraAnimation.MoveTo(emanationRange);
+                                        })).WithPossibilityGroup("Maintain an activity");
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                            }
+                        };
+                        auraAnimation.Color = Color.Green;
+                        qEffect.StateCheck = (qfBless) =>
+                        {
+                            if (qfBless?.Tag != null)
+                            {
+                                int emanationSize = (int)qfBless.Tag;
+                                foreach (Creature creature in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= emanationSize && cr.FriendOf(qfBless.Owner)))
+                                {
+                                    creature.AddQEffect(new QEffect("Protective Wards", "You gain a +1 status bonus to AC.", ExpirationCondition.Ephemeral, qfBless.Owner, IllustrationName.Bless)
+                                    {
+                                        BonusToDefenses = (_3, _4, defense) => defense != Defense.AC ? null : new Bonus(1, BonusType.Status, "Protective Wards")
+                                    });
+                                }
+                            }
+                        };
+                        self.AddQEffect(qEffect);
+                    });
+            });
+
+            // Force Bolt is essentially the same
+
+            // Earthworks
+            RemasterSpells.RegisterNewSpell("Earthworks", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.PummelingRubble, "Earth Works", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Earth, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                    "With a ripple of earth, you raise small barriers from the ground.",
+                    "The ground in the area becomes difficult terrain. The spell's area is a 5-foot burst if you spent 1 action to cast it, a 10-foot burst if you spent 2 actions, or a 15-foot burst if you spent 3 actions. A creature can Interact to clear the barriers from one 5-foot square adjacent to it.",
+                    Target.DependsOnActionsSpent(Target.Burst(12, 1), Target.Burst(12, 2), Target.Burst(12, 3)), 1, null)
+                .WithActionCost(-1).WithSoundEffect(SfxName.ElementalBlastEarth)
+                .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
+                {
+                    List<TileQEffect> effects = new List<TileQEffect>();
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("SpellcastingSource should not be null");
+                    }
+                    int spellDC = spell.SpellcastingSource.GetSpellSaveDC();
+                    foreach (Tile tile in targets.ChosenTiles)
+                    {
+                        TileQEffect item = new TileQEffect(tile)
+                        {
+                            StateCheck = (_) => { tile.DifficultTerrain = true; },
+                            Illustration = new[] { IllustrationName.Rubble, IllustrationName.Rubble2 }.GetRandom(),
+                            ExpiresAt = ExpirationCondition.Never
+                        };
+                        effects.Add(item);
+                        tile.QEffects.Add(item);
+                    }
+                });
+            });
+
+            // Charming Push is mostly just a rename of Charming Words
+            RemasterSpells.ReplaceLegacySpell(SpellId.CharmingWords, "CharmingPush", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Enchantment, "Charming Push", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                    "You push at the target's mind to deflect their ire. The target must attempt a Will save.",
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target takes a –1 circumstance penalty to attack rolls and damage rolls against you.", "The target can't use hostile actions against you.", "The target is stunned 1 and can't use hostile actions against you.")),
+                    Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.Bless).WithActionCost(1)
+                    .WithEffectOnEachTarget(async (spell, caster, target, result) =>
+                    {
+                        switch (result)
+                        {
+                            case CheckResult.CriticalFailure:
+                            case CheckResult.Failure:
+                                if (result == CheckResult.CriticalFailure)
+                                    target.AddQEffect(QEffect.Stunned(1));
+                                target.AddQEffect(new QEffect("Charming Push", "You can't target " + caster?.ToString() + ".", ExpirationCondition.ExpiresAtStartOfSourcesTurn, caster, IllustrationName.Enchantment).AddGrantingOfTechnical((Creature c) => c == caster, (QEffect qfTechnical) => qfTechnical.PreventTargetingBy = ((CombatAction ca) => ca.Owner != target ? null : "charming push")));
+                                break;
+                            case CheckResult.Success:
+                                target.AddQEffect(new QEffect("Charming Push", "You have -1 on attack and damage against " + caster?.ToString() + ".", ExpirationCondition.ExpiresAtStartOfSourcesTurn, caster, IllustrationName.Enchantment)
+                                {
+                                    BonusToAttackRolls = ((_, power, newTarget) => !power.HasTrait(Trait.Attack) || newTarget != caster ? null : new Bonus(-1, BonusType.Circumstance, "Charming Words"))
+                                });
+                                break;
+                        }
+                    });
+            });
+
+            RemasterSpells.RegisterNewSpell("ScrambleBody", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Transmutation, "Scramble Body", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                    "Your magic throws the creature's biology into disarray, inducing nausea, fever, and other unpleasant conditions.",
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess(null, "The target is unaffected.", "The target becomes sickened 1.", "The target becomes sickened 2 and slowed 1 as long as it's sickened.")),
+                    Target.Ranged(6).WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Boneshaker).WithActionCost(2)
+                    .WithEffectOnEachTarget(async (spell, caster, target, result) =>
+                    {
+                        switch (result)
+                        {
+                            case CheckResult.CriticalFailure:
+                                QEffect slowed = QEffect.Slowed(1).WithExpirationNever();
+                                QEffect sickened = QEffect.Sickened(2, spell.SpellcastingSource!.GetSpellSaveDC());
+                                sickened.WhenExpires = (_) => slowed.ExpiresAt = ExpirationCondition.Immediately;
+                                target.AddQEffect(sickened);
+                                target.AddQEffect(slowed);
+                                break;
+                            case CheckResult.Failure:
+                                target.AddQEffect(QEffect.Sickened(1, spell.SpellcastingSource!.GetSpellSaveDC()));
+                                break;
+                        }
+                    });
+            });
+
+            // Fortify Summoning is mostly just a rename of Augment Summoning
+            RemasterSpells.ReplaceLegacySpell(SpellId.AugmentSummoning, "FortifySummoning", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Conjuration, "Fortify Summoning", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                    "As you call a creature to your side, your magic transforms its body, heightening its ferocity and fortifying its resilience.",
+                    "The target gains a +1 status bonus to all checks and DCs (including its AC) for the duration of its summoning, up to 1 minute.",
+                    Target.RangedFriend(6).WithAdditionalConditionOnTargetCreature((a, d) => !d.QEffects.Any((qf) => (qf.Id == QEffectId.SummonedBy && qf.Source == a)) ? Usability.NotUsableOnThisCreature("not your summon") : Usability.Usable), spellLevel, null).WithSoundEffect(SfxName.MinorAbjuration).WithActionCost(1)
+                    .WithEffectOnEachTarget(async (spell, caster, target, result) =>
+                    {
+                        target.AddQEffect(new QEffect("Fortify Summoning", "You have +1 to all checks.", ExpirationCondition.Never, caster, IllustrationName.Conjuration)
+                        {
+                            BonusToAllChecksAndDCs = (Func<QEffect, Bonus>)(_ => new Bonus(1, BonusType.Status, "Augment Summoning"))
+                        });
+                    });
+            });
+
+            // Hand of the Apprentice is essentially the same
         }
     }
 }

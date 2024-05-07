@@ -14,6 +14,7 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook;
 
@@ -36,7 +37,7 @@ public class Cantrips
         // * Timber
         
         // Caustic Blast (formerly Acid Splash)
-        RemasterSpells.ReplaceLegacySpell(SpellId.AcidSplash, "CausticBlast", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.ReplaceLegacySpell(SpellId.AcidSplash, "CausticBlast", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
@@ -59,9 +60,9 @@ public class Cantrips
                     }
                 }
             }));
-        }));
+        });
 
-        ModManager.ReplaceExistingSpell(SpellId.Daze, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+        ModManager.ReplaceExistingSpell(SpellId.Daze, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
@@ -80,9 +81,9 @@ public class Cantrips
                     target.AddQEffect(QEffect.Stunned(1));
                 }
             });
-        }));
+        });
 
-        ModManager.ReplaceExistingSpell(SpellId.DivineLance, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+        ModManager.ReplaceExistingSpell(SpellId.DivineLance, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             return Spells.CreateModern(IllustrationName.DivineLance, "Divine Lance", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, RemasterSpells.Trait.Remaster },
@@ -99,9 +100,9 @@ public class Cantrips
                 DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Good, DamageKind.Untyped });
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d4", damageKind);
             });
-        }));
+        });
 
-        ModManager.ReplaceExistingSpell(SpellId.ElectricArc, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+        ModManager.ReplaceExistingSpell(SpellId.ElectricArc, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
@@ -117,10 +118,10 @@ public class Cantrips
                 DiceFormula diceFormula = DiceFormula.FromText((2 + heightenIncrements) + "d4", "Electric Arc");
                 await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, diceFormula, DamageKind.Electricity);
             });
-        }));
+        });
 
         // Frostbite (formerly Ray of Frost)
-        RemasterSpells.ReplaceLegacySpell(SpellId.RayOfFrost, "Frostbite", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.ReplaceLegacySpell(SpellId.RayOfFrost, "Frostbite", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -139,9 +140,9 @@ public class Cantrips
                     target.AddQEffect(QEffect.DamageWeakness(DamageKind.Bludgeoning, 1 + heightenIncrements).WithExpirationAtStartOfOwnerTurn());
                 }
             });
-        }));
+        });
 
-        RemasterSpells.RegisterNewSpell("GougingClaw", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("GougingClaw", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -162,11 +163,11 @@ public class Cantrips
                     target.AddQEffect(QEffect.PersistentDamage((2 + heightenIncrements).ToString(), DamageKind.Bleed));
                 }
             });
-        }));
+        });
 
 
         // Ignition (formerly Produce Flame)
-        RemasterSpells.ReplaceLegacySpell(SpellId.ProduceFlame, "Ignition", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.ReplaceLegacySpell(SpellId.ProduceFlame, "Ignition", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
@@ -186,9 +187,9 @@ public class Cantrips
                     target.AddQEffect(QEffect.PersistentDamage(spell.SpellLevel + dieSize, DamageKind.Fire));
                 }
             });
-        }));
+        });
 
-        ModManager.ReplaceExistingSpell(SpellId.TelekineticProjectile, 0, ((spellcaster, spellLevel, inCombat, spellInformation) =>
+        ModManager.ReplaceExistingSpell(SpellId.TelekineticProjectile, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             bool amped = spellInformation.PsychicAmpInformation?.Amped ?? false;
             int heightenIncrements = spellLevel - 1;
@@ -245,10 +246,10 @@ public class Cantrips
 
             return AddPsiTraits(combatAction, spellInformation);
 
-        }));
+        });
 
         // Tangle Vine (formerly Tanglefoot)
-        RemasterSpells.RegisterNewSpell("TangleVine", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("TangleVine", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int duration = spellLevel >= 2 ? 2 : 1;
             string durationText = spellLevel >= 2 ? "2 rounds" : "1 round";
@@ -276,10 +277,10 @@ public class Cantrips
                     }.WithExpirationAtStartOfSourcesTurn(caster, duration));
                 }
             });
-        }));
+        });
         
         // Vitality Lash (formerly Disrupt Undead)
-        RemasterSpells.ReplaceLegacySpell(SpellId.DisruptUndead, "VitalityLash", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.ReplaceLegacySpell(SpellId.DisruptUndead, "VitalityLash", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             // Using Positive instead of Vitality here, since otherwise I'd need to update creatures
@@ -299,10 +300,10 @@ public class Cantrips
                     target.AddQEffect(QEffect.Enfeebled(1).WithExpirationAtStartOfSourcesTurn(caster, 0));
                 }
             });
-        }));
+        });
 
         // Void Warp (formerly Chill Touch)
-        RemasterSpells.ReplaceLegacySpell(SpellId.ChillTouch, "VoidWarp", 0, ((spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.ReplaceLegacySpell(SpellId.ChillTouch, "VoidWarp", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
             // Using Negative instead of Void here, since otherwise I'd need to update creatures
@@ -310,7 +311,7 @@ public class Cantrips
                 "You call upon the Void to harm life force.",
                 "The target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 void damage with a basic Fortitude save. On a critical failure, the target is also enfeebled 1 until the start of your next turn." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
-                Target.Ranged(6).WithAdditionalConditionOnTargetCreature((Creature _, Creature t) => { return t.IsLivingCreature ? Usability.Usable : Usability.CommonReasons.TargetIsNotAlive; }),
+                Target.Ranged(6).WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()),
                 spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
             .WithSoundEffect(SfxName.DivineLance)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 2.5f)
@@ -322,7 +323,7 @@ public class Cantrips
                     target.AddQEffect(QEffect.Enfeebled(1).WithExpirationAtStartOfSourcesTurn(caster, 0));
                 }
             });
-        }));
+        });
     }
 
     static CombatAction AddPsiTraits(CombatAction combatAction, SpellInformation spellInformation)
