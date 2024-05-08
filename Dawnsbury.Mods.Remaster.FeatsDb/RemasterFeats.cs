@@ -2,6 +2,7 @@
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
+using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.IO;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb;
@@ -17,13 +18,13 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             public static readonly Core.Mechanics.Enumerations.Trait Remaster = ModManager.RegisterTrait("Remaster");
 
             // Traits to represent the various Wizard Curriculum options
-            public static readonly Core.Mechanics.Enumerations.Trait ArsGrammatica = ModManager.RegisterTrait("ArsGrammatica");
-            public static readonly Core.Mechanics.Enumerations.Trait BattleMagic = ModManager.RegisterTrait("BattleMagic");
-            public static readonly Core.Mechanics.Enumerations.Trait CivicWizardry = ModManager.RegisterTrait("CivicWizardry");
-            public static readonly Core.Mechanics.Enumerations.Trait Mentalism = ModManager.RegisterTrait("Mentalism");
-            public static readonly Core.Mechanics.Enumerations.Trait ProteanForm = ModManager.RegisterTrait("ProteanForm");
-            public static readonly Core.Mechanics.Enumerations.Trait TheBoundary = ModManager.RegisterTrait("TheBoundary");
-            public static readonly Core.Mechanics.Enumerations.Trait UnifiedMagicalTheory = ModManager.RegisterTrait("UnifiedMagicalTheory");
+            public static readonly Core.Mechanics.Enumerations.Trait ArsGrammatica = ModManager.RegisterTrait("SchoolArsGrammatica", new TraitProperties("Ars Grammatica", false));
+            public static readonly Core.Mechanics.Enumerations.Trait BattleMagic = ModManager.RegisterTrait("SchoolBattleMagic", new TraitProperties("Battle Magic", false));
+            public static readonly Core.Mechanics.Enumerations.Trait CivicWizardry = ModManager.RegisterTrait("SchoolCivicWizardry", new TraitProperties("Civic Wizardry", false));
+            public static readonly Core.Mechanics.Enumerations.Trait Mentalism = ModManager.RegisterTrait("SchoolMentalism", new TraitProperties("Mentalism", false));
+            public static readonly Core.Mechanics.Enumerations.Trait ProteanForm = ModManager.RegisterTrait("SchoolProteanForm", new TraitProperties("Protean Form", false));
+            public static readonly Core.Mechanics.Enumerations.Trait TheBoundary = ModManager.RegisterTrait("SchoolTheBoundary", new TraitProperties("The Boundary", false));
+            public static readonly Core.Mechanics.Enumerations.Trait UnifiedMagicalTheory = ModManager.RegisterTrait("SchoolUnifiedMagicalTheory");
         }
 
         public class FeatName

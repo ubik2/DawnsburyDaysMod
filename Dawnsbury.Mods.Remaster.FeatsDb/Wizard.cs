@@ -6,8 +6,7 @@ using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
-using Humanizer;
-using Dawnsbury.IO;
+using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb
 {
@@ -25,6 +24,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
 
         public static IEnumerable<Feat> LoadCurricula()
         {
+            // TODO: I include the spell options here, but it's really the PatchWizard where we add the traits to the spells that's responsible.
             yield return new CurriculumFeat(RemasterFeats.FeatName.ArsGrammatica, RemasterFeats.Trait.ArsGrammatica,
                 "Runes and wards, numbers and letters—they underpin all magic, making them the logical subject for a wizard who studies fundamental forces. Perhaps you studied at the Pathfinder Society's School of Spells or a similar institution, but whether you're lacing your words with magic to compel others, casting wards around your workshop, or destabilizing the very structure of an opponent's spells, you know this unassuming school carries elegant power.",
                 RemasterFeats.GetSpellIdByName("ProtectiveWards"),
@@ -92,45 +92,10 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         {
             public override string SlotName { get; }
 
-            private SpellId[] spellOptions;
-
-            public CurriculumPreparedSpellSlot(int level, string key, Trait school, string slotName, SpellId[] spellOptions)
+            public CurriculumPreparedSpellSlot(int level, string key, Trait school)
                 : base(level, key, school)
             {
-                SlotName =  slotName;
-                this.spellOptions = spellOptions;
-            }
-
-            public override bool AdmitsSpell(Spell preparedSpell, CharacterSheet sheet, PreparedSpellSlots preparedSpellSlots)
-            {
-                if (spellOptions.Contains(preparedSpell.SpellId))
-                {
-                    // Replicate the logic in PreparedSpellSlot. We needed to extend ArcaneSchoolPreparedSpellSlot for the correct CharacterSheet behaviour,
-                    // but that version of AdmitsSpell will reject our spells.
-                    int spellRank = (!preparedSpell.HasTrait(Trait.Cantrip)) ? preparedSpell.CombatActionSpell.SpellLevel : 0;
-                    int slotRank = SpellLevel;
-                    // Cantrips can only go in cantrip slots and spells only in spell slots. The slot must be of high enough rank for the spell.
-                    if ((slotRank == 0 && spellRank != 0) || (slotRank != 0 && spellRank == 0) || (slotRank < spellRank))
-                    {
-                        return false;
-                    }
-
-                    // We can only prepare a cantrip once in a category's slot.
-                    if (slotRank == 0 && sheet.PreparedSpells!.Any((KeyValuePair<string, Spell> kvp) => kvp.Value?.Name == preparedSpell.Name && kvp.Key != Key && preparedSpellSlots.Slots.Any((PreparedSpellSlot slot) => slot.Key == kvp.Key)))
-                    {
-                        return false;
-                    }
-
-                    // Clerics can add spells from another tradition from their deity, but other casters are limited to their tradition.
-                    if (!preparedSpell.HasTrait(preparedSpellSlots.SpellTradition) && !sheet.Calculated.ClericAdditionalPreparableSpells.Contains(preparedSpell.SpellId))
-                    {
-                        return false;
-                    }
-
-                    return true;
-                }
-                GeneralLog.Log("Rejecting spell: " + preparedSpell.SpellId + " since it's not in the list of options: " + string.Join(", ", spellOptions));
-                return false;
+                SlotName = TraitExtensions.TraitProperties[school].HumanizedName;
             }
         }
 
@@ -160,9 +125,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                     if (schoolTrait != RemasterFeats.Trait.UnifiedMagicalTheory)
                     {
                         sheet.WizardSchool = schoolTrait; // Create new traits for each curriculum
-                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(0, "Wizard:SchoolSpell0:" + schoolTrait.ToString(), schoolTrait, Name, spellOptions[0]));
-                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(1, "Wizard:SchoolSpell1:" + schoolTrait.ToString(), schoolTrait, Name, spellOptions[1]));
-                        sheet.AddAtLevel(3, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(2, "Wizard:SchoolSpell2:" + schoolTrait.ToString(), schoolTrait, Name, spellOptions[1].Concat(spellOptions[2]).ToArray())));
+                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(0, "Wizard:SchoolSpell0:" + schoolTrait.ToString(), schoolTrait));
+                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(1, "Wizard:SchoolSpell1:" + schoolTrait.ToString(), schoolTrait));
+                        sheet.AddAtLevel(3, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(2, "Wizard:SchoolSpell2:" + schoolTrait.ToString(), schoolTrait)));
                     }
                     // FIXME: need to add upgraded version of Drain Bonded Item and bonus feat for Unified Magical Theory
                     sheet.AddFocusSpellAndFocusPoint(Trait.Wizard, Ability.Intelligence, focusSpell);
@@ -179,6 +144,44 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             classFeat.OnSheet = (Action<CalculatedCharacterSheetValues>)Delegate.Combine(classFeat.OnSheet, (CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.Simple, Proficiency.Trained));
             // TODO: Replace old school specializations with new versions
             classFeat.Subfeats = AllFeats.All.Where((feat) => feat.FeatName == FeatName.UniversalistSchool || feat is CurriculumFeat).ToList();
+ 
+            // We add traits to the non-cantrips so we get the green highlight effect in spell selection
+            Dictionary<SpellId, Trait[]> schoolTraitsMap = new Dictionary<SpellId, Trait[]> {
+                { SpellId.Daze, new[] { RemasterFeats.Trait.ArsGrammatica, RemasterFeats.Trait.Mentalism } },
+                { SpellId.Shield, new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.TelekineticProjectile, new[] { RemasterFeats.Trait.BattleMagic, RemasterFeats.Trait.CivicWizardry } },
+                { SpellId.Command, new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("TangleVine"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("VoidWarp"), new[] { RemasterFeats.Trait.TheBoundary } },
+
+                { RemasterFeats.GetSpellIdByName("RunicBody"), new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("RunicWeapon"), new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
+                
+                { RemasterFeats.GetSpellIdByName("Mist"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.ResistEnergy, new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
+                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("RevealingLight"), new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("Stupefy"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
+                { RemasterFeats.GetSpellIdByName("SeeTheUnseen"), new[] { RemasterFeats.Trait.TheBoundary } }
+            };
+
+            ModManager.RegisterActionOnEachSpell((spell) =>
+            {
+                if (schoolTraitsMap.TryGetValue(spell.SpellId, out Trait[]? schoolTraits))
+                {
+                    spell.Traits.AddRange(schoolTraits);
+                }
+            });
         }
     }
 }

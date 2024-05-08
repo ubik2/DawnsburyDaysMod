@@ -38,5 +38,6 @@ Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url]
  [*]Thief still can't add dex modifier to unarmed attacks
  [*]Ruffian weapon restrictions for sneak attack are not updated
  [*]Wizard curriculum for Battle Magic and Civic Wizardry have alternative cantrip selection
+ [*]The Wizard spell preparation shows a number instead of the school
 [/list]
 
