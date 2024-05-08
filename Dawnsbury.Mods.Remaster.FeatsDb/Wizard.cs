@@ -7,11 +7,45 @@ using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Modding;
+using Dawnsbury.IO;
+using Dawnsbury.Core.CombatActions;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb
 {
     public static class Wizard
     {
+
+        private static readonly Dictionary<SpellId, Trait[]> schoolTraitsMap = new Dictionary<SpellId, Trait[]> {
+                { SpellId.Daze, new[] { RemasterFeats.Trait.ArsGrammatica, RemasterFeats.Trait.Mentalism } },
+                { SpellId.Shield, new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.TelekineticProjectile, new[] { RemasterFeats.Trait.BattleMagic, RemasterFeats.Trait.CivicWizardry } },
+                { SpellId.Command, new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("TangleVine"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("VoidWarp"), new[] { RemasterFeats.Trait.TheBoundary } },
+
+                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
+                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("RunicBody"), new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("RunicWeapon"), new[] { RemasterFeats.Trait.ArsGrammatica } },
+                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("SummonConstruct"), new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("SummonUndead"), new[] { RemasterFeats.Trait.TheBoundary } },
+                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
+
+                { RemasterFeats.GetSpellIdByName("Mist"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.ResistEnergy, new[] { RemasterFeats.Trait.BattleMagic } },
+                { RemasterFeats.GetSpellIdByName("RevealingLight"), new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("Stupefy"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("SeeTheUnseen"), new[] { RemasterFeats.Trait.TheBoundary } }
+            };
+
         public static IEnumerable<Feat> LoadAll()
         {
             // Add traits to our spells to associated then with a curriculum
@@ -97,10 +131,17 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         {
             public override string SlotName { get; }
 
-            public CurriculumPreparedSpellSlot(int level, string key, Trait school)
+            public CurriculumPreparedSpellSlot(int level, string key, Trait school, string slotName)
                 : base(level, key, school)
             {
-                SlotName = TraitExtensions.TraitProperties[school].HumanizedName;
+                SlotName = slotName;
+            }
+
+            public override bool AdmitsSpell(Spell preparedSpell, CharacterSheet sheet, PreparedSpellSlots preparedSpellSlots)
+            {
+                // These spells may not have gone through the ActionOnEachSpell pipe, so patch them manually
+                AddCurriculumTraits(preparedSpell.CombatActionSpell);
+                return base.AdmitsSpell(preparedSpell, sheet, preparedSpellSlots);
             }
         }
 
@@ -110,7 +151,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 : base(schoolFeat, flavorText, "XX", new List<Trait>(), null)
             {
                 Spell modernSpellTemplate = AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard);
-                RulesText = "You gain an extra spell slot at each spell level for which you have wizard spell slots. You can only prepare spells from the " + Name + " in this slot.\n\nYou learn the " + AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard).ToSpellLink() + " focus school spell and you gain a focus pool of 1 focus point which recharges after every encounter.\n" +"\n{b}Curriculum{/b}";
+                RulesText = "You gain an extra spell slot at each spell level for which you have wizard spell slots. You can only prepare spells from the " + Name + " in this slot.\n\nYou learn the " + AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard).ToSpellLink() + " focus school spell and you gain a focus pool of 1 focus point which recharges after every encounter.\n" + "\n{b}Curriculum{/b}";
                 if (spellOptions[0].Length > 0)
                 {
                     RulesText += "\ncantrips: " + string.Join(", ", spellOptions[0].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
@@ -123,15 +164,16 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     RulesText += "\n2nd: " + string.Join(", ", spellOptions[2].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
                 }
-                ShowRulesBlockForClassOfOrigin = Trait.Wizard; 
+                ShowRulesBlockForClassOfOrigin = Trait.Wizard;
                 OnSheet = (sheet) =>
                 {
                     if (schoolTrait != RemasterFeats.Trait.UnifiedMagicalTheory)
                     {
+                        string schoolTraitName = TraitExtensions.TraitProperties[schoolTrait].HumanizedName;
                         sheet.WizardSchool = schoolTrait; // Create new traits for each curriculum
-                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(0, "Wizard:SchoolSpell0:" + schoolTrait.ToString(), schoolTrait));
-                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(1, "Wizard:SchoolSpell1:" + schoolTrait.ToString(), schoolTrait));
-                        sheet.AddAtLevel(3, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(2, "Wizard:SchoolSpell2:" + schoolTrait.ToString(), schoolTrait)));
+                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(0, "Wizard:SchoolSpell0:" + schoolTraitName, schoolTrait, schoolTraitName));
+                        sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(1, "Wizard:SchoolSpell1:" + schoolTraitName, schoolTrait, schoolTraitName));
+                        sheet.AddAtLevel(3, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(2, "Wizard:SchoolSpell2:" + schoolTraitName, schoolTrait, schoolTraitName)));
                     }
                     // FIXME: need to add upgraded version of Drain Bonded Item and bonus feat for Unified Magical Theory
                     sheet.AddFocusSpellAndFocusPoint(Trait.Wizard, Ability.Intelligence, focusSpell);
@@ -152,45 +194,19 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
 
         private static void PatchWizardSpells()
         {
-            // We add traits to the non-cantrips so we get the green highlight effect in spell selection
-            Dictionary<SpellId, Trait[]> schoolTraitsMap = new Dictionary<SpellId, Trait[]> {
-                { SpellId.Daze, new[] { RemasterFeats.Trait.ArsGrammatica, RemasterFeats.Trait.Mentalism } },
-                { SpellId.Shield, new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.TelekineticProjectile, new[] { RemasterFeats.Trait.BattleMagic, RemasterFeats.Trait.CivicWizardry } },
-                { SpellId.Command, new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("TangleVine"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("VoidWarp"), new[] { RemasterFeats.Trait.TheBoundary } },
-
-                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
-                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("RunicBody"), new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("RunicWeapon"), new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("SummonConstruct"), new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("SummonUndead"), new[] { RemasterFeats.Trait.TheBoundary } },
-                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
-
-                { RemasterFeats.GetSpellIdByName("Mist"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.ResistEnergy, new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("RevealingLight"), new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("Stupefy"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("SeeTheUnseen"), new[] { RemasterFeats.Trait.TheBoundary } }
-            };
-
-            ModManager.RegisterActionOnEachSpell((spell) =>
+            ModManager.RegisterActionOnEachSpell((CombatAction spellCombatAction) =>
             {
-                if (schoolTraitsMap.TryGetValue(spell.SpellId, out Trait[]? schoolTraits))
-                {
-                    spell.Traits.AddRange(schoolTraits);
-                }
+                AddCurriculumTraits(spellCombatAction);
             });
+        }
+
+
+        private static void AddCurriculumTraits(CombatAction spellCombatAction)
+        {
+            if (schoolTraitsMap.TryGetValue(spellCombatAction.SpellId, out Trait[]? schoolTraits))
+            {
+                spellCombatAction.Traits.AddRange(schoolTraits);
+            }
         }
     }
 }

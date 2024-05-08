@@ -11,19 +11,33 @@ This doesn't remove any feats, but if you were using a legacy version, you shoul
  [*]Raise Symbol
 [/list]
 
-[h4]Internal[/h4]
+[h3]Cleric - Internals[/h3]
 [list]
  [*]Healing Font (updated to grant 4 font slots)
  [*]Harmful Font (updated to grant 4 font slots)
  [*]Cleric Deities updated to use the Remaster spells
- [*]Sorcerer Bloodlines updated to use the Remaster spells
- [*]Wizard Curricula updated to the new version
 [/list]
 
 [h3]Fighter[/h3]
 [list]
  [*]Vicious Swing (formerly Power Attack)
  [*]Slam Down
+[/list]
+
+[h3]Rogue - Internals[/h3]
+[list]
+ [*]Rogues granted martial weapon proficiency
+[/list]
+
+[h3]Sorcerer - Internals[/h3]
+[list]
+ [*]Sorcerer Bloodlines updated to use the Remaster spells
+[/list]
+
+[h3]Wizard - Internals[/h3]
+[list]
+ [*]Wizard Curricula updated to the Remaster versions
+ [*]Wizards granted simple weapon proficiency
 [/list]
 
 [h2]Code[/h2]

@@ -40,7 +40,7 @@ Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url]
 
 [h2]Known Issues[/h2]
 [list]
- [*]Cleric deity spells have not been changed, so if they reference a hidden spell, that will not be available to prepare.
+ [*]Cleric deity spells and Sorcerer bloodline spells are changed with the RemasterFeats mod. If you aren't using that, and the old versions reference a hidden spell, that will not be available to prepare.
 [/list]
 
 [h2]Replacements[/h2]
