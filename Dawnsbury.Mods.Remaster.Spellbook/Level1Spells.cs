@@ -19,6 +19,8 @@ using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Humanizer;
+using Dawnsbury.Core.StatBlocks;
+using Dawnsbury.Display;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -46,13 +48,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Tailwind (formerly Longstrider) - Fleet Step is generally better in game, but we could give this the mage armor treatment for level 2
         // * Vanishing Tracks
         // * Ventriloquism
+        // The following spell is moved to the Level2Spells since there are no creatures available at rank 1
+        // * Summon Construct
+        // * Summon Plant or Fungus
         // The following spells are excluded because of their difficulty
         // * Ill Omen
         // * Phantasmal Minion
-        // * Summon Construct
-        // * Summon Fey
-        // * Summon Plant of Fungus
-        // * Summon Undead
+        // * Summon Fey - no creatures exist with this trait
         // The following are in limbo
         // ? Gust of Wind
         // ? Harm/Heal - these are already in game, but could be modified for vitality/void instead of positive/negative
@@ -290,7 +292,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     if (checkResult != CheckResult.CriticalSuccess)
                     {
                         await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (2 * spellLevel) + "d4", DamageKind.Mental);
-                        if ((checkResult == CheckResult.Failure || checkResult == CheckResult.CriticalFailure) && (spell.SpellcastingSource != null)) 
+                        if ((checkResult == CheckResult.Failure || checkResult == CheckResult.CriticalFailure) && (spell.SpellcastingSource != null))
                         {
                             QEffect persistentDamage = QEffect.PersistentDamage(spellLevel + "d4", DamageKind.Mental);
                             QEffect sickenedEffect = QEffect.Sickened(checkResult == CheckResult.CriticalFailure ? 2 : 1, spell.SpellcastingSource.GetSpellSaveDC());
@@ -354,7 +356,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
                 return Spells.CreateModern(IllustrationName.KineticRam, "Runic Body", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
                     "Glowing runes appear on the target’s body.",
-                    "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.", 
+                    "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
                     Target.AdjacentFriendOrSelf()
                 .WithAdditionalConditionOnTargetCreature((Creature a, Creature d) => IsValidTargetForRunicBody(d.UnarmedStrike) ? Usability.Usable : Usability.CommonReasons.TargetIsNotPossibleForComplexReason), spellLevel, null)
                 .WithSoundEffect(SfxName.MagicWeapon)
@@ -432,7 +434,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     S.FourDegreesOfSuccess("The target is unaffected.", "The target takes 1d4 poison damage.",
                                            "The target is afflicted with spider venom at stage 1.", "The target is afflicted with spider venom at stage 2."),
                     Target.AdjacentCreature(), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Necromancy)
-                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) => 
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
                     if (spell.SpellcastingSource == null)
                     {
@@ -484,6 +486,18 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         }
                     }
                 });
+            });
+
+            RemasterSpells.RegisterNewSpell("SummonUndead", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
+                return Spells.CreateModern(IllustrationName.Skeleton256, "Summon Undead", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                    "You summon a creature that has the undead trait.", "You summon a creature that has the undead trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                    Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
+                    .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Undead) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
+                    {
+                        GoodnessModifier = (ai, original) => original + (float)(creature.Level * 20)
+                    }).ToArray()).WithCreateVariantDescription((_, variant) => RulesBlock.CreateCreatureDescription(MonsterStatBlocks.MonsterExemplarsByName[variant!.Id])).WithEffectOnChosenTargets(async (spell, caster, targets) => await CommonSpellEffects.SummonMonster(spell, caster, targets.ChosenTile!));
             });
 
             // Sure Strike (formerly True Strike)

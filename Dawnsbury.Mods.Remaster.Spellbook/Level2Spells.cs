@@ -21,6 +21,8 @@ using Dawnsbury.Core.Animations.Movement;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Auxiliary;
+using Dawnsbury.Core.StatBlocks;
+using Dawnsbury.Display;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -524,6 +526,33 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
                 });
             });
+
+            // This is a level 1 spell, but we don't have any -1 creatures. To prevent it from being a trap, we treat it like a level 2 spell.
+            RemasterSpells.RegisterNewSpell("SummonConstruct", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
+                return Spells.CreateModern(IllustrationName.AnimatedStatue256, "Summon Construct", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, RemasterSpells.Trait.Remaster },
+                    "You summon a creature that has the construct trait.", "You summon a creature that has the construct trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                    Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
+                    .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Construct) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
+                    {
+                        GoodnessModifier = (ai, original) => original + (float)(creature.Level * 20)
+                    }).ToArray()).WithCreateVariantDescription((_, variant) => RulesBlock.CreateCreatureDescription(MonsterStatBlocks.MonsterExemplarsByName[variant!.Id])).WithEffectOnChosenTargets(async (spell, caster, targets) => await CommonSpellEffects.SummonMonster(spell, caster, targets.ChosenTile!));
+            });
+
+            // This is a level 1 spell, but we don't have any -1 creatures. To prevent it from being a trap, we treat it like a level 2 spell.
+            RemasterSpells.RegisterNewSpell("SummonPlantOrFungus", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
+                return Spells.CreateModern(IllustrationName.WoodMephit256, "Summon Plant or Fungus", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Primal, RemasterSpells.Trait.Remaster },
+                    "You summon a creature that has the plant or fungus trait.", "You summon a creature that has the plant or fungus trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                    Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
+                    .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Plant) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
+                    {
+                        GoodnessModifier = (ai, original) => original + (float)(creature.Level * 20)
+                    }).ToArray()).WithCreateVariantDescription((_, variant) => RulesBlock.CreateCreatureDescription(MonsterStatBlocks.MonsterExemplarsByName[variant!.Id])).WithEffectOnChosenTargets(async (spell, caster, targets) => await CommonSpellEffects.SummonMonster(spell, caster, targets.ChosenTile!));
+            });
+
         }
 
         private static Creature CreateIllusoryObject(IllustrationName illustration, string name)

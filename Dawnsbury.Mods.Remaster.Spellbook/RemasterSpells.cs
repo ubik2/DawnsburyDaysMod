@@ -23,6 +23,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // These are aliases. We'll rename them below.
             public static readonly Core.Mechanics.Enumerations.Trait Vitality = Core.Mechanics.Enumerations.Trait.Positive;
             public static readonly Core.Mechanics.Enumerations.Trait Void = Core.Mechanics.Enumerations.Trait.Negative;
+            // New trait for summon spells
+            public static readonly Core.Mechanics.Enumerations.Trait Summon = ModManager.RegisterTrait("Summon");
         }
 
         private static readonly Dictionary<string, SpellId> newSpells = new Dictionary<string, SpellId>();
@@ -137,7 +139,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         internal static string StripInitialWhitespace(string str)
         {
-            return Regex.Replace(str, "^\\w*", "");
+            return Regex.Replace(str, @"^\n*", "");
         }
     }
 }

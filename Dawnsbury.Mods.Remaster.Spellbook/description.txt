@@ -33,6 +33,9 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Runic Weapon (replaces Magic Weapon)
  [*]Spider Sting
  [*]Sure Strike (replaces Sure Strike)
+ [*]Summon Construct (there are no level -1 options, but the heightened version works)
+ [*]Summon Plant or Fungus (there are no level -1 options, but the heightened version works)
+ [*]Summon Undead
  [*]Thunderstrike (replaces Shocking Grasp)
 [/list]
 

@@ -14,11 +14,16 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
     {
         public static IEnumerable<Feat> LoadAll()
         {
+            // Add traits to our spells to associated then with a curriculum
+            PatchWizardSpells();
+
+            // Generate the curriculum feats
             foreach (Feat curriculumFeat in LoadCurricula())
             {
                 yield return curriculumFeat;
             }
 
+            // Update the wizard class to select from the curricula instead of the old spell schools
             PatchWizard();
         }
 
@@ -51,7 +56,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 new Dictionary<int, SpellId[]>()
                 {
                     { 0, new[] { SpellId.TelekineticProjectile } }, // Prestidigitation, Read Aura; Telekinetic Projectile doesn't belong
-                    { 1, new[] { SpellId.HydraulicPush, SpellId.PummelingRubble } }, // Summon Construct
+                    { 1, new[] { SpellId.HydraulicPush, SpellId.PummelingRubble, RemasterFeats.GetSpellIdByName("SummonConstruct") } },
                     { 2, new[] { RemasterFeats.GetSpellIdByName("RevealingLight") } } // Water Walk
                 });
 
@@ -81,7 +86,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 new Dictionary<int, SpellId[]>()
                 {
                     { 0, new[] { RemasterFeats.GetSpellIdByName("VoidWarp") } }, // Telekinetic Hand
-                    { 1, new[] { SpellId.GrimTendrils } }, // Phantasmal Minion, Summon Undead
+                    { 1, new[] { SpellId.GrimTendrils, RemasterFeats.GetSpellIdByName("SummonUndead") } }, // Phantasmal Minion
                     { 2, new[] { RemasterFeats.GetSpellIdByName("SeeTheUnseen") } } // Darkness
                 });
         }
@@ -105,7 +110,6 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 : base(schoolFeat, flavorText, "XX", new List<Trait>(), null)
             {
                 Spell modernSpellTemplate = AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard);
-                // TODO: I should probably display the list of acceptable spells somehere here
                 RulesText = "You gain an extra spell slot at each spell level for which you have wizard spell slots. You can only prepare spells from the " + Name + " in this slot.\n\nYou learn the " + AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard).ToSpellLink() + " focus school spell and you gain a focus pool of 1 focus point which recharges after every encounter.\n" +"\n{b}Curriculum{/b}";
                 if (spellOptions[0].Length > 0)
                 {
@@ -132,7 +136,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                     // FIXME: need to add upgraded version of Drain Bonded Item and bonus feat for Unified Magical Theory
                     sheet.AddFocusSpellAndFocusPoint(Trait.Wizard, Ability.Intelligence, focusSpell);
                 };
-                Illustration = modernSpellTemplate.Illustration;
+                Illustration = modernSpellTemplate.Illustration; // we just use the illustration from our focus spell
             }
         }
 
@@ -144,7 +148,10 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             classFeat.OnSheet = (Action<CalculatedCharacterSheetValues>)Delegate.Combine(classFeat.OnSheet, (CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.Simple, Proficiency.Trained));
             // TODO: Replace old school specializations with new versions
             classFeat.Subfeats = AllFeats.All.Where((feat) => feat.FeatName == FeatName.UniversalistSchool || feat is CurriculumFeat).ToList();
- 
+        }
+
+        private static void PatchWizardSpells()
+        {
             // We add traits to the non-cantrips so we get the green highlight effect in spell selection
             Dictionary<SpellId, Trait[]> schoolTraitsMap = new Dictionary<SpellId, Trait[]> {
                 { SpellId.Daze, new[] { RemasterFeats.Trait.ArsGrammatica, RemasterFeats.Trait.Mentalism } },
@@ -154,24 +161,26 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 { RemasterFeats.GetSpellIdByName("TangleVine"), new[] { RemasterFeats.Trait.ProteanForm } },
                 { RemasterFeats.GetSpellIdByName("VoidWarp"), new[] { RemasterFeats.Trait.TheBoundary } },
 
+                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
+                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
+                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
+                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
                 { RemasterFeats.GetSpellIdByName("RunicBody"), new[] { RemasterFeats.Trait.ArsGrammatica } },
                 { RemasterFeats.GetSpellIdByName("RunicWeapon"), new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
-                
+                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
+                { RemasterFeats.GetSpellIdByName("SummonConstruct"), new[] { RemasterFeats.Trait.CivicWizardry } },
+                { RemasterFeats.GetSpellIdByName("SummonUndead"), new[] { RemasterFeats.Trait.TheBoundary } },
+                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
+
                 { RemasterFeats.GetSpellIdByName("Mist"), new[] { RemasterFeats.Trait.BattleMagic } },
                 { SpellId.ResistEnergy, new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
-                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
                 { RemasterFeats.GetSpellIdByName("RevealingLight"), new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
                 { RemasterFeats.GetSpellIdByName("Stupefy"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
                 { RemasterFeats.GetSpellIdByName("SeeTheUnseen"), new[] { RemasterFeats.Trait.TheBoundary } }
             };
 
