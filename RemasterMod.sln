@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Remaster.Fea
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Remaster.HideLegacySpells", "Dawnsbury.Mods.Remaster.HideLegacySpells\Dawnsbury.Mods.Remaster.HideLegacySpells.csproj", "{035F2130-4FF1-4328-B13F-85E9E99ED4B9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Battlecry", "Dawnsbury.Mods.Battlecry\Dawnsbury.Mods.Battlecry.csproj", "{2AA97E45-8797-41B6-B98B-046550CADF05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,14 @@ Global
 		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|x64.ActiveCfg = Release|x64
 		{035F2130-4FF1-4328-B13F-85E9E99ED4B9}.Release|x64.Build.0 = Release|x64
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Debug|x64.Build.0 = Debug|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Release|x64.ActiveCfg = Release|Any CPU
+		{2AA97E45-8797-41B6-B98B-046550CADF05}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
