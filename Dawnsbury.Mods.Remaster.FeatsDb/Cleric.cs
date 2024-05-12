@@ -67,7 +67,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                 "The spell is expended with no effect if your Strike fails or hits a creature that isn’t damaged by that energy type (such as if you hit a non - undead creature with a {i}heal{/i} spell).",
                 new[] { Trait.Cleric, Trait.Divine })
                 .WithActionCost(2)
-                .WithOnCreature(((CalculatedCharacterSheetValues sheet, Creature creature) =>
+                .WithOnCreature((CalculatedCharacterSheetValues sheet, Creature creature) =>
                 {
                     QEffect qfChannelSmite = new QEffect("Channel Smite {icon:TwoActions}", "You siphon the energies of life and death through a melee attack and into your foe.");
                     qfChannelSmite.ProvideStrikeModifierAsPossibility = (Item weapon) =>
@@ -79,7 +79,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
                     };
                     creature.AddQEffect(qfChannelSmite);
-                }));
+                });
 
             yield return new TrueFeat(RemasterFeats.FeatName.RaiseSymbol, 4, "You present your religious symbol emphatically.",
                 "You gain a +2 circumstance bonus to saving throws until the start of your next turn. While it's raised, if you roll a success at a saving throw against a vitality or void effect, you get a critical success instead.",
