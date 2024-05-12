@@ -11,12 +11,14 @@ using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Display.Text;
+using Dawnsbury.Core.Mechanics.Treasure;
 
 namespace Dawnsbury.Mods.Battlecry
 {
     internal class Guardian
     {
         // Taunt
+        // Guardian's Armor - can't do the chain specialization
         // Ferocious Vengeance - probably skip
         // Mitigate Harm
 
@@ -25,7 +27,7 @@ namespace Dawnsbury.Mods.Battlecry
         // Long-Distance Taunt - TODO
         // Reactive Shield - already available
         // Shoulder Check - TODO
-        
+
         // Armor Break - game doesn't really deal with broken state (and this ability is bad)
         // Covering Stance - a lot of functionality, but investigate
         // Hampering Sweeps - TODO
@@ -55,12 +57,36 @@ namespace Dawnsbury.Mods.Battlecry
                 null)
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
                 {
-                    sheet.GrantFeat(FeatName.ShieldBlock);
+                    sheet.GrantFeat(BattlecryMod.FeatName.GuardiansArmor);
                     sheet.GrantFeat(BattlecryMod.FeatName.InterceptStrike);
+                    sheet.GrantFeat(FeatName.ShieldBlock);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GuardianFeat1", "Guardian feat", 1, (feat) => feat.HasTrait(BattlecryMod.Trait.Guardian)));
                     // FIXME: How to deal with dying2 once per day
                     // TODO: investigate what happens if they already have diehard
                     sheet.AddAtLevel(3, (sheet) => sheet.GrantFeat(FeatName.Diehard));
+                });
+
+            // I'm not dealing with the chain specialization, which provides resistance to critical hits, since the system doesn't really expose that.
+            yield return new Feat(BattlecryMod.FeatName.GuardiansArmor, "Even when you are struck, your armor protects you from some harm.",
+                "You gain the armor specialization effects of medium and heavy armor. In addition, you can rest normally while wearing medium and heavy armor.",
+                new[] { BattlecryMod.Trait.Guardian }.ToList(), null)
+                .WithOnCreature((creature) => 
+                {
+                    // I'm not sure why, but the creature.BaseArmor is null. Get it from the character sheet instead
+                    Item? armor = creature.PersistentCharacterSheet?.InventoryForView.Armor;
+                    if (armor != null)
+                    {
+                        // None of the armor has potency runes yet (armor.ArmorProperties.ItemBonus), so we don't add that
+                        int resistance = armor.HasTrait(Trait.HeavyArmor) ? 2 : (armor.HasTrait(Trait.MediumArmor) ? 1 : 0);
+                        if (resistance > 0) 
+                        {
+                            DamageKind damageKind = armor.HasTrait(Trait.Leather) ? DamageKind.Bludgeoning : (armor.HasTrait(Trait.Composite) ? DamageKind.Piercing : (armor.HasTrait(Trait.Plate) ? DamageKind.Slashing : DamageKind.Untyped));
+                            if (damageKind != DamageKind.Untyped)
+                            {
+                                creature.AddQEffect(QEffect.DamageResistance(damageKind, resistance));
+                            }
+                        }
+                    }
                 });
 
             yield return new Feat(BattlecryMod.FeatName.InterceptStrike, "You fling yourself in the way of oncoming harm to protect an ally.",
@@ -134,7 +160,7 @@ namespace Dawnsbury.Mods.Battlecry
                     {
                         if (checkResult >= CheckResult.Success && caster.Abilities.Strength >= 0)
                         {
-                            await caster.DealDirectDamage(new DamageEvent(action, target, checkResult, 
+                            await caster.DealDirectDamage(new DamageEvent(action, target, checkResult,
                                 new[] { new KindedDamage(DiceFormula.FromText(caster.Abilities.Strength.ToString()), DamageKind.Bludgeoning) }, checkResult == CheckResult.CriticalSuccess));
                         }
                     };
@@ -142,6 +168,8 @@ namespace Dawnsbury.Mods.Battlecry
 
                     return new ActionPossibility(unkindShove);
                 });
+
         }
+
     }
 }

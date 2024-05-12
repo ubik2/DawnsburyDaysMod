@@ -20,7 +20,9 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName Commander = ModManager.RegisterFeatName("CommanderClass", "Commander");
             public static readonly Core.CharacterBuilder.Feats.FeatName Guardian = ModManager.RegisterFeatName("GuardianClass", "Guardian");
 
+            public static readonly Core.CharacterBuilder.Feats.FeatName GuardiansArmor = ModManager.RegisterFeatName("GuardiansArmor", "Guardian's Armor");
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptStrike = ModManager.RegisterFeatName("InterceptStrike", "Intercept Strike");
+            public static readonly Core.CharacterBuilder.Feats.FeatName Taunt = ModManager.RegisterFeatName("Taunt");
             public static readonly Core.CharacterBuilder.Feats.FeatName UnkindShove = ModManager.RegisterFeatName("UnkindShove", "Unkind Shove");
         }
 
