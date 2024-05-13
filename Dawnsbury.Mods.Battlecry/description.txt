@@ -10,6 +10,8 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Reactive Shield
  [*] Unkind Shove
  [*] Long-Distance Taunt
+ [*] Shielding Taunt
+ [*] Intercept Energy
 [/list]
 
 [h3]Missing Features[/h3]
@@ -24,11 +26,9 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Covering Stance - requires more investigation
  [*] Hampering Sweeps
  [*] Raise Haft
- [*] Shielding Taunt
  [*] Area Cover
  [*] Averting Shield - not useful in game
  [*] Flying Tackle
- [*] Intercept Energy
  [*] Intercept Foe - requires more investigation
  [*] Shielded Attrition - I probably won't do this one
 [/list]

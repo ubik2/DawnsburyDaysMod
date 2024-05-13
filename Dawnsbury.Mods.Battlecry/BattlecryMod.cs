@@ -23,8 +23,13 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName GuardiansArmor = ModManager.RegisterFeatName("GuardiansArmor", "Guardian's Armor");
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptStrike = ModManager.RegisterFeatName("InterceptStrike", "Intercept Strike");
             public static readonly Core.CharacterBuilder.Feats.FeatName Taunt = ModManager.RegisterFeatName("Taunt");
-            public static readonly Core.CharacterBuilder.Feats.FeatName UnkindShove = ModManager.RegisterFeatName("UnkindShove", "Unkind Shove");
+
             public static readonly Core.CharacterBuilder.Feats.FeatName LongDistanceTaunt = ModManager.RegisterFeatName("LongDistanceTaunt", "Long-Distance Taunt");
+            public static readonly Core.CharacterBuilder.Feats.FeatName UnkindShove = ModManager.RegisterFeatName("UnkindShove", "Unkind Shove");
+
+            public static readonly Core.CharacterBuilder.Feats.FeatName ShieldedTaunt = ModManager.RegisterFeatName("ShieldedTaunt", "Shielded Taunt");
+
+            public static readonly Core.CharacterBuilder.Feats.FeatName InterceptEnergy = ModManager.RegisterFeatName("InterceptEnergy", "Intercept Energy");
         }
 
         [DawnsburyDaysModMainMethod]

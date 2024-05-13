@@ -15,6 +15,7 @@ using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 
 namespace Dawnsbury.Mods.Battlecry
 {
@@ -75,7 +76,7 @@ namespace Dawnsbury.Mods.Battlecry
             yield return new Feat(BattlecryMod.FeatName.GuardiansArmor, "Even when you are struck, your armor protects you from some harm.",
                 "You gain the armor specialization effects of medium and heavy armor. In addition, you can rest normally while wearing medium and heavy armor.",
                 new[] { BattlecryMod.Trait.Guardian }.ToList(), null)
-                .WithOnCreature((creature) => 
+                .WithOnCreature((creature) =>
                 {
                     // I'm not sure why, but the creature.BaseArmor is null. Get it from the character sheet instead
                     Item? armor = creature.PersistentCharacterSheet?.InventoryForView.Armor;
@@ -83,7 +84,7 @@ namespace Dawnsbury.Mods.Battlecry
                     {
                         // None of the armor has potency runes yet (armor.ArmorProperties.ItemBonus), so we don't add that
                         int resistance = armor.HasTrait(Trait.HeavyArmor) ? 2 : (armor.HasTrait(Trait.MediumArmor) ? 1 : 0);
-                        if (resistance > 0) 
+                        if (resistance > 0)
                         {
                             DamageKind damageKind = armor.HasTrait(Trait.Leather) ? DamageKind.Bludgeoning : (armor.HasTrait(Trait.Composite) ? DamageKind.Piercing : (armor.HasTrait(Trait.Plate) ? DamageKind.Slashing : DamageKind.Untyped));
                             if (damageKind != DamageKind.Untyped)
@@ -117,7 +118,12 @@ namespace Dawnsbury.Mods.Battlecry
                                 YouAreDealtDamage = async (qEffect, attacker, damageStuff, defender) =>
                                 {
                                     Creature? protector = qEffect.Tag as Creature ?? throw new NullReferenceException("Intercept Strike creature is null.");
-                                    if (!damageStuff.Kind.IsPhysical() || !protector.IsAdjacentTo(defender) || !protector.Actions.CanTakeReaction())
+                                    if (!protector.IsAdjacentTo(defender) || !protector.Actions.CanTakeReaction())
+                                    {
+                                        return null;
+                                    }
+
+                                    if (!(damageStuff.Kind.IsPhysical() || qEffect.Owner.HasFeat(BattlecryMod.FeatName.InterceptEnergy) && IsEnergy(damageStuff.Kind)))
                                     {
                                         return null;
                                     }
@@ -150,52 +156,17 @@ namespace Dawnsbury.Mods.Battlecry
                     "As success, but the penalty is -2.",
                     "As success, but the penalty is -3."),
                 new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian }.ToList(), null)
-                .WithPermanentQEffect("Yyou get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfUnkindShove, section) =>
+                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
                 {
                     if (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers)
                     {
                         return null;
                     }
-                    int tauntRange = qEffect.Owner.HasFeat(BattlecryMod.FeatName.LongDistanceTaunt) ? 24 : 6;
-                    CombatAction taunt = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Taunt", new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian },
-                        "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you." +
-                        "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
-                        S.FourDegreesOfSuccess("The creature is unaffected.",
-                            "Until the beginning of your next turn, the creature gains a +2 circumstance bonus to attack rolls it makes against you and to its DCs of effects that target you (for area effects, the DC increases only for you), but takes a –1 circumstance penalty to attack rolls and DCs when taking a hostile action that doesn't include you as a target.",
-                            "As success, but the penalty is -2.",
-                            "As success, but the penalty is -3."),
-                        Target.RangedCreature(tauntRange).WithAdditionalConditionOnTargetCreature((c, t) => t.QEffects.Any((qf) => qf.Name == "GuardianTauntImmunity" && qf.Source == c) ? Usability.NotUsableOnThisCreature("Target is immune to your taunt until the beginning of your next turn.") : Usability.Usable))
-                    .WithActionCost(1)
-                    .WithSoundEffect(SfxName.BeastRoar).WithActionId(ActionId.Shove)
-                    .WithSavingThrow(new SavingThrow(Defense.Will, (Creature? cr) => GetClassDC(cr)))
-                    .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
-                    {
-                        target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
-                        if (checkResult == CheckResult.CriticalSuccess)
-                        {
-                            return;
-                        }
-                        int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
-                        target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
-                        {
-                            BonusToAttackRolls = (qEffect, action, defender) =>
-                            {
-                                if (defender == caster)
-                                {
-                                    return new Bonus(2, BonusType.Circumstance, "Taunt", true);
-                                } 
-                                else if (!action.Targets(caster) && penalty < 0)
-                                {
-                                    return new Bonus(penalty, BonusType.Circumstance, "Taunt", false);
-                                }
-                                return null;
-                            }
-                        }.WithExpirationAtStartOfSourcesTurn(caster, 1));
-                    });
+                    CombatAction taunt = Taunt(qEffect.Owner);
                     return new ActionPossibility(taunt);
                 });
 
-            
+
             // This is just a marker feat which we check for in the taunt code
             yield return new TrueFeat(BattlecryMod.FeatName.LongDistanceTaunt, 1, "You can draw the wrath of your foes even at a great distance.",
                 "When you use Taunt, you can choose a target within 120 feet.",
@@ -233,11 +204,136 @@ namespace Dawnsbury.Mods.Battlecry
                     return new ActionPossibility(unkindShove);
                 });
 
+
+            // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
+            yield return new TrueFeat(BattlecryMod.FeatName.ShieldedTaunt, 2, "By banging loudly on your shield, you get the attention of even the most stubborn of foes.",
+                "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.",
+                new[] { Trait.Flourish, BattlecryMod.Trait.Guardian }, null)
+                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
+                {
+                    Creature owner = qEffect.Owner;
+                    if (section.PossibilitySectionId != PossibilitySectionId.ItemActions)
+                    {
+                        return null;
+                    }
+                    Item? shield = qEffect.Owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                    if (shield == null)
+                    {
+                        return null;
+                    }
+                    bool hasShieldBlock = owner.HasEffect(QEffectId.ShieldBlock) || shield.HasTrait(Trait.AlwaysOfferShieldBlock);
+                    CombatAction shieldedTaunt = Taunt(owner).WithNoSaveFor((action, creature) => true).WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult _)
+                    {
+
+                        target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        target.AddQEffect(new QEffect("ShieldedTauntBonus", "bonus from shielded taunt")
+                        {
+                            BonusToDefenses = (effect, action, defense) => (action?.Name == "Taunt" || action?.Name == "Shielded Taunt") ? new Bonus(-1, BonusType.Circumstance, "Shielded Taunt", false) : null
+                        }.WithExpirationEphemeral());
+                        CheckResult checkResult = CommonSpellEffects.RollSavingThrow(target, action, Defense.Will, (_) => GetClassDC(action.Owner));
+                        if (checkResult == CheckResult.CriticalSuccess)
+                        {
+                            return;
+                        }
+                        int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
+                        target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
+                        {
+                            BonusToAttackRolls = (qEffect, action, defender) =>
+                            {
+                                if (defender == caster)
+                                {
+                                    return new Bonus(2, BonusType.Circumstance, "Taunt", true);
+                                }
+                                else if (!action.Targets(caster) && penalty < 0)
+                                {
+                                    return new Bonus(penalty, BonusType.Circumstance, "Taunt", false);
+                                }
+                                return null;
+                            }
+                        }.WithExpirationAtStartOfSourcesTurn(caster, 1));
+
+                    }).WithEffectOnSelf((caster) =>
+                    {
+                        QEffect qShieldRaised = QEffect.RaisingAShield(hasShieldBlock);
+                        if (hasShieldBlock)
+                            qShieldRaised.YouAreDealtDamage = async (qEffect, attacker, damageStuff, defender) =>
+                            {
+                                if (damageStuff.Kind == DamageKind.Bludgeoning || damageStuff.Kind == DamageKind.Piercing || damageStuff.Kind == DamageKind.Slashing)
+                                {
+                                    int preventHowMuch = Math.Min(shield.Hardness, damageStuff.Amount);
+                                    if (await defender.Battle.AskToUseReaction(defender, "You are about to be dealt damage by " + damageStuff.Power?.Name + ".\nUse Shield Block to resist " + preventHowMuch.ToString() + " damage?"))
+                                    {
+                                        qShieldRaised.YouAreDealtDamage = null;
+                                        return new ReduceDamageModification(preventHowMuch, "Shield block");
+                                    }
+                                }
+                                return null;
+                            };
+                        caster.AddQEffect(qShieldRaised);
+                    });
+                    shieldedTaunt.Name = "Shielded Taunt";
+                    shieldedTaunt.Illustration = shield.Illustration;
+                    shieldedTaunt.Traits.AddRange(new[] { Trait.Flourish, Trait.Auditory });
+                    shieldedTaunt.Description = "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.";
+                    return new ActionPossibility(shieldedTaunt);
+                });
+
+            // This is just a marker feat which we check for in the intercept-strike code
+            yield return new TrueFeat(BattlecryMod.FeatName.InterceptEnergy, 4, "By tempering your armor with chemicals, you can use it to absorb energy damage.",
+                "Your Intercept Strike also triggers when an adjacent ally would take acid, cold, fire, electricity, or sonic damage.",
+                new[] { BattlecryMod.Trait.Guardian }, null);
         }
 
         public static int GetClassDC(Creature? caster)
         {
             return 10 + (caster != null ? caster.Abilities.Intelligence : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
+        }
+
+        private static CombatAction Taunt(Creature owner)
+        {
+            int tauntRange = owner.HasFeat(BattlecryMod.FeatName.LongDistanceTaunt) ? 24 : 6;
+            CombatAction taunt = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Taunt", new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian },
+                "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you." +
+                "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
+                S.FourDegreesOfSuccess("The creature is unaffected.",
+                    "Until the beginning of your next turn, the creature gains a +2 circumstance bonus to attack rolls it makes against you and to its DCs of effects that target you (for area effects, the DC increases only for you), but takes a –1 circumstance penalty to attack rolls and DCs when taking a hostile action that doesn't include you as a target.",
+                    "As success, but the penalty is -2.",
+                    "As success, but the penalty is -3."),
+                Target.RangedCreature(tauntRange).WithAdditionalConditionOnTargetCreature((c, t) => t.QEffects.Any((qf) => qf.Name == "GuardianTauntImmunity" && qf.Source == c) ? Usability.NotUsableOnThisCreature("Target is immune to your taunt until the beginning of your next turn.") : Usability.Usable))
+            .WithActionCost(1)
+            .WithSoundEffect(SfxName.BeastRoar)
+            .WithSavingThrow(new SavingThrow(Defense.Will, (Creature? cr) => GetClassDC(cr)))
+            .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
+            {
+                target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                if (checkResult == CheckResult.CriticalSuccess)
+                {
+                    return;
+                }
+                int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
+                target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
+                {
+                    BonusToAttackRolls = (qEffect, action, defender) =>
+                    {
+                        if (defender == caster)
+                        {
+                            return new Bonus(2, BonusType.Circumstance, "Taunt", true);
+                        }
+                        else if (!action.Targets(caster) && penalty < 0)
+                        {
+                            return new Bonus(penalty, BonusType.Circumstance, "Taunt", false);
+                        }
+                        return null;
+                    }
+                }.WithExpirationAtStartOfSourcesTurn(caster, 1));
+            });
+
+            return taunt;
+        }
+
+        private static bool IsEnergy(DamageKind damageKind)
+        {
+            return damageKind == DamageKind.Acid || damageKind == DamageKind.Cold || damageKind == DamageKind.Fire || damageKind == DamageKind.Electricity || damageKind == DamageKind.Sonic;
         }
     }
 }
