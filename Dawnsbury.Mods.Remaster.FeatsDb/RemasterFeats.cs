@@ -9,7 +9,6 @@ using Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb
 {
-
     public class RemasterFeats
     {
         public class Trait

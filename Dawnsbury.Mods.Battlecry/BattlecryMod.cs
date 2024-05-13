@@ -24,6 +24,7 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptStrike = ModManager.RegisterFeatName("InterceptStrike", "Intercept Strike");
             public static readonly Core.CharacterBuilder.Feats.FeatName Taunt = ModManager.RegisterFeatName("Taunt");
             public static readonly Core.CharacterBuilder.Feats.FeatName UnkindShove = ModManager.RegisterFeatName("UnkindShove", "Unkind Shove");
+            public static readonly Core.CharacterBuilder.Feats.FeatName LongDistanceTaunt = ModManager.RegisterFeatName("LongDistanceTaunt", "Long-Distance Taunt");
         }
 
         [DawnsburyDaysModMainMethod]

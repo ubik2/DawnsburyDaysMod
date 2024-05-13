@@ -58,7 +58,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // The following are in limbo
         // ? Gust of Wind
         // ? Harm/Heal - these are already in game, but could be modified for vitality/void instead of positive/negative
-        // ? Infuse Vitality
+        // ? Infuse Vitality - should be able to hook into YouDealDamageWithStrike
         // ? Spirit Link
         public static void RegisterSpells()
         {

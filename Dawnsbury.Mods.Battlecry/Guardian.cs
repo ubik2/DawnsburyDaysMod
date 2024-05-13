@@ -12,21 +12,25 @@ using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Display.Text;
 using Dawnsbury.Core.Mechanics.Treasure;
+using Dawnsbury.Audio;
+using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core;
 
 namespace Dawnsbury.Mods.Battlecry
 {
     internal class Guardian
     {
-        // Taunt
+        // Taunt - bonus/pentaly only applies to attack rolls; doesn't change the AI behavior
         // Guardian's Armor - can't do the chain specialization
         // Ferocious Vengeance - probably skip
         // Mitigate Harm
 
         // Bodyguard - TODO
         // Larger Than Life - not useful in game
-        // Long-Distance Taunt - TODO
+        // Long-Distance Taunt
         // Reactive Shield - already available
         // Shoulder Check - TODO
+        // Unkind Shove
 
         // Armor Break - game doesn't really deal with broken state (and this ability is bad)
         // Covering Stance - a lot of functionality, but investigate
@@ -47,7 +51,7 @@ namespace Dawnsbury.Mods.Battlecry
             yield return new ClassSelectionFeat(BattlecryMod.FeatName.Guardian,
                 "You are the shield, the steel wall that holds back the tide of deadly force exhibited by enemies great and small. You are clad in armor that you wear like a second skin. You can angle your armor to protect yourself and your allies from damage and keep foes at bay. You also make yourself a more tempting target to take the hits that might have otherwise struck down your companions.",
                 BattlecryMod.Trait.Guardian, new EnforcedAbilityBoost(Ability.Strength), 10,
-                new[] { Trait.Perception, Trait.Reflex, Trait.Athletics, Trait.Simple, Trait.Martial, Trait.Unarmed, Trait.Armor, Trait.UnarmoredDefense },
+                new[] { Trait.Perception, Trait.Reflex, Trait.Athletics, Trait.Simple, Trait.Martial, Trait.Unarmed, Trait.Armor, Trait.UnarmoredDefense, BattlecryMod.Trait.Guardian },
                 new[] { Trait.Fortitude, Trait.Will },
                 3,
                 "{b}1. Guardian's Armor{/b} Even when you are struck, your armor protects you from some harm. You gain the armor specialization effects of medium and heavy armor.\n\n" +
@@ -60,6 +64,7 @@ namespace Dawnsbury.Mods.Battlecry
                     sheet.GrantFeat(BattlecryMod.FeatName.GuardiansArmor);
                     sheet.GrantFeat(BattlecryMod.FeatName.InterceptStrike);
                     sheet.GrantFeat(FeatName.ShieldBlock);
+                    sheet.GrantFeat(BattlecryMod.FeatName.Taunt);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GuardianFeat1", "Guardian feat", 1, (feat) => feat.HasTrait(BattlecryMod.Trait.Guardian)));
                     // FIXME: How to deal with dying2 once per day
                     // TODO: investigate what happens if they already have diehard
@@ -138,6 +143,65 @@ namespace Dawnsbury.Mods.Battlecry
                     };
                 });
 
+            yield return new Feat(BattlecryMod.FeatName.Taunt, "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you.",
+                "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
+                S.FourDegreesOfSuccess("The creature is unaffected.",
+                    "Until the beginning of your next turn, the creature gains a +2 circumstance bonus to attack rolls it makes against you and to its DCs of effects that target you (for area effects, the DC increases only for you), but takes a –1 circumstance penalty to attack rolls and DCs when taking a hostile action that doesn't include you as a target.",
+                    "As success, but the penalty is -2.",
+                    "As success, but the penalty is -3."),
+                new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian }.ToList(), null)
+                .WithPermanentQEffect("Yyou get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfUnkindShove, section) =>
+                {
+                    if (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers)
+                    {
+                        return null;
+                    }
+                    int tauntRange = qEffect.Owner.HasFeat(BattlecryMod.FeatName.LongDistanceTaunt) ? 24 : 6;
+                    CombatAction taunt = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Taunt", new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian },
+                        "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you." +
+                        "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
+                        S.FourDegreesOfSuccess("The creature is unaffected.",
+                            "Until the beginning of your next turn, the creature gains a +2 circumstance bonus to attack rolls it makes against you and to its DCs of effects that target you (for area effects, the DC increases only for you), but takes a –1 circumstance penalty to attack rolls and DCs when taking a hostile action that doesn't include you as a target.",
+                            "As success, but the penalty is -2.",
+                            "As success, but the penalty is -3."),
+                        Target.RangedCreature(tauntRange).WithAdditionalConditionOnTargetCreature((c, t) => t.QEffects.Any((qf) => qf.Name == "GuardianTauntImmunity" && qf.Source == c) ? Usability.NotUsableOnThisCreature("Target is immune to your taunt until the beginning of your next turn.") : Usability.Usable))
+                    .WithActionCost(1)
+                    .WithSoundEffect(SfxName.BeastRoar).WithActionId(ActionId.Shove)
+                    .WithSavingThrow(new SavingThrow(Defense.Will, (Creature? cr) => GetClassDC(cr)))
+                    .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
+                    {
+                        target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        if (checkResult == CheckResult.CriticalSuccess)
+                        {
+                            return;
+                        }
+                        int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
+                        target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
+                        {
+                            BonusToAttackRolls = (qEffect, action, defender) =>
+                            {
+                                if (defender == caster)
+                                {
+                                    return new Bonus(2, BonusType.Circumstance, "Taunt", true);
+                                } 
+                                else if (!action.Targets(caster) && penalty < 0)
+                                {
+                                    return new Bonus(penalty, BonusType.Circumstance, "Taunt", false);
+                                }
+                                return null;
+                            }
+                        }.WithExpirationAtStartOfSourcesTurn(caster, 1));
+                    });
+                    return new ActionPossibility(taunt);
+                });
+
+            
+            // This is just a marker feat which we check for in the taunt code
+            yield return new TrueFeat(BattlecryMod.FeatName.LongDistanceTaunt, 1, "You can draw the wrath of your foes even at a great distance.",
+                "When you use Taunt, you can choose a target within 120 feet.",
+                new[] { BattlecryMod.Trait.Guardian }, null);
+
+
             // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
             yield return new TrueFeat(BattlecryMod.FeatName.UnkindShove, 1, "When you push a foe away, you put the entire force of your armored form into it.",
                 "When you successfully Shove a creature, that creature takes an amount of bludgeoning damage equal to your Strength modifier (double that amount on a critical success).",
@@ -171,5 +235,9 @@ namespace Dawnsbury.Mods.Battlecry
 
         }
 
+        public static int GetClassDC(Creature? caster)
+        {
+            return 10 + (caster != null ? caster.Abilities.Intelligence : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
+        }
     }
 }

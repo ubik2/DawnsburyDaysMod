@@ -658,7 +658,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                     await PerformFlamingSphereAttack(spell, caster, tile.PrimaryOccupant, damage);
                                 }
                             }
-                        }).WithSpellSavingThrow(new Defense?(Defense.Reflex))).WithPossibilityGroup("Maintain an activity");
+                        }).WithSpellSavingThrow(Defense.Reflex)).WithPossibilityGroup("Maintain an activity");
                     },
                     StateCheck = (qEffect) =>
                     {
