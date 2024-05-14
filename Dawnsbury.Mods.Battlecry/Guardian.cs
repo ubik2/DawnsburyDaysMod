@@ -16,6 +16,8 @@ using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Coroutines.Requests;
 
 namespace Dawnsbury.Mods.Battlecry
 {
@@ -32,16 +34,16 @@ namespace Dawnsbury.Mods.Battlecry
         // Reactive Shield - already available
         // Shoulder Check - TODO
         // Unkind Shove
+        // Flying Tackle - leap replaced with stride 15'
+        // Hampering Sweeps - TODO
 
         // Armor Break - game doesn't really deal with broken state (and this ability is bad)
         // Covering Stance - a lot of functionality, but investigate
-        // Hampering Sweeps - TODO
         // Raise Haft - TODO
         // Shielding Taunt - TODO
 
         // Area Cover
         // Averting Shield - not useful in game
-        // Flying Tackle
         // Intercept Energy
         // Intercept Foe - do we get a call when an ally is targeted?
         // Shielded Attrition - probably too tricky
@@ -73,6 +75,7 @@ namespace Dawnsbury.Mods.Battlecry
                     sheet.AddAtLevel(3, (sheet) => sheet.GrantFeat(FeatName.Diehard));
                 });
 
+
             // I'm not dealing with the chain specialization, which provides resistance to critical hits, since the system doesn't really expose that.
             yield return new Feat(BattlecryMod.FeatName.GuardiansArmor, "Even when you are struck, your armor protects you from some harm.",
                 "You gain the armor specialization effects of medium and heavy armor. In addition, you can rest normally while wearing medium and heavy armor.",
@@ -95,6 +98,7 @@ namespace Dawnsbury.Mods.Battlecry
                         }
                     }
                 });
+
 
             yield return new Feat(BattlecryMod.FeatName.InterceptStrike, "You fling yourself in the way of oncoming harm to protect an ally.",
                 "You take the damage instead of your ally, though thanks to your armor, you gain resistance to all damage against the triggering damage equal to 2 + your level.",
@@ -150,6 +154,7 @@ namespace Dawnsbury.Mods.Battlecry
                     };
                 });
 
+
             yield return new Feat(BattlecryMod.FeatName.Taunt, "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you.",
                 "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
                 S.FourDegreesOfSuccess("The creature is unaffected.",
@@ -157,14 +162,9 @@ namespace Dawnsbury.Mods.Battlecry
                     "As success, but the penalty is -2.",
                     "As success, but the penalty is -3."),
                 [Trait.Concentrate, BattlecryMod.Trait.Guardian], null)
-                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
+                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (qEffect) => qEffect.ProvideMainAction = (qfTaunt) =>
                 {
-                    if (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers)
-                    {
-                        return null;
-                    }
-                    CombatAction taunt = Taunt(qEffect.Owner);
-                    return new ActionPossibility(taunt);
+                    return new ActionPossibility(Taunt(qEffect.Owner)).WithPossibilityGroup(nameof(Guardian));
                 });
 
 
@@ -178,12 +178,8 @@ namespace Dawnsbury.Mods.Battlecry
             yield return new TrueFeat(BattlecryMod.FeatName.UnkindShove, 1, "When you push a foe away, you put the entire force of your armored form into it.",
                 "When you successfully Shove a creature, that creature takes an amount of bludgeoning damage equal to your Strength modifier (double that amount on a critical success).",
                 [BattlecryMod.Trait.Guardian], null)
-                .WithPermanentQEffect("When you push a foe away, you put the entire force of your armored form into it.", (qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfUnkindShove, section) =>
+                .WithPermanentQEffect("When you push a foe away, you put the entire force of your armored form into it.", (qEffect) => qEffect.ProvideMainAction = (qfUnkindShove) =>
                 {
-                    if (section.PossibilitySectionId != PossibilitySectionId.AttackManeuvers)
-                    {
-                        return null;
-                    }
                     CombatAction unkindShove = Possibilities.CreateShove(qEffect.Owner);
                     int damage = Math.Max(0, qEffect.Owner.Abilities.Strength);
                     unkindShove.Name = "Unkind Shove";
@@ -202,20 +198,17 @@ namespace Dawnsbury.Mods.Battlecry
                     };
                     unkindShove.WithEffectOnEachTarget((Delegates.EffectOnEachTarget)Delegate.Combine(shoveDamageDelegate, unkindShove.EffectOnOneTarget));
 
-                    return new ActionPossibility(unkindShove);
+                    return new ActionPossibility(unkindShove).WithPossibilityGroup(nameof(Guardian));
                 });
+
 
             // I didn't see any way to restrict the squares the target could move into, so I instead reduce their speed to 5'
             yield return new TrueFeat(BattlecryMod.FeatName.HamperingSweeps, 2, "You make it difficult for enemies to move away from you once they have gotten close.",
                 "Until the beginning of your next turn or until you move, whichever comes first, foes within reach of the weapon you are wielding or your unarmed attack can’t use move actions to move outside of the reach of your weapon or unarmed attack. They can still move to other squares within reach of your weapon or unarmed attack." +
                 "\n\n{i}currently reduces speed to 5' instead{/i}",
-                [BattlecryMod.Trait.Guardian], null)
-                .WithPermanentQEffect("You make it difficult for enemies to move away from you once they have gotten close.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfHamperingSweeps, section) =>
+                [BattlecryMod.Trait.Guardian], null).WithActionCost(1)
+                .WithPermanentQEffect("You make it difficult for enemies to move away from you once they have gotten close.", (qEffect) => qEffect.ProvideMainAction = (qfHamperingSweeps) =>
                 {
-                    if (section.PossibilitySectionId != PossibilitySectionId.AttackManeuvers)
-                    {
-                        return null;
-                    }
                     CombatAction hamperingSweeps = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Hampering Sweeps", [BattlecryMod.Trait.Guardian], "You make it difficult for enemies to move away from you once they have gotten close.",
                         Target.Melee()).WithSoundEffect(SfxName.Shove).WithActionCost(1)
                         .WithEffectOnEachTarget(async (CombatAction action, Creature caster, Creature target, CheckResult checkResult) =>
@@ -228,20 +221,17 @@ namespace Dawnsbury.Mods.Battlecry
                             target.AddQEffect(hamperingEffect);
                         });
 
-                    return new ActionPossibility(hamperingSweeps);
+                    return new ActionPossibility(hamperingSweeps).WithPossibilityGroup(nameof(Guardian));
                 });
+
 
             // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
             yield return new TrueFeat(BattlecryMod.FeatName.ShieldedTaunt, 2, "By banging loudly on your shield, you get the attention of even the most stubborn of foes.",
                 "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.",
-                [Trait.Flourish, BattlecryMod.Trait.Guardian], null)
-                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
+                [Trait.Flourish, BattlecryMod.Trait.Guardian], null).WithActionCost(1)
+                .WithPermanentQEffect("You get an enemy to focus their ire on you.", (qEffect) => qEffect.ProvideMainAction = (qfTaunt) =>
                 {
                     Creature owner = qEffect.Owner;
-                    if (section.PossibilitySectionId != PossibilitySectionId.ItemActions)
-                    {
-                        return null;
-                    }
                     Item? shield = qEffect.Owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
                     if (shield == null)
                     {
@@ -277,7 +267,6 @@ namespace Dawnsbury.Mods.Battlecry
                                 return null;
                             }
                         }.WithExpirationAtStartOfSourcesTurn(caster, 1));
-
                     }).WithEffectOnSelf((caster) =>
                     {
                         QEffect qShieldRaised = QEffect.RaisingAShield(hasShieldBlock);
@@ -301,15 +290,37 @@ namespace Dawnsbury.Mods.Battlecry
                     shieldedTaunt.Illustration = shield.Illustration;
                     shieldedTaunt.Traits.AddRange([Trait.Flourish, Trait.Auditory]);
                     shieldedTaunt.Description = "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.";
-                    return new ActionPossibility(shieldedTaunt);
+                    return new ActionPossibility(shieldedTaunt).WithPossibilityGroup(nameof(Guardian));
                 });
+
+
+            yield return new TrueFeat(BattlecryMod.FeatName.FlyingTackle, 4, "You barrel forward, gathering enough momentum to take down a threatening foe.",
+                "Stride and then Leap. If you end your movement adjacent to a foe, you can attempt to Trip that foe. If you succeed at the Athletics check, you get a critical success. You can use Flying Tackle while Burrowing, Climbing, Flying, or Swimming instead of Striding if you have the corresponding movement type.",
+                [Trait.Flourish, BattlecryMod.Trait.Guardian], null).WithActionCost(2)
+                .WithPermanentQEffect("Stride twice, then make a melee Strike.", (qf) => qf.ProvideMainAction = (qfSelf) => new ActionPossibility(new CombatAction(qfSelf.Owner, IllustrationName.FleetStep, "Flying Tackle", [Trait.Flourish, Trait.Move, BattlecryMod.Trait.Guardian],
+                    "Stride and then Leap. If you end your movement adjacent to a foe, you can attempt to Trip that foe. If you succeed at the Athletics check, you get a critical succes", Target.Self()).WithActionCost(2).WithSoundEffect(SfxName.Footsteps)
+                    .WithEffectOnSelf(async (action, self) =>
+                    {
+                        if (!await self.StrideAsync("Choose where to Stride with Flying Tackle.", allowCancel: true))
+                        {
+                            action.RevertRequested = true;
+                        }
+                        else
+                        {
+                            self.AddQEffect(new QEffect("Leap", "Set speed to 15' for leap") { SetBaseSpeedTo = 3, ExpiresAt = ExpirationCondition.Immediately });
+                            int num = await self.StrideAsync("Choose where to Leap with Flying Tackle. You should end your movement within melee reach of an enemy.", allowPass: true) ? 1 : 0;
+                            // Upgrade the check result from success to critical success
+                            await TripAdjacentCreature(self, (_, input) => input == CheckResult.Success ? CheckResult.CriticalSuccess : input);
+                        }
+                    })).WithPossibilityGroup(nameof(Guardian)));
+
 
             // This is just a marker feat which we check for in the intercept-strike code
             yield return new TrueFeat(BattlecryMod.FeatName.InterceptEnergy, 4, "By tempering your armor with chemicals, you can use it to absorb energy damage.",
                 "Your Intercept Strike also triggers when an adjacent ally would take acid, cold, fire, electricity, or sonic damage.",
                 [BattlecryMod.Trait.Guardian], null);
         }
-
+        
         public static int GetClassDC(Creature? caster)
         {
             return 10 + (caster != null ? caster.Abilities.Intelligence : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
@@ -360,6 +371,40 @@ namespace Dawnsbury.Mods.Battlecry
         private static bool IsEnergy(DamageKind damageKind)
         {
             return damageKind == DamageKind.Acid || damageKind == DamageKind.Cold || damageKind == DamageKind.Fire || damageKind == DamageKind.Electricity || damageKind == DamageKind.Sonic;
+        }
+
+        private static async Task TripAdjacentCreature(Creature creature, Func<CombatAction, CheckResult, CheckResult>? adjustCheckResult = null)
+        {
+            List<Option> list = new List<Option>();
+            CombatAction baseTrip = Possibilities.CreateTrip(creature);
+            Delegates.EffectOnEachTarget? baseEffectOnOneTarget = baseTrip.EffectOnOneTarget;
+            CombatAction combatAction = baseTrip.WithActionCost(0).WithEffectOnEachTarget(async (CombatAction power, Creature a, Creature t, CheckResult sk) =>
+            {
+                if (baseEffectOnOneTarget != null)
+                {
+                    if (adjustCheckResult != null)
+                    {
+                        sk = adjustCheckResult(power, sk);
+                    }
+                    await baseEffectOnOneTarget(power, a, t, sk);
+                }
+            });
+            GameLoop.AddDirectUsageOnCreatureOptions(combatAction, list);
+        
+            if (list.Count > 0)
+            {
+                if (list.Count == 1)
+                {
+                    await list[0].Action();
+                    return;
+                }
+
+                await (await creature.Battle.SendRequest(new AdvancedRequest(creature, "Choose a creature to Trip.", list)
+                {
+                    TopBarText = "Choose a creature to Trip.",
+                    TopBarIcon = IllustrationName.Trip
+                })).ChosenOption.Action();
+            }
         }
     }
 }

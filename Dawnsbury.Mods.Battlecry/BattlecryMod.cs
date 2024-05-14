@@ -30,6 +30,7 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName HamperingSweeps = ModManager.RegisterFeatName("HamperingSweeps", "Hampering Sweeps");
             public static readonly Core.CharacterBuilder.Feats.FeatName ShieldedTaunt = ModManager.RegisterFeatName("ShieldedTaunt", "Shielded Taunt");
 
+            public static readonly Core.CharacterBuilder.Feats.FeatName FlyingTackle = ModManager.RegisterFeatName("FlyingTackle", "Flying Tackle");
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptEnergy = ModManager.RegisterFeatName("InterceptEnergy", "Intercept Energy");
         }
 
