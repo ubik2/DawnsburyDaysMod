@@ -10,6 +10,7 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Reactive Shield
  [*] Unkind Shove
  [*] Long-Distance Taunt
+ [*] Hampering Sweeps - this just reduces the speed to 5'
  [*] Shielding Taunt
  [*] Intercept Energy
 [/list]
@@ -24,7 +25,6 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Tough to Kill - daily benefit of dying 3 to dying 2 isn't implemented
  [*] Armor Break - I probably won't do this one
  [*] Covering Stance - requires more investigation
- [*] Hampering Sweeps
  [*] Raise Haft
  [*] Area Cover
  [*] Averting Shield - not useful in game
@@ -32,7 +32,6 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Intercept Foe - requires more investigation
  [*] Shielded Attrition - I probably won't do this one
 [/list]
-[/h3]
 
 [h3]Commander[/h3]
 Only the base class is implemented. No class features or feats.

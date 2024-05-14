@@ -47,13 +47,14 @@ namespace Dawnsbury.Mods.Battlecry
         // Shielded Attrition - probably too tricky
 
         // Tough to Kill - daily benefit of dying 3 to dying 2 isn't implemented
+        // TODO: Trained in blank as a skill (likely based on trained in Guardian)
         public static IEnumerable<Feat> LoadAll()
         {
             yield return new ClassSelectionFeat(BattlecryMod.FeatName.Guardian,
                 "You are the shield, the steel wall that holds back the tide of deadly force exhibited by enemies great and small. You are clad in armor that you wear like a second skin. You can angle your armor to protect yourself and your allies from damage and keep foes at bay. You also make yourself a more tempting target to take the hits that might have otherwise struck down your companions.",
                 BattlecryMod.Trait.Guardian, new EnforcedAbilityBoost(Ability.Strength), 10,
-                new[] { Trait.Perception, Trait.Reflex, Trait.Athletics, Trait.Simple, Trait.Martial, Trait.Unarmed, Trait.Armor, Trait.UnarmoredDefense, BattlecryMod.Trait.Guardian },
-                new[] { Trait.Fortitude, Trait.Will },
+                [Trait.Perception, Trait.Reflex, Trait.Athletics, Trait.Simple, Trait.Martial, Trait.Unarmed, Trait.Armor, Trait.UnarmoredDefense, BattlecryMod.Trait.Guardian],
+                [Trait.Fortitude, Trait.Will],
                 3,
                 "{b}1. Guardian's Armor{/b} Even when you are struck, your armor protects you from some harm. You gain the armor specialization effects of medium and heavy armor.\n\n" +
                 "{b}2. Intercept Strike {icon:Reaction}{/b} You keep your charges safe from harm, even if it means you get hurt yourself. You gain the Intercept Strike reaction.\n\n" +
@@ -75,7 +76,7 @@ namespace Dawnsbury.Mods.Battlecry
             // I'm not dealing with the chain specialization, which provides resistance to critical hits, since the system doesn't really expose that.
             yield return new Feat(BattlecryMod.FeatName.GuardiansArmor, "Even when you are struck, your armor protects you from some harm.",
                 "You gain the armor specialization effects of medium and heavy armor. In addition, you can rest normally while wearing medium and heavy armor.",
-                new[] { BattlecryMod.Trait.Guardian }.ToList(), null)
+                [BattlecryMod.Trait.Guardian], null)
                 .WithOnCreature((creature) =>
                 {
                     // I'm not sure why, but the creature.BaseArmor is null. Get it from the character sheet instead
@@ -97,7 +98,7 @@ namespace Dawnsbury.Mods.Battlecry
 
             yield return new Feat(BattlecryMod.FeatName.InterceptStrike, "You fling yourself in the way of oncoming harm to protect an ally.",
                 "You take the damage instead of your ally, though thanks to your armor, you gain resistance to all damage against the triggering damage equal to 2 + your level.",
-                new[] { BattlecryMod.Trait.Guardian }.ToList(), null)
+                [BattlecryMod.Trait.Guardian], null)
                 .WithPermanentQEffect("You fling yourself in the way of oncoming harm to protect an ally.", (QEffect qEffect) =>
                 {
                     // At the beginning of combat, we'll apply an effect to all creatures of our faction that can potentially trigger this intercept strike action.
@@ -140,7 +141,7 @@ namespace Dawnsbury.Mods.Battlecry
                                     // We only take damage if the amount is greater than zero (no healing and no minimum 1 for 0 damage).
                                     if (protectorDamage > 0)
                                     {
-                                        await protector.DealDirectDamage(new DamageEvent(damageStuff.Power, protector, CheckResult.Success, new[] { new KindedDamage(DiceFormula.FromText(protectorDamage.ToString()), damageStuff.Kind) }));
+                                        await protector.DealDirectDamage(new DamageEvent(damageStuff.Power, protector, CheckResult.Success, [new KindedDamage(DiceFormula.FromText(protectorDamage.ToString()), damageStuff.Kind)]));
                                     }
                                     return new SetToTargetNumberModification(0, "An ally used Intercept Strike to take the damage instead of you.");
                                 }
@@ -155,7 +156,7 @@ namespace Dawnsbury.Mods.Battlecry
                     "Until the beginning of your next turn, the creature gains a +2 circumstance bonus to attack rolls it makes against you and to its DCs of effects that target you (for area effects, the DC increases only for you), but takes a –1 circumstance penalty to attack rolls and DCs when taking a hostile action that doesn't include you as a target.",
                     "As success, but the penalty is -2.",
                     "As success, but the penalty is -3."),
-                new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian }.ToList(), null)
+                [Trait.Concentrate, BattlecryMod.Trait.Guardian], null)
                 .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
                 {
                     if (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers)
@@ -170,13 +171,13 @@ namespace Dawnsbury.Mods.Battlecry
             // This is just a marker feat which we check for in the taunt code
             yield return new TrueFeat(BattlecryMod.FeatName.LongDistanceTaunt, 1, "You can draw the wrath of your foes even at a great distance.",
                 "When you use Taunt, you can choose a target within 120 feet.",
-                new[] { BattlecryMod.Trait.Guardian }, null);
+                [BattlecryMod.Trait.Guardian], null);
 
 
             // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
             yield return new TrueFeat(BattlecryMod.FeatName.UnkindShove, 1, "When you push a foe away, you put the entire force of your armored form into it.",
                 "When you successfully Shove a creature, that creature takes an amount of bludgeoning damage equal to your Strength modifier (double that amount on a critical success).",
-                new[] { BattlecryMod.Trait.Guardian }, null)
+                [BattlecryMod.Trait.Guardian], null)
                 .WithPermanentQEffect("When you push a foe away, you put the entire force of your armored form into it.", (qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfUnkindShove, section) =>
                 {
                     if (section.PossibilitySectionId != PossibilitySectionId.AttackManeuvers)
@@ -196,7 +197,7 @@ namespace Dawnsbury.Mods.Battlecry
                         if (checkResult >= CheckResult.Success && caster.Abilities.Strength >= 0)
                         {
                             await caster.DealDirectDamage(new DamageEvent(action, target, checkResult,
-                                new[] { new KindedDamage(DiceFormula.FromText(caster.Abilities.Strength.ToString()), DamageKind.Bludgeoning) }, checkResult == CheckResult.CriticalSuccess));
+                                [new KindedDamage(DiceFormula.FromText(caster.Abilities.Strength.ToString()), DamageKind.Bludgeoning)], checkResult == CheckResult.CriticalSuccess));
                         }
                     };
                     unkindShove.WithEffectOnEachTarget((Delegates.EffectOnEachTarget)Delegate.Combine(shoveDamageDelegate, unkindShove.EffectOnOneTarget));
@@ -204,11 +205,36 @@ namespace Dawnsbury.Mods.Battlecry
                     return new ActionPossibility(unkindShove);
                 });
 
+            // I didn't see any way to restrict the squares the target could move into, so I instead reduce their speed to 5'
+            yield return new TrueFeat(BattlecryMod.FeatName.HamperingSweeps, 2, "You make it difficult for enemies to move away from you once they have gotten close.",
+                "Until the beginning of your next turn or until you move, whichever comes first, foes within reach of the weapon you are wielding or your unarmed attack can’t use move actions to move outside of the reach of your weapon or unarmed attack. They can still move to other squares within reach of your weapon or unarmed attack." +
+                "\n\n{i}currently reduces speed to 5' instead{/i}",
+                [BattlecryMod.Trait.Guardian], null)
+                .WithPermanentQEffect("You make it difficult for enemies to move away from you once they have gotten close.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfHamperingSweeps, section) =>
+                {
+                    if (section.PossibilitySectionId != PossibilitySectionId.AttackManeuvers)
+                    {
+                        return null;
+                    }
+                    CombatAction hamperingSweeps = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Hampering Sweeps", [BattlecryMod.Trait.Guardian], "You make it difficult for enemies to move away from you once they have gotten close.",
+                        Target.Melee()).WithSoundEffect(SfxName.Shove).WithActionCost(1)
+                        .WithEffectOnEachTarget(async (CombatAction action, Creature caster, Creature target, CheckResult checkResult) =>
+                        {
+                            QEffect hamperingEffect = new QEffect("Slowed by Hampering Sweeps", "Your speed is reduced to 5'.") { SetBaseSpeedTo = 1 }.WithExpirationAtStartOfSourcesTurn(caster, 1);
+                            caster.AddQEffect(new QEffect("Hampering Sweeps", "You are preventing the movement of your foe.")
+                            {
+                                YouBeginAction = async (qEffect, action) => { if (action.HasTrait(Trait.Move)) { hamperingEffect.ExpiresAt = ExpirationCondition.Immediately; } }
+                            });
+                            target.AddQEffect(hamperingEffect);
+                        });
+
+                    return new ActionPossibility(hamperingSweeps);
+                });
 
             // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
             yield return new TrueFeat(BattlecryMod.FeatName.ShieldedTaunt, 2, "By banging loudly on your shield, you get the attention of even the most stubborn of foes.",
                 "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.",
-                new[] { Trait.Flourish, BattlecryMod.Trait.Guardian }, null)
+                [Trait.Flourish, BattlecryMod.Trait.Guardian], null)
                 .WithPermanentQEffect("You get an enemy to focus their ire on you.", (QEffect qEffect) => qEffect.ProvideActionIntoPossibilitySection = (qfTaunt, section) =>
                 {
                     Creature owner = qEffect.Owner;
@@ -225,8 +251,8 @@ namespace Dawnsbury.Mods.Battlecry
                     CombatAction shieldedTaunt = Taunt(owner).WithNoSaveFor((action, creature) => true).WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult _)
                     {
 
-                        target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
-                        target.AddQEffect(new QEffect("ShieldedTauntBonus", "bonus from shielded taunt")
+                        target.AddQEffect(new QEffect("Guardian Taunt Immunity", "Immune to taunt by " + owner.Name).WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        target.AddQEffect(new QEffect("Shielded Taunt Bonus", "bonus from shielded taunt")
                         {
                             BonusToDefenses = (effect, action, defense) => (action?.Name == "Taunt" || action?.Name == "Shielded Taunt") ? new Bonus(-1, BonusType.Circumstance, "Shielded Taunt", false) : null
                         }.WithExpirationEphemeral());
@@ -236,7 +262,7 @@ namespace Dawnsbury.Mods.Battlecry
                             return;
                         }
                         int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
-                        target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
+                        target.AddQEffect(new QEffect("Guardian Taunt", "Taunted by " + owner.Name)
                         {
                             BonusToAttackRolls = (qEffect, action, defender) =>
                             {
@@ -273,7 +299,7 @@ namespace Dawnsbury.Mods.Battlecry
                     });
                     shieldedTaunt.Name = "Shielded Taunt";
                     shieldedTaunt.Illustration = shield.Illustration;
-                    shieldedTaunt.Traits.AddRange(new[] { Trait.Flourish, Trait.Auditory });
+                    shieldedTaunt.Traits.AddRange([Trait.Flourish, Trait.Auditory]);
                     shieldedTaunt.Description = "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.";
                     return new ActionPossibility(shieldedTaunt);
                 });
@@ -281,7 +307,7 @@ namespace Dawnsbury.Mods.Battlecry
             // This is just a marker feat which we check for in the intercept-strike code
             yield return new TrueFeat(BattlecryMod.FeatName.InterceptEnergy, 4, "By tempering your armor with chemicals, you can use it to absorb energy damage.",
                 "Your Intercept Strike also triggers when an adjacent ally would take acid, cold, fire, electricity, or sonic damage.",
-                new[] { BattlecryMod.Trait.Guardian }, null);
+                [BattlecryMod.Trait.Guardian], null);
         }
 
         public static int GetClassDC(Creature? caster)
@@ -292,7 +318,7 @@ namespace Dawnsbury.Mods.Battlecry
         private static CombatAction Taunt(Creature owner)
         {
             int tauntRange = owner.HasFeat(BattlecryMod.FeatName.LongDistanceTaunt) ? 24 : 6;
-            CombatAction taunt = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Taunt", new[] { Trait.Concentrate, BattlecryMod.Trait.Guardian },
+            CombatAction taunt = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Taunt", [Trait.Concentrate, BattlecryMod.Trait.Guardian],
                 "With an attention-getting gesture, a cutting remark, or a threatening shout, you get an enemy to focus their ire on you." +
                 "Even mindless creatures are drawn to your taunts. Choose a creature within 30 feet, who must attempts a Will save against your class DC. Regardless of the result, it is immune to your Taunt until the beginning of your next turn. If you gesture, this action gains the visual trait. If you speak or otherwise make noise, this action gains the auditory trait. Your Taunt must have one of those two traits." +
                 S.FourDegreesOfSuccess("The creature is unaffected.",
@@ -305,13 +331,13 @@ namespace Dawnsbury.Mods.Battlecry
             .WithSavingThrow(new SavingThrow(Defense.Will, (Creature? cr) => GetClassDC(cr)))
             .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
             {
-                target.AddQEffect(new QEffect("GuardianTauntImmunity", "Immune to taunt").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                target.AddQEffect(new QEffect("Guardian Taunt Immunity", "Immune to taunt by " + owner.Name).WithExpirationAtStartOfSourcesTurn(caster, 1));
                 if (checkResult == CheckResult.CriticalSuccess)
                 {
                     return;
                 }
                 int penalty = checkResult switch { CheckResult.Success => -1, CheckResult.Failure => -2, CheckResult.CriticalFailure => -3, _ => 0 };
-                target.AddQEffect(new QEffect("GuardianTaunt", "Taunted")
+                target.AddQEffect(new QEffect("Guardian Taunt", "Taunted by " + owner.Name)
                 {
                     BonusToAttackRolls = (qEffect, action, defender) =>
                     {
