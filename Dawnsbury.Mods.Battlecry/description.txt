@@ -11,24 +11,24 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Unkind Shove
  [*] Long-Distance Taunt
  [*] Hampering Sweeps - this just reduces the speed to 5'
+ [*] Raise Haft
  [*] Shielding Taunt
+ [*] Flying Tackle - leap is just a 15' stride
  [*] Intercept Energy
 [/list]
 
 [h3]Missing Features[/h3]
 [list]
  [*] Ferocious Vengeance - I probably won't do this one
- [*] Mitigate Harm
+ [*] Mitigate Harm - Not sure how to deal with this
  [*] Bodyguard
  [*] Larger Than Life - not useful in game
  [*] Shoulder Check
  [*] Tough to Kill - daily benefit of dying 3 to dying 2 isn't implemented
  [*] Armor Break - I probably won't do this one
  [*] Covering Stance - requires more investigation
- [*] Raise Haft
  [*] Area Cover
  [*] Averting Shield - not useful in game
- [*] Flying Tackle
  [*] Intercept Foe - requires more investigation
  [*] Shielded Attrition - I probably won't do this one
 [/list]

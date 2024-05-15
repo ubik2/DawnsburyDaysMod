@@ -28,6 +28,7 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName UnkindShove = ModManager.RegisterFeatName("UnkindShove", "Unkind Shove");
 
             public static readonly Core.CharacterBuilder.Feats.FeatName HamperingSweeps = ModManager.RegisterFeatName("HamperingSweeps", "Hampering Sweeps");
+            public static readonly Core.CharacterBuilder.Feats.FeatName RaiseHaft = ModManager.RegisterFeatName("RaiseHaft", "Raise Haft");
             public static readonly Core.CharacterBuilder.Feats.FeatName ShieldedTaunt = ModManager.RegisterFeatName("ShieldedTaunt", "Shielded Taunt");
 
             public static readonly Core.CharacterBuilder.Feats.FeatName FlyingTackle = ModManager.RegisterFeatName("FlyingTackle", "Flying Tackle");

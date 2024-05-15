@@ -23,32 +23,18 @@ namespace Dawnsbury.Mods.Battlecry
 {
     internal class Guardian
     {
-        // Taunt - bonus/pentaly only applies to attack rolls; doesn't change the AI behavior
-        // Guardian's Armor - can't do the chain specialization
         // Ferocious Vengeance - probably skip
         // Mitigate Harm
 
         // Bodyguard - TODO
-        // Larger Than Life - not useful in game
-        // Long-Distance Taunt
-        // Reactive Shield - already available
         // Shoulder Check - TODO
-        // Unkind Shove
-        // Flying Tackle - leap replaced with stride 15'
-        // Hampering Sweeps - TODO
 
-        // Armor Break - game doesn't really deal with broken state (and this ability is bad)
         // Covering Stance - a lot of functionality, but investigate
-        // Raise Haft - TODO
-        // Shielding Taunt - TODO
 
         // Area Cover
-        // Averting Shield - not useful in game
-        // Intercept Energy
         // Intercept Foe - do we get a call when an ally is targeted?
         // Shielded Attrition - probably too tricky
 
-        // Tough to Kill - daily benefit of dying 3 to dying 2 isn't implemented
         // TODO: Trained in blank as a skill (likely based on trained in Guardian)
         public static IEnumerable<Feat> LoadAll()
         {
@@ -115,7 +101,7 @@ namespace Dawnsbury.Mods.Battlecry
                             {
                                 return;
                             }
-                            creature.AddQEffect(new QEffect("InterceptStrikeCandidate", "An ally stands ready to intercept strikes.")
+                            creature.AddQEffect(new QEffect("Intercept Strike candidate", "An ally stands ready to intercept strikes.")
                             {
                                 // Store the guardian in the QEffect Tag
                                 Tag = qEffect.Owner,
@@ -225,14 +211,38 @@ namespace Dawnsbury.Mods.Battlecry
                 });
 
 
-            // It's unclear from the rules, but I decided to leave Shove as an option as well, for when you don't want to deal damage.
+            // None of the built in weapons have the Parry trait
+            yield return new TrueFeat(BattlecryMod.FeatName.RaiseHaft, 2, "You know how to use the haft of larger weapons to block attacks.",
+                "Two-handed weapons you wield gain the parry trait. If the weapon already has the parry trait, you increase the circumstance bonus to AC it provides to +2.",
+                [BattlecryMod.Trait.Guardian], null)
+                .WithPermanentQEffect("You know how to use the haft of larger weapons to block attacks.", (qEffect) => qEffect.ProvideMainAction = (qfTaunt) =>
+                {
+                    Creature owner = qEffect.Owner;
+                    Item? weapon = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.TwoHanded));
+                    if (weapon == null)
+                    {
+                        return null;
+                    }
+                    CombatAction raiseHaft = new CombatAction(owner, IllustrationName.Shield, "Raise Haft", [BattlecryMod.Trait.Guardian], "You use your weapon to parry attacks. You gain a +1 circumstance bonus to AC until the start of your next turn, or a +2 circumstance bonus if the weapon has the parry trait.", Target.Self()).WithActionCost(1)
+                    .WithEffectOnSelf((caster) =>
+                    {
+                        QEffect qParryBonus = new QEffect("Parry", "You gain a +1 circumstance bonus to AC")
+                        {
+                            BonusToDefenses = (qEffect, action, defense) => defense == Defense.AC ? new Bonus(1, BonusType.Circumstance, "Parry", true) : null
+                        }.WithExpirationAtStartOfSourcesTurn(owner, 1);
+                        caster.AddQEffect(qParryBonus);
+                    });
+                    return new ActionPossibility(raiseHaft).WithPossibilityGroup(nameof(Guardian));
+                });
+
+
             yield return new TrueFeat(BattlecryMod.FeatName.ShieldedTaunt, 2, "By banging loudly on your shield, you get the attention of even the most stubborn of foes.",
                 "Raise a Shield and then Taunt a creature. Your Taunt gains the auditory trait, and the target takes a –1 circumstance penalty to their save.",
                 [Trait.Flourish, BattlecryMod.Trait.Guardian], null).WithActionCost(1)
                 .WithPermanentQEffect("You get an enemy to focus their ire on you.", (qEffect) => qEffect.ProvideMainAction = (qfTaunt) =>
                 {
                     Creature owner = qEffect.Owner;
-                    Item? shield = qEffect.Owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                    Item? shield = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
                     if (shield == null)
                     {
                         return null;
@@ -320,7 +330,7 @@ namespace Dawnsbury.Mods.Battlecry
                 "Your Intercept Strike also triggers when an adjacent ally would take acid, cold, fire, electricity, or sonic damage.",
                 [BattlecryMod.Trait.Guardian], null);
         }
-        
+
         public static int GetClassDC(Creature? caster)
         {
             return 10 + (caster != null ? caster.Abilities.Intelligence : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
