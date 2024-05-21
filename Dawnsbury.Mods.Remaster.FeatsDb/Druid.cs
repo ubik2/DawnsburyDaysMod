@@ -24,6 +24,13 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         // * Mature Animal Companion
         // * Snowdrift Spell - kind of cool way to get difficult terrain
         // * Storm Born - real feat has different functionality, but the balance may be better with the houserule
+
+        // * Grown of Oak
+        // * Instinctive Support
+
+        // * Floral Restoration
+        // * Raise Menhir
+
         public static IEnumerable<Feat> LoadAll()
         {
             yield break;

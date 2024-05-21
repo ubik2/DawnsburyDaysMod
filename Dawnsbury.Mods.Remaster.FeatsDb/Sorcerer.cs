@@ -11,6 +11,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
     {
         public static IEnumerable<Feat> LoadAll()
         {
+#if V3
             yield return PatchBloodline(FeatName.ImperialBloodline, Trait.Arcane, SpellId.UnravelingBlast, SpellId.Thunderburst, [SpellId.AncientDust, SpellId.MagicMissile, SpellId.Invisibility, SpellId.Haste, SpellId.DimensionDoor],
                 "You and the target, if friendly, each get a +1 status bonus to all skill checks for 1 round.");
             yield return PatchBloodline(FeatName.AngelicBloodline, Trait.Divine, SpellId.AngelicHalo, SpellId.AngelicWings, [SpellId.DivineLance, SpellId.Heal, SpellId.SpiritualWeapon, SpellId.SearingLight, SpellId.DivineWrath],
@@ -25,7 +26,22 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 "The first creature that deals damage to you before the end of your next turn takes 2 mental damage per spell level (basic Will save mitigates).");
             yield return PatchBloodline(FeatName.FireElementalBloodline, Trait.Primal, SpellId.ElementalToss, SpellId.FieryWings, [SpellId.ProduceFlame, SpellId.BurningHands, SpellId.ResistEnergy, SpellId.Fireball, SpellId.FireShield],
                 "All enemy targets take 1 extra fire damage per spell level, and you get a +1 status bonus to Intimidation for 1 round.");
-
+#else
+            yield return PatchBloodline(FeatName.ImperialBloodline, Trait.Arcane, SpellId.UnravelingBlast, SpellId.None, [SpellId.AncientDust, SpellId.MagicMissile, SpellId.Invisibility, SpellId.Haste, SpellId.DimensionDoor],
+                "You and the target, if friendly, each get a +1 status bonus to all skill checks for 1 round.");
+            yield return PatchBloodline(FeatName.AngelicBloodline, Trait.Divine, SpellId.AngelicHalo, SpellId.None, [SpellId.DivineLance, SpellId.Heal, SpellId.SpiritualWeapon, SpellId.SearingLight, SpellId.DivineWrath],
+                "You and all friendly targets each get a +1 status bonus to all saving throws for 1 round.");
+            yield return PatchBloodline(FeatName.DemonicBloodline, Trait.Divine, SpellId.GluttonsJaw, SpellId.None, [SpellId.AcidSplash, SpellId.Fear, SpellId.HideousLaughter, SpellId.Slow, SpellId.DivineWrath],
+                "All enemy targets get a -1 status penalty to AC for 1 round, and you get a +1 status bonus to Intimidation for 1 round.");
+            yield return PatchBloodline(FeatName.InfernalBloodline, Trait.Divine, SpellId.RejuvenatingFlames, SpellId.None, [SpellId.ProduceFlame, SpellId.BurningHands, SpellId.FlamingSphere, SpellId.None, SpellId.DivineWrath],
+                "All enemy targets take 1 extra fire damage per spell level.");
+            yield return PatchBloodline(FeatName.DraconicBloodline, Trait.Arcane, SpellId.DragonClaws, SpellId.None, [SpellId.Shield, SpellId.TrueStrike, SpellId.ResistEnergy, SpellId.Haste, SpellId.None],
+                "You and the target each get a +1 status bonus to AC for 1 round."); // FIXME: Need to address the OnSheet
+            yield return PatchBloodline(FeatName.HagBloodline, Trait.Occult, SpellId.JealousHex, SpellId.None, [SpellId.Daze, SpellId.Fear, SpellId.TouchOfIdiocy, SpellId.None, SpellId.None],
+                "The first creature that deals damage to you before the end of your next turn takes 2 mental damage per spell level (basic Will save mitigates).");
+            yield return PatchBloodline(FeatName.FireElementalBloodline, Trait.Primal, SpellId.ElementalToss, SpellId.None, [SpellId.ProduceFlame, SpellId.BurningHands, SpellId.ResistEnergy, SpellId.Fireball, SpellId.None],
+                "All enemy targets take 1 extra fire damage per spell level, and you get a +1 status bonus to Intimidation for 1 round.");
+#endif
             PatchClassBloodlines();
         }
 
@@ -52,13 +68,17 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             string basicRulesText = "• Spell list: {b}" + spellList.ToString() + "{/b} {i}" + ExplainSpellList(spellList) + "{/i}\n" +
                 "• Focus spell: " + AllSpells.CreateModernSpellTemplate(focusSpellId, Trait.Sorcerer).ToSpellLink() + "\n" +
                 "• Bloodline-granted spells: cantrip: " + AllSpells.CreateModernSpellTemplate(grantedSpells[0], Trait.Sorcerer).ToSpellLink() + 
-                (grantedSpells.Length >= 1 ? ", 1st: " + AllSpells.CreateModernSpellTemplate(grantedSpells[1], Trait.Sorcerer).ToSpellLink() : "") +
-                (grantedSpells.Length >= 2 ? ", 2nd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[2], Trait.Sorcerer).ToSpellLink() : "") +
-                (grantedSpells.Length >= 3 ? ", 3rd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[3], Trait.Sorcerer).ToSpellLink() : "") +
-                (grantedSpells.Length >= 4 ? ", 4th: " + AllSpells.CreateModernSpellTemplate(grantedSpells[4], Trait.Sorcerer).ToSpellLink() : "") +
+                ((grantedSpells.Length >= 1 && grantedSpells[1] != SpellId.None) ? ", 1st: " + AllSpells.CreateModernSpellTemplate(grantedSpells[1], Trait.Sorcerer).ToSpellLink() : "") +
+                ((grantedSpells.Length >= 2 && grantedSpells[2] != SpellId.None) ? ", 2nd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[2], Trait.Sorcerer).ToSpellLink() : "") +
+                ((grantedSpells.Length >= 3 && grantedSpells[3] != SpellId.None) ? ", 3rd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[3], Trait.Sorcerer).ToSpellLink() : "") +
+                ((grantedSpells.Length >= 4 && grantedSpells[4] != SpellId.None) ? ", 4th: " + AllSpells.CreateModernSpellTemplate(grantedSpells[4], Trait.Sorcerer).ToSpellLink() : "") +
                 "\n" +
                 "• Blood magic effect: " + bloodMagicDescription + " {i}(Your blood magic effect activates whenever you use your focus spell or a non-cantrip bloodline-granted spell.){/i}";
+#if V3
             Bloodline newFeat = new Bloodline(existingFeat.FeatName, existingFeat.FlavorText ?? "", spellList, focusSpellId, advancedFocusSpellId, grantedSpells )
+#else
+            Bloodline newFeat = new Bloodline(existingFeat.FeatName, existingFeat.FlavorText ?? "", spellList, focusSpellId, grantedSpells[0], grantedSpells[1], grantedSpells[2])
+#endif
             {
                 RulesText = basicRulesText,
                 OnCreature = existingFeat.OnCreature
@@ -73,17 +93,13 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         // Just a copy of the one in Bloodline
         private static string ExplainSpellList(Trait spellList)
         {
-            switch (spellList)
+            return spellList switch
             {
-                case Trait.Arcane:
-                    return "(You cast arcane spells. Arcane spells are extremely varied, include powerful offensive and debuffing spells, but cannot heal your allies. Arcane sorcerers, wizards and magi can cast arcane spells.)";
-                case Trait.Primal:
-                    return "(You cast primal spells. Primal spells are very varied, but focus on elemental and energy effects, including both dealing damage and healing, but generally can't affect minds. Primal sorcerers and druids can cast primal spells.)";
-                case Trait.Occult:
-                    return "(You can cast occult spells. Occult spells focus on enchantment, emotion and the mind. They inflict debuffs on your opponents and grant buffs to your allies, but generally can't manipulate energy. Occult sorcerers and psychics can cast occult spells.)";
-                default:
-                    return "(You cast divine spells. Divine spells can heal or buff your allies and are powerful against the undead, but they can lack utility or offensive power against natural creatures. Divine sorcerers and clerics can cast divine spells.)";
-            }
+                Trait.Arcane => "(You cast arcane spells. Arcane spells are extremely varied, include powerful offensive and debuffing spells, but cannot heal your allies. Arcane sorcerers, wizards and magi can cast arcane spells.)",
+                Trait.Primal => "(You cast primal spells. Primal spells are very varied, but focus on elemental and energy effects, including both dealing damage and healing, but generally can't affect minds. Primal sorcerers and druids can cast primal spells.)",
+                Trait.Occult => "(You can cast occult spells. Occult spells focus on enchantment, emotion and the mind. They inflict debuffs on your opponents and grant buffs to your allies, but generally can't manipulate energy. Occult sorcerers and psychics can cast occult spells.)",
+                _ => "(You cast divine spells. Divine spells can heal or buff your allies and are powerful against the undead, but they can lack utility or offensive power against natural creatures. Divine sorcerers and clerics can cast divine spells.)"
+            };
         }
     }
 }

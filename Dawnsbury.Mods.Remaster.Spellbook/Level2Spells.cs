@@ -439,7 +439,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     Target.AdjacentFriendOrSelf((Target tg, Creature a, Creature d) => (a == d && !a.HasEffect(QEffectId.Barkskin) && !a.HasEffect(QEffectId.EndedBarkskin)) ? 15 : int.MinValue), spellLevel, null).WithSoundEffect(SfxName.ArmorDon)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
+#if V3
                     QEffect updatedEffect = QEffect.Barkskin(resistanceTier);
+#else
+                    QEffect updatedEffect = QEffect.Barkskin();
+#endif
                     updatedEffect.Name = "Oaken Resilience";
                     target.AddQEffect(updatedEffect);
                 });

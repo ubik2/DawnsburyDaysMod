@@ -28,6 +28,17 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
         // * Divine Infusion - I didn't do the infuse vitality spell either, but these are very similar
         // * Directed Channel - need to interact with the existing variant system, but this is a second 3 action variant
         // * Restorative Strike
+
+        // * Divine Rebuttal - maybe?
+        // * Divine Weapon - 
+        // * Magic Hands - this would only affect Battle Medicine
+        // * Selective Energy - TODO
+
+        // * Restorative Channel - TODO
+        // * Sanctify Armament
+        // * Void Siphon
+        // * Zealous Rush
+
         public static IEnumerable<Feat> LoadAll()
         {
             // Update the heal spell to enable our Panic the Dead feat.
@@ -117,7 +128,11 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                                 return null;
                                         };
                                     },
+#if V3
                                     AdjustSavingThrowCheckResult = (QEffect qEffect, Defense defense, CombatAction action, CheckResult checkResult) =>
+#else
+                                    AdjustSavingThrowResult = (QEffect qEffect, CombatAction action, CheckResult checkResult) =>
+#endif
                                     {
                                         // We use the old names here so we don't need to bring in symbols from the RemasterSpells mod.
                                         if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Positive) || action.HasTrait(Trait.Negative)))

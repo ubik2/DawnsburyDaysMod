@@ -11,39 +11,82 @@ using Dawnsbury.Core.CombatActions;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb
 {
+    // * Explosive Arrival
+    // * Irresistable Magic (from Spell Penetration)
+    
+    // * Advanced School Spell (will be different)
+    // * Bond Conservation - essentially the same
+    // * Knowledge is Power - skipping, since we don't do Recall Knowledge checks
+
     public static class Wizard
     {
-
-        private static readonly Dictionary<SpellId, Trait[]> schoolTraitsMap = new Dictionary<SpellId, Trait[]> {
-                { SpellId.Daze, new[] { RemasterFeats.Trait.ArsGrammatica, RemasterFeats.Trait.Mentalism } },
-                { SpellId.Shield, new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.TelekineticProjectile, new[] { RemasterFeats.Trait.BattleMagic, RemasterFeats.Trait.CivicWizardry } },
-                { SpellId.Command, new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("TangleVine"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("VoidWarp"), new[] { RemasterFeats.Trait.TheBoundary } },
-
-                { RemasterFeats.GetSpellIdByName("BreatheFire"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("DizzyingColors"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("ForceBarrage"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.InsectForm, new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("GougingClaw"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { SpellId.GrimTendrils, new[] { RemasterFeats.Trait.TheBoundary } },
-                { SpellId.HydraulicPush, new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("MysticArmor"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.PummelingRubble, new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("RunicBody"), new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("RunicWeapon"), new[] { RemasterFeats.Trait.ArsGrammatica } },
-                { RemasterFeats.GetSpellIdByName("SpiderSting"), new[] { RemasterFeats.Trait.ProteanForm } },
-                { RemasterFeats.GetSpellIdByName("SummonConstruct"), new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("SummonUndead"), new[] { RemasterFeats.Trait.TheBoundary } },
-                { RemasterFeats.GetSpellIdByName("SureStrike"), new[] { RemasterFeats.Trait.Mentalism } },
-
-                { RemasterFeats.GetSpellIdByName("Mist"), new[] { RemasterFeats.Trait.BattleMagic } },
-                { SpellId.ResistEnergy, new[] { RemasterFeats.Trait.BattleMagic } },
-                { RemasterFeats.GetSpellIdByName("RevealingLight"), new[] { RemasterFeats.Trait.CivicWizardry } },
-                { RemasterFeats.GetSpellIdByName("Stupefy"), new[] { RemasterFeats.Trait.Mentalism } },
-                { RemasterFeats.GetSpellIdByName("SeeTheUnseen"), new[] { RemasterFeats.Trait.TheBoundary } }
-            };
+        private static readonly Dictionary<Trait, SpellId[][]> curriculaSpellOptions = new Dictionary<Trait, SpellId[][]>()
+        {
+            {
+                RemasterFeats.Trait.ArsGrammatica,
+                [
+                    [SpellId.Daze], // Message, Sigil; Daze doesn't belong.
+                    [SpellId.Command, RemasterFeats.GetSpellIdByName("RunicBody"), RemasterFeats.GetSpellIdByName("RunicWeapon")], // Disguise Magic
+                    [], // Dispel Magic, Translate
+                    [], // Enthrall, Veil of Prophecy
+                    [], // Dispelling Globe, Suggestion
+                ]
+            },
+            {
+                RemasterFeats.Trait.BattleMagic,
+                [
+                    [SpellId.Shield, SpellId.TelekineticProjectile],
+                    [RemasterFeats.GetSpellIdByName("BreatheFire"), RemasterFeats.GetSpellIdByName("ForceBarrage"), RemasterFeats.GetSpellIdByName("MysticArmor")],
+                    [RemasterFeats.GetSpellIdByName("Mist"), SpellId.ResistEnergy],
+                    [SpellId.Fireball], // Earthbind
+                    [], // Wall of Fire, Weapon Storm
+                ]
+            },
+            {
+                RemasterFeats.Trait.CivicWizardry,
+                [
+                    [SpellId.TelekineticProjectile], // Prestidigitation, Read Aura; Telekinetic Projectile doesn't belong
+                    [SpellId.HydraulicPush, SpellId.PummelingRubble, RemasterFeats.GetSpellIdByName("SummonConstruct")],
+                    [RemasterFeats.GetSpellIdByName("RevealingLight")], // Water Walk
+                    [], // Cozy Cabin, Safe Passage
+                    [], // Creation, Unfettered Movement
+                ]
+            },
+            {
+                RemasterFeats.Trait.Mentalism,
+                [
+                    [SpellId.Daze], // Figment
+                    [RemasterFeats.GetSpellIdByName("DizzyingColors"), RemasterFeats.GetSpellIdByName("SureStrike")], // Sleep
+                    [RemasterFeats.GetSpellIdByName("Stupefy")], // Illusory Creature
+                    [], // Dream Message, Mind Reading
+                    [], // Nightmare, Vision of Death
+                ]
+            },
+            {
+                RemasterFeats.Trait.ProteanForm,
+                [
+                    [RemasterFeats.GetSpellIdByName("TangleVine")],
+                    [RemasterFeats.GetSpellIdByName("GougingClaw"), SpellId.InsectForm, RemasterFeats.GetSpellIdByName("SpiderSting")], // Jump, Pest Form  -> Insect Swarm
+                    [], // Enlarge, Humanoid Form
+                    [], // Feet to Fins, Vampiric Feast
+                    [], // Mountain Resilience, Vapor Form
+                ]
+            },
+            {
+                RemasterFeats.Trait.TheBoundary,
+                [
+                    [RemasterFeats.GetSpellIdByName("VoidWarp")], // Telekinetic Hand
+                    [SpellId.GrimTendrils, RemasterFeats.GetSpellIdByName("SummonUndead")], // Phantasmal Minion
+                    [RemasterFeats.GetSpellIdByName("SeeTheUnseen")], // Darkness
+#if V3
+                    [SpellId.BindUndead], // Ghostly Weapon
+#else
+                    [],
+#endif
+                    [], // Flicker, Translocate
+                ]
+            }
+        };
 
         public static IEnumerable<Feat> LoadAll()
         {
@@ -65,75 +108,27 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             // TODO: I include the spell options here, but it's really the PatchWizard where we add the traits to the spells that's responsible.
             yield return new CurriculumFeat(RemasterFeats.FeatName.ArsGrammatica, RemasterFeats.Trait.ArsGrammatica,
                 "Runes and wards, numbers and letters—they underpin all magic, making them the logical subject for a wizard who studies fundamental forces. Perhaps you studied at the Pathfinder Society's School of Spells or a similar institution, but whether you're lacing your words with magic to compel others, casting wards around your workshop, or destabilizing the very structure of an opponent's spells, you know this unassuming school carries elegant power.",
-                RemasterFeats.GetSpellIdByName("ProtectiveWards"),
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { SpellId.Daze } }, // Message, Sigil; Daze doesn't belong.
-                    { 1, new[] { SpellId.Command, RemasterFeats.GetSpellIdByName("RunicBody"), RemasterFeats.GetSpellIdByName("RunicWeapon") } }, // Disguise Magic
-                    { 2, Array.Empty<SpellId>() }, // Dispel Magic, Translate
-                    { 3, Array.Empty<SpellId>() }, // Enthrall, Veil of Prophecy
-                    { 4, Array.Empty<SpellId>() }, // Dispelling Globe, Suggestion
-                });
+                RemasterFeats.GetSpellIdByName("ProtectiveWards"), curriculaSpellOptions[RemasterFeats.Trait.ArsGrammatica]);
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.BattleMagic, RemasterFeats.Trait.BattleMagic,
                 "Runes and wards, numbers and letters—they underpin all magic, making them the logical subject for a wizard who studies fundamental forces. Perhaps you studied at the Pathfinder Society's School of Spells or a similar institution, but whether you're lacing your words with magic to compel others, casting wards around your workshop, or destabilizing the very structure of an opponent's spells, you know this unassuming school carries elegant power.",
-                SpellId.ForceBolt,
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { SpellId.Shield, SpellId.TelekineticProjectile } },
-                    { 1, new[] { RemasterFeats.GetSpellIdByName("BreatheFire"), RemasterFeats.GetSpellIdByName("ForceBarrage"), RemasterFeats.GetSpellIdByName("MysticArmor") } },
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("Mist"), SpellId.ResistEnergy } },
-                    { 3, new[] { SpellId.Fireball } }, // Earthbind
-                    { 4, Array.Empty<SpellId>() }, // Wall of Fire, Weapon Storm
-                });
+                SpellId.ForceBolt, curriculaSpellOptions[RemasterFeats.Trait.BattleMagic]);
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.CivicWizardry, RemasterFeats.Trait.CivicWizardry,
                 "Whether you studied in Manaket's Occularium or the Academy of Applied Magic, you learned that the fruits of arcane studies—like any other field—should ultimately help the common citizen. You've learned the humble art of construction, of finding lost people and things, of moving speedily among buildings and moats—yet these same arts can be turned to demolition, and the constructs you animate to build bridges can just as easily tear them down.",
-                RemasterFeats.GetSpellIdByName("Earthworks"),
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { SpellId.TelekineticProjectile } }, // Prestidigitation, Read Aura; Telekinetic Projectile doesn't belong
-                    { 1, new[] { SpellId.HydraulicPush, SpellId.PummelingRubble, RemasterFeats.GetSpellIdByName("SummonConstruct") } },
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("RevealingLight") } }, // Water Walk
-                    { 3, Array.Empty<SpellId>() }, // Cozy Cabin, Safe Passage
-                    { 4, Array.Empty<SpellId>() }, // Creation, Unfettered Movement
-                });
+                RemasterFeats.GetSpellIdByName("Earthworks"), curriculaSpellOptions[RemasterFeats.Trait.CivicWizardry]);
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.Mentalism, RemasterFeats.Trait.Mentalism,
                 "As a scholar, you know all too well the importance of a sound mind. Thus, you attended a school—like the Farseer Tower or the Stone of the Seers—that taught the arts of befuddling lesser minds with figments and illusions or implanted sensations and memories.",
-                RemasterFeats.GetSpellIdByName("CharmingPush"),
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { SpellId.Daze } }, // Figment
-                    { 1, new[] { RemasterFeats.GetSpellIdByName("DizzyingColors"), RemasterFeats.GetSpellIdByName("SureStrike") } }, // Sleep
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("Stupefy") } }, // Illusory Creature
-                    { 3, Array.Empty<SpellId>() }, // Dream Message, Mind Reading
-                    { 4, Array.Empty<SpellId>() }, // Nightmare, Vision of Death
-                });
+                RemasterFeats.GetSpellIdByName("CharmingPush"), curriculaSpellOptions[RemasterFeats.Trait.Mentalism]);
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.ProteanForm, RemasterFeats.Trait.ProteanForm,
                 "As a scholar, you know all too well the importance of a sound mind. Thus, you attended a school—like the Farseer Tower or the Stone of the Seers—that taught the arts of befuddling lesser minds with figments and illusions or implanted sensations and memories.",
-                RemasterFeats.GetSpellIdByName("ScrambleBody"),
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { RemasterFeats.GetSpellIdByName("TangleVine") } },
-                    { 1, new[] { RemasterFeats.GetSpellIdByName("GougingClaw"), SpellId.InsectForm, RemasterFeats.GetSpellIdByName("SpiderSting") } }, // Jump, Pest Form  -> Insect Swarm
-                    { 2, Array.Empty<SpellId>() }, // Enlarge, Humanoid Form
-                    { 3, Array.Empty<SpellId>() }, // Feet to Fins, Vampiric Feast
-                    { 4, Array.Empty<SpellId>() }, // Mountain Resilience, Vapor Form
-                });
+                RemasterFeats.GetSpellIdByName("ScrambleBody"), curriculaSpellOptions[RemasterFeats.Trait.ProteanForm]);
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.TheBoundary, RemasterFeats.Trait.TheBoundary,
                 "Why use your magic to affect something as pedestrian as the physical world? Whether you studied at the College of Dimensional Studies in Katapesh or an underground school in haunted Ustalav, you've turned your magic past the Universe to the forces beyond, summoning spirits and shades, manipulating dimensions and planes, and treading in a place not meant for mortals.",
-                RemasterFeats.GetSpellIdByName("FortifySummoning"),
-                new Dictionary<int, SpellId[]>()
-                {
-                    { 0, new[] { RemasterFeats.GetSpellIdByName("VoidWarp") } }, // Telekinetic Hand
-                    { 1, new[] { SpellId.GrimTendrils, RemasterFeats.GetSpellIdByName("SummonUndead") } }, // Phantasmal Minion
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("SeeTheUnseen") } }, // Darkness
-                    { 3, new[] { SpellId.BindUndead } }, // Ghostly Weapon
-                    { 4, Array.Empty<SpellId>() }, // Flicker, Translocate
-                });
+                RemasterFeats.GetSpellIdByName("FortifySummoning"), curriculaSpellOptions[RemasterFeats.Trait.TheBoundary]);
         }
 
 
@@ -158,31 +153,27 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
 
         public class CurriculumFeat : Feat
         {
-            public CurriculumFeat(FeatName schoolFeat, Trait schoolTrait, string flavorText, SpellId focusSpell, Dictionary<int, SpellId[]> spellOptions)
+            public CurriculumFeat(FeatName schoolFeat, Trait schoolTrait, string flavorText, SpellId focusSpell, SpellId[][] spellOptions)
                 : base(schoolFeat, flavorText, "XX", new List<Trait>(), null)
             {
                 Spell modernSpellTemplate = AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard);
                 RulesText = "You gain an extra spell slot at each spell level for which you have wizard spell slots. You can only prepare spells from the " + Name + " in this slot.\n\nYou learn the " + AllSpells.CreateModernSpellTemplate(focusSpell, Trait.Wizard).ToSpellLink() + " focus school spell and you gain a focus pool of 1 focus point which recharges after every encounter.\n" + "\n{b}Curriculum{/b}";
-                if (spellOptions[0].Length > 0)
+                for (int spellRank = 0; spellRank < spellOptions.Length; spellRank++)
                 {
-                    RulesText += "\ncantrips: " + string.Join(", ", spellOptions[0].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
-                }
-                if (spellOptions[1].Length > 0)
-                {
-                    RulesText += "\n1st: " + string.Join(", ", spellOptions[1].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
-                }
-                if (spellOptions[2].Length > 0)
-                {
-                    RulesText += "\n2nd: " + string.Join(", ", spellOptions[2].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
-                }
-                if (spellOptions[3].Length > 0)
-                {
-                    RulesText += "\n2nd: " + string.Join(", ", spellOptions[3].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
-                }
-                if (spellOptions[4].Length > 0)
-                {
-                    RulesText += "\n4th: " + string.Join(", ", spellOptions[4].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
-                }
+                    string rankDescription = spellRank switch
+                    {
+                        0 => "cantrips",
+                        1 => "1st",
+                        2 => "2nd",
+                        3 => "3rd",
+                        _ => spellRank + "th",
+                    };
+                    IEnumerable<string> validSpellEntries = spellOptions[spellRank].Where((spellId) => spellId != SpellId.None).Select((spellId) => AllSpells.CreateModernSpellTemplate(spellId, Trait.Wizard).ToSpellLink());
+                    if (validSpellEntries.Any())
+                    {
+                        RulesText += "\n" + rankDescription + ": " + string.Join(", ", validSpellEntries);
+                    }
+                };
                 ShowRulesBlockForClassOfOrigin = Trait.Wizard;
                 OnSheet = (sheet) =>
                 {
@@ -221,7 +212,15 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
 
         private static void AddCurriculumTraits(CombatAction spellCombatAction)
         {
-            if (schoolTraitsMap.TryGetValue(spellCombatAction.SpellId, out Trait[]? schoolTraits))
+            List<Trait> schoolTraits = new List<Trait>();
+            foreach (KeyValuePair<Trait, SpellId[][]> entry in curriculaSpellOptions)
+            {
+                if (entry.Value.Any((spellIds) => spellIds.Any((spellId) => spellId == spellCombatAction.SpellId)))
+                {
+                    schoolTraits.Add(entry.Key);
+                }
+            }
+            if (schoolTraits.Any())
             {
                 spellCombatAction.Traits.AddRange(schoolTraits);
             }

@@ -22,6 +22,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
     // Ruffian Sneak Attack restrictions lessened
     // Thief can add dex modifier to unarmed attack damage
 
+    // * Gang Up - minor change to benefit allies
+    // * Sly Disarm
     public static class Rogue
     {
         public static IEnumerable<Feat> LoadAll()
