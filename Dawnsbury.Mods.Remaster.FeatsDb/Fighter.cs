@@ -45,7 +45,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
         {
             yield return new TrueFeat(RemasterFeats.FeatName.SlamDown, 4, "You make an attack to knock a foe off balance, then follow up immediately with a sweep to topple them.",
                 "Make a melee Strike. If it hits and deals damage, you can attempt an Athletics check to Trip the creature you hit. If you’re wielding a two-handed melee weapon, you can ignore Trip's requirement that you have a hand free. Both attacks count toward your multiple attack penalty, but the penalty doesn't increase until after you've made both of them.",
-                 new[] { Trait.Fighter, Trait.Flourish })
+                 [Trait.Fighter, Trait.Flourish])
                 .WithActionCost(2)
                 .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.GetProficiency(Trait.Athletics) >= Proficiency.Trained, "You must be trained in Athletics.")
                 .WithPermanentQEffect("You make an attack to knock a foe off balance, then follow up immediately with a sweep to topple them.", (QEffect qEffect) =>
@@ -78,7 +78,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
             yield return new TrueFeat(RemasterFeats.FeatName.ViciousSwing, 1, "You unleash a particularly powerful attack that clobbers your foe but leaves you a bit unsteady.",
                 "Make a melee Strike. This counts as two attacks when calculating your multiple attack penalty. If this Strike hits, you deal an extra die of weapon damage.",
-                new[] { Trait.Fighter, Trait.Flourish })
+                [Trait.Fighter, Trait.Flourish])
                 .WithActionCost(2)
                 .WithPermanentQEffect("You unleash a particularly powerful attack.", (QEffect qEffect) =>
                 {

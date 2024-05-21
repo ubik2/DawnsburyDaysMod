@@ -72,6 +72,7 @@ Some of these are essentially just a rename of existing spells, but many have ne
 
 [h2]Known Issues[/h2]
 [list]
+ [*]The escape DC for Tangle Vine uses your skill rather than your spell DC. There is no option to escape the slow effect (it would be a poor option).
  [*]Thunderstrike doesn't have any extra effect for foes in metal armor or made of metal.
  [*]Floating Flame rolls damage for each target, instead of using a shared damage roll for each Sustain action.
  [*]Revealing Light will have some unexpected interactions when Invisibility wears off before Revealing Light. Creatures will continue to be concealed.
@@ -79,7 +80,7 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Spirit damage will be effective against constructs. Spiritual Armament does Good damage instead of possibly Sanctified Spirit damage.
  [*]Sorcerer Bloodlines and Deities are updated in the RemasterFeats mod, but if that isn't installed, the old ones have not been updated to reference the new spells.
  [*]Wizard schools are updated in the RemasterFeats mod, but if that isn't installed, since Remaster spells don't have the school trait, they won't qualify for the old school slots.
- [*]Earthworks doesn't let you interact from an adjacent square to remove the effect.
+ [*]Earthworks doesn't let you interact from an adjacent square to remove the effect. It also doesn't apply to flying creatures even when heightened.
 [/list]
 
 [h2]Code[/h2]

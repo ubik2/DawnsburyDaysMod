@@ -38,8 +38,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             // I don't hide the Holy Castigation feat like I should.
             yield return new TrueFeat(RemasterFeats.FeatName.DivineCastigation, 1, "Your deity's grace doesn't extend to your sworn enemies.",
                 "When you cast a {i}harm{/i} or {i}heal{/i} spell, you can add your holy or unholy trait to it. If you do, the spell deals damage to creatures with the opposing trait, even if it wouldn’t normally damage them. The spell deals spirit damage when used this way. For example, if you are holy, you could add the holy trait to a {i}heal{/i} spell and deal spirit damage to a fiend that has the unholy trait.",
-                new[] { Trait.Cleric })
-                .WithPrerequisite((CalculatedCharacterSheetValues values) => values.NineCornerAlignment.GetTraits().Intersect(new[] { Trait.Good, Trait.Evil }).Any(), "You must have a Good or Evil alignment.")
+                [Trait.Cleric])
+                .WithPrerequisite((CalculatedCharacterSheetValues values) => values.NineCornerAlignment.GetTraits().Intersect([Trait.Good, Trait.Evil]).Any(), "You must have a Good or Evil alignment.")
                 .WithPermanentQEffect("Your {i}heal{/i} spells damage fiends.", (QEffect qf) =>
                 {
                     qf.Id = QEffectId.HolyCastigation;
@@ -49,7 +49,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             // I don't hide the Turn Undead feat like I should
             yield return new TrueFeat(RemasterFeats.FeatName.PanicTheDead, 2, "Vitality strikes terror in the undead.",
                 "When you use a {i}heal{/i} spell to damage undead, any undead that fails its saving throw is also frightened 1. If it critically failed, the creature also gains the fleeing condition until the start of your next turn. Mindless undead are not immune to this effect due to being mindless.",
-                new[] { Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental })
+                [Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental])
                 .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.AllFeats.Any(feat => feat.FeatName == FeatName.Warpriest), "You must be a warpriest.")
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.HeavyArmor, Proficiency.Trained));
 
@@ -57,7 +57,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             // The bulk reduction isn't implemented, since the game uses inventory slots instead of bulk.
             yield return new TrueFeat(RemasterFeats.FeatName.WarpriestsArmor, 2, "Your training has helped you adapt to ever - heavier armor.",
                 "You are trained in heavy armor. Whenever you gain a class feature that grants you expert or greater proficiency in medium armor, you also gain that proficiency in heavy armor. You treat armor you wear of 2 Bulk or higher as though it were 1 Bulk lighter (to a minimum of 1 Bulk).",
-                new[] { Trait.Cleric })
+                [Trait.Cleric])
                 .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.AllFeats.Any(feat => feat.FeatName == FeatName.Warpriest), "You must be a warpriest.")
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.HeavyArmor, Proficiency.Trained));
 
@@ -65,7 +65,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             yield return new TrueFeat(RemasterFeats.FeatName.ChannelSmite, 4, "You siphon the energies of life and death through a melee attack and into your foe.",
                 "Make a melee Strike. On a hit, you cast the 1 - action version of the expended spell to damage the target, in addition to the normal damage from your Strike. The target automatically gets a failure on its save (or a critical failure if your Strike was a critical hit). The spell doesn’t have the manipulate trait when cast this way.\n\n" +
                 "The spell is expended with no effect if your Strike fails or hits a creature that isn’t damaged by that energy type (such as if you hit a non - undead creature with a {i}heal{/i} spell).",
-                new[] { Trait.Cleric, Trait.Divine })
+                [Trait.Cleric, Trait.Divine])
                 .WithActionCost(2)
                 .WithOnCreature((CalculatedCharacterSheetValues sheet, Creature creature) =>
                 {
@@ -83,7 +83,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
             yield return new TrueFeat(RemasterFeats.FeatName.RaiseSymbol, 4, "You present your religious symbol emphatically.",
                 "You gain a +2 circumstance bonus to saving throws until the start of your next turn. While it's raised, if you roll a success at a saving throw against a vitality or void effect, you get a critical success instead.",
-                new[] { Trait.Cleric })
+                [Trait.Cleric])
                 .WithActionCost(1)
                 .WithPermanentQEffect("You present your religious symbol emphatically.", (QEffect qEffect) =>
                 {
@@ -94,7 +94,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         {
                             return null;
                         }
-                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.GateAttenuator, "Raise Symbol", new[] { Trait.Cleric },
+                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.GateAttenuator, "Raise Symbol", [Trait.Cleric],
                             "You present your religious symbol emphatically.",
                             // "\n\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield." +
                             Target.Self().WithAdditionalRestriction((Creature caster) =>
@@ -117,7 +117,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                                 return null;
                                         };
                                     },
-                                    AdjustSavingThrowResult = (QEffect qEffect, CombatAction action, CheckResult checkResult) =>
+                                    AdjustSavingThrowCheckResult = (QEffect qEffect, Defense defense, CombatAction action, CheckResult checkResult) =>
                                     {
                                         // We use the old names here so we don't need to bring in symbols from the RemasterSpells mod.
                                         if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Positive) || action.HasTrait(Trait.Negative)))

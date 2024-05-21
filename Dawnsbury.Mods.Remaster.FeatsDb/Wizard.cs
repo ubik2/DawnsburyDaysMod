@@ -71,6 +71,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                     { 0, new[] { SpellId.Daze } }, // Message, Sigil; Daze doesn't belong.
                     { 1, new[] { SpellId.Command, RemasterFeats.GetSpellIdByName("RunicBody"), RemasterFeats.GetSpellIdByName("RunicWeapon") } }, // Disguise Magic
                     { 2, Array.Empty<SpellId>() }, // Dispel Magic, Translate
+                    { 3, Array.Empty<SpellId>() }, // Enthrall, Veil of Prophecy
+                    { 4, Array.Empty<SpellId>() }, // Dispelling Globe, Suggestion
                 });
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.BattleMagic, RemasterFeats.Trait.BattleMagic,
@@ -80,7 +82,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     { 0, new[] { SpellId.Shield, SpellId.TelekineticProjectile } },
                     { 1, new[] { RemasterFeats.GetSpellIdByName("BreatheFire"), RemasterFeats.GetSpellIdByName("ForceBarrage"), RemasterFeats.GetSpellIdByName("MysticArmor") } },
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("Mist"), SpellId.ResistEnergy } }
+                    { 2, new[] { RemasterFeats.GetSpellIdByName("Mist"), SpellId.ResistEnergy } },
+                    { 3, new[] { SpellId.Fireball } }, // Earthbind
+                    { 4, Array.Empty<SpellId>() }, // Wall of Fire, Weapon Storm
                 });
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.CivicWizardry, RemasterFeats.Trait.CivicWizardry,
@@ -90,7 +94,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     { 0, new[] { SpellId.TelekineticProjectile } }, // Prestidigitation, Read Aura; Telekinetic Projectile doesn't belong
                     { 1, new[] { SpellId.HydraulicPush, SpellId.PummelingRubble, RemasterFeats.GetSpellIdByName("SummonConstruct") } },
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("RevealingLight") } } // Water Walk
+                    { 2, new[] { RemasterFeats.GetSpellIdByName("RevealingLight") } }, // Water Walk
+                    { 3, Array.Empty<SpellId>() }, // Cozy Cabin, Safe Passage
+                    { 4, Array.Empty<SpellId>() }, // Creation, Unfettered Movement
                 });
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.Mentalism, RemasterFeats.Trait.Mentalism,
@@ -100,7 +106,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     { 0, new[] { SpellId.Daze } }, // Figment
                     { 1, new[] { RemasterFeats.GetSpellIdByName("DizzyingColors"), RemasterFeats.GetSpellIdByName("SureStrike") } }, // Sleep
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("Stupefy") } } // Illusory Creature
+                    { 2, new[] { RemasterFeats.GetSpellIdByName("Stupefy") } }, // Illusory Creature
+                    { 3, Array.Empty<SpellId>() }, // Dream Message, Mind Reading
+                    { 4, Array.Empty<SpellId>() }, // Nightmare, Vision of Death
                 });
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.ProteanForm, RemasterFeats.Trait.ProteanForm,
@@ -110,7 +118,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     { 0, new[] { RemasterFeats.GetSpellIdByName("TangleVine") } },
                     { 1, new[] { RemasterFeats.GetSpellIdByName("GougingClaw"), SpellId.InsectForm, RemasterFeats.GetSpellIdByName("SpiderSting") } }, // Jump, Pest Form  -> Insect Swarm
-                    { 2, Array.Empty<SpellId>() } // Enlarge, Humanoid Form
+                    { 2, Array.Empty<SpellId>() }, // Enlarge, Humanoid Form
+                    { 3, Array.Empty<SpellId>() }, // Feet to Fins, Vampiric Feast
+                    { 4, Array.Empty<SpellId>() }, // Mountain Resilience, Vapor Form
                 });
 
             yield return new CurriculumFeat(RemasterFeats.FeatName.TheBoundary, RemasterFeats.Trait.TheBoundary,
@@ -120,7 +130,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     { 0, new[] { RemasterFeats.GetSpellIdByName("VoidWarp") } }, // Telekinetic Hand
                     { 1, new[] { SpellId.GrimTendrils, RemasterFeats.GetSpellIdByName("SummonUndead") } }, // Phantasmal Minion
-                    { 2, new[] { RemasterFeats.GetSpellIdByName("SeeTheUnseen") } } // Darkness
+                    { 2, new[] { RemasterFeats.GetSpellIdByName("SeeTheUnseen") } }, // Darkness
+                    { 3, new[] { SpellId.BindUndead } }, // Ghostly Weapon
+                    { 4, Array.Empty<SpellId>() }, // Flicker, Translocate
                 });
         }
 
@@ -163,6 +175,14 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 {
                     RulesText += "\n2nd: " + string.Join(", ", spellOptions[2].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
                 }
+                if (spellOptions[3].Length > 0)
+                {
+                    RulesText += "\n2nd: " + string.Join(", ", spellOptions[3].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
+                }
+                if (spellOptions[4].Length > 0)
+                {
+                    RulesText += "\n4th: " + string.Join(", ", spellOptions[4].Select((SpellId id) => AllSpells.CreateModernSpellTemplate(id, Trait.Wizard).ToSpellLink()));
+                }
                 ShowRulesBlockForClassOfOrigin = Trait.Wizard;
                 OnSheet = (sheet) =>
                 {
@@ -173,6 +193,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                         sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(0, "Wizard:SchoolSpell0:" + schoolTraitName, schoolTrait, schoolTraitName));
                         sheet.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(1, "Wizard:SchoolSpell1:" + schoolTraitName, schoolTrait, schoolTraitName));
                         sheet.AddAtLevel(3, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(2, "Wizard:SchoolSpell2:" + schoolTraitName, schoolTrait, schoolTraitName)));
+                        sheet.AddAtLevel(5, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(3, "Wizard:SchoolSpell3:" + schoolTraitName, schoolTrait, schoolTraitName)));
+                        sheet.AddAtLevel(7, (laterValues) => laterValues.PreparedSpells.GetValueOrDefault(Trait.Wizard)?.Slots.Add(new CurriculumPreparedSpellSlot(4, "Wizard:SchoolSpell4:" + schoolTraitName, schoolTrait, schoolTraitName)));
                     }
                     // FIXME: need to add upgraded version of Drain Bonded Item and bonus feat for Unified Magical Theory
                     sheet.AddFocusSpellAndFocusPoint(Trait.Wizard, Ability.Intelligence, focusSpell);
@@ -193,10 +215,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
 
         private static void PatchWizardSpells()
         {
-            ModManager.RegisterActionOnEachSpell((CombatAction spellCombatAction) =>
-            {
-                AddCurriculumTraits(spellCombatAction);
-            });
+            ModManager.RegisterActionOnEachSpell(AddCurriculumTraits);
         }
 
 

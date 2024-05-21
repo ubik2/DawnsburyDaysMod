@@ -41,7 +41,7 @@ public class Cantrips
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
-            return Spells.CreateModern(IllustrationName.AcidSplash, "Caustic Blast", new[] { Trait.Acid, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.AcidSplash, "Caustic Blast", [Trait.Acid, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You fling a large glob of acid that immediately detonates, spraying nearby creatures.",
                 "Creatures in the area take " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d8 acid damage with a basic Reflex save; " +
                 "on a critical failure, the creature also takes " + S.HeightenedVariable(1 + heightenIncrements, 1) + " persistent acid damage." +
@@ -66,7 +66,7 @@ public class Cantrips
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
-            return Spells.CreateModern(IllustrationName.Daze, "Daze", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.Daze, "Daze", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                 "You push into the target's mind and daze it with a mental jolt.",
                 "The jolt deals " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 mental damage, with a basic Will save. If the target critically fails the save, it is also stunned 1." +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d6."),
@@ -86,7 +86,7 @@ public class Cantrips
         ModManager.ReplaceExistingSpell(SpellId.DivineLance, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.DivineLance, "Divine Lance", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.DivineLance, "Divine Lance", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, RemasterSpells.Trait.Remaster],
                 "You unleash a beam of divine energy.",
                 "Make a ranged spell attack against the target's AC. On a hit, the target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 spirit damage (double damage on a critical hit)." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
@@ -97,7 +97,7 @@ public class Cantrips
             .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
                 // For now, just do the better of good or untyped. We don't have core support for Spirit damage type
-                DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Good, DamageKind.Untyped });
+                DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe([DamageKind.Good, DamageKind.Untyped]);
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d4", damageKind);
             });
         });
@@ -105,7 +105,7 @@ public class Cantrips
         ModManager.ReplaceExistingSpell(SpellId.ElectricArc, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.ElectricArc, "Electric Arc", [Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "An arc of lightning leaps from one target to another.",
                 "Each target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 electricity damage with a basic Reflex save." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),
@@ -125,7 +125,7 @@ public class Cantrips
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.RayOfFrost, "Frostbite", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Cold, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.RayOfFrost, "Frostbite", [Trait.Cantrip, Trait.Concentrate, Trait.Cold, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "An orb of biting cold coalesces around your target, freezing its body.",
                 "The target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 cold damage with a basic Fortitude save. On a critical failure, the target also gains weakness 1 to bludgeoning until the start of your next turn." +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d4 and the weakness on a critical failure increases by 1."),
@@ -146,7 +146,7 @@ public class Cantrips
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.DragonClaws, "Gouging Claw", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Morph, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.DragonClaws, "Gouging Claw", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Morph, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You temporarily morph your limb into a clawed appendage.",
                 "Make a melee spell attack roll against your target's AC. If you hit, you deal your choice of " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 slashing damage or " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 piercing damage, plus 2 persistent bleed damage. On a critical success, you deal double damage and double bleed damage." +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The damage increases by 1d6 and the persistent bleed damage increases by 1."),
@@ -156,7 +156,7 @@ public class Cantrips
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(2 + heightenIncrements) * 3.5f)
             .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
-                DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Slashing, DamageKind.Piercing });
+                DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe([DamageKind.Slashing, DamageKind.Piercing]);
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, (2 + heightenIncrements) + "d6", damageKind);
                 if (checkResult == CheckResult.CriticalSuccess)
                 {
@@ -171,7 +171,7 @@ public class Cantrips
         {
             const int heightenStep = 1;
             int heightenIncrements = spellLevel - 1;
-            return Spells.CreateModern(IllustrationName.ProduceFlame, "Ignition", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, Trait.VersatileMelee, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.ProduceFlame, "Ignition", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, Trait.VersatileMelee, RemasterSpells.Trait.Remaster],
                 "You snap your fingers and point at a target, which begins to smolder.",
                 "Make a spell attack roll against the target's AC, dealing " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 fire damage on a hit. If the target is within your melee reach, you can choose to make a melee spell attack with the flame instead of a ranged spell attack, which increases all the spell's damage dice to d6s." +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The initial damage increases by 1d4 and the persistent fire damage on a critical hit increases by 1d4."),
@@ -222,7 +222,7 @@ public class Cantrips
 
 
             CombatAction combatAction =
-             Spells.CreateModern(IllustrationName.TelekineticProjectile, "Telekinetic Projectile", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+             Spells.CreateModern(IllustrationName.TelekineticProjectile, "Telekinetic Projectile", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                 "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target.",
                 "Make a spell attack roll against the target's AC. If you hit, you deal " + damageText + " bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled. " + ampedEffect + "No specific traits or magic properties of the hurled item affect the attack or the damage." +
                 S.FourDegreesOfSuccess(criticalSuccessEffect, successEffect, null, null) +
@@ -235,7 +235,7 @@ public class Cantrips
                 if (checkResult >= CheckResult.Success)
                 {
                     DiceFormula diceFormula = DiceFormula.FromText(diceExpression, "Telekinetic Projectile");
-                    DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(new[] { DamageKind.Bludgeoning, DamageKind.Piercing, DamageKind.Slashing });
+                    DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe([DamageKind.Bludgeoning, DamageKind.Piercing, DamageKind.Slashing]);
                     await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, diceFormula, damageKind);
                     if (amped)
                     {
@@ -251,14 +251,13 @@ public class Cantrips
         // Tangle Vine (formerly Tanglefoot)
         RemasterSpells.RegisterNewSpell("TangleVine", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            int duration = spellLevel >= 2 ? 2 : 1;
-            string durationText = spellLevel >= 2 ? "2 rounds" : "1 round";
-            return Spells.CreateModern(IllustrationName.TelekineticManeuver, "Tangle Vine", new[] { Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, Trait.VersatileMelee, RemasterSpells.Trait.Remaster },
+            string durationText = spellLevel switch { >= 4 => "1 minute.", >= 2 => "2 rounds", _ => "1 round" };
+            return Spells.CreateModern(IllustrationName.TelekineticManeuver, "Tangle Vine", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, Trait.VersatileMelee, RemasterSpells.Trait.Remaster],
                 "A vine appears from thin air, flicking from your hand and lashing itself to the target.",
                 "Attempt a spell attack roll against the target." +
                 S.FourDegreesOfSuccess("The target gains the immobilized condition and takes a –10-foot circumstance penalty to its Speeds for " + durationText + ". It can attempt to Escape against your spell DC to remove the penalty and the immobilized condition.",
                                        "The target takes a –10 foot circumstance penalty to its Speeds for " + durationText + ". It can attempt to Escape against your spell DC to remove the penalty.", null, null) +
-                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The effects last for 2 rounds."),
+                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The effects last for 2 rounds.\n\n{b}Heightened (4th){/b} The effects last for 1 minute."),
                 Target.Ranged(6), spellLevel, null)
             .WithSpellAttackRoll().WithSoundEffect(SfxName.Trip)
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)t.OwnerAction.SpellLevel * 5f)
@@ -266,15 +265,29 @@ public class Cantrips
             {
                 if (checkResult == CheckResult.CriticalSuccess)
                 {
-                    target.AddQEffect(QEffect.Immobilized().WithExpirationAtStartOfSourcesTurn(caster, duration));
+                    QEffect immobilized = QEffect.Immobilized();
+                    immobilized.BonusToAllSpeeds = (QEffect _) => new Bonus(-2, BonusType.Circumstance, "Tangle Vine");
+                    immobilized = spellLevel switch
+                    {
+                        >= 4 => immobilized.WithExpirationNever(),
+                        >= 2 => immobilized.WithExpirationAtStartOfSourcesTurn(caster, 2),
+                        _ => immobilized.WithExpirationAtStartOfSourcesTurn(caster, 1)
+                    };
+                    target.AddQEffect(immobilized);
                 }
-                if (checkResult >= CheckResult.Success)
+                else if (checkResult >= CheckResult.Success)
                 {
-                    target.AddQEffect(new QEffect("Slowed by vines", "You have a -10-foot-penalty to Speed.")
+                    QEffect slowed = new QEffect("Slowed by vines", "You have a -10-foot-penalty to Speed.")
                     {
                         BonusToAllSpeeds = (QEffect _) => new Bonus(-2, BonusType.Circumstance, "Tangle Vine")
-
-                    }.WithExpirationAtStartOfSourcesTurn(caster, duration));
+                    };
+                    slowed = spellLevel switch
+                    {
+                        >= 4 => slowed.WithExpirationNever(),
+                        >= 2 => slowed.WithExpirationAtStartOfSourcesTurn(caster, 2),
+                        _ => slowed.WithExpirationAtStartOfSourcesTurn(caster, 1)
+                    };
+                    target.AddQEffect(slowed);
                 }
             });
         });
@@ -284,7 +297,7 @@ public class Cantrips
         {
             int heightenIncrements = spellLevel - 1;
             // Using Positive instead of Vitality here, since otherwise I'd need to update creatures
-            return Spells.CreateModern(IllustrationName.DisruptUndead, "Vitality Lash", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Vitality, Trait.Divine, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.DisruptUndead, "Vitality Lash", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Vitality, Trait.Divine, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You demolish the target's corrupted essence with energy from Creation's Forge.",
                 "You deal " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 vitality damage with a basic Fortitude save. If the creature critically fails the save, it is also enfeebled 1 until the start of your next turn." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
@@ -307,7 +320,7 @@ public class Cantrips
         {
             int heightenIncrements = spellLevel - 1;
             // Using Negative instead of Void here, since otherwise I'd need to update creatures
-            return Spells.CreateModern(IllustrationName.Enervation, "Void Warp", new[] { Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Void, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.Enervation, "Void Warp", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Void, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                 "You call upon the Void to harm life force.",
                 "The target takes " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d4 void damage with a basic Fortitude save. On a critical failure, the target is also enfeebled 1 until the start of your next turn." +
                 S.HeightenedDamageIncrease(spellLevel, inCombat, "1d4"),

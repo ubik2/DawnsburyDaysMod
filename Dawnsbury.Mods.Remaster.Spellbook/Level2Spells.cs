@@ -72,14 +72,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             RemasterSpells.ReplaceLegacySpell(SpellId.AcidArrow, "AcidGrip", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = (spellLevel - 2) / 2;
-                return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", new[] { Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.AcidArrow, "Acid Grip", [Trait.Acid, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "An ephemeral, taloned hand grips the target, burning it with magical acid.",
                     "The target takes " + S.HeightenedVariable(2 + 2 * heightenIncrements, 2) + "d8 acid damage plus " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 persistent acid damage depending on its Reflex save. A creature taking persistent damage from this spell takes a –10-foot status bonus to its Speeds." +
                     S.FourDegreesOfSuccess("The creature is unaffected.",
                         "The creature takes half damage and no persistent damage, and the claw moves it up to 5 feet in a direction of your choice.",
                         "The creature takes full damage and persistent damage, and the claw moves it up to 10 feet in a direction of your choice.",
-                        "The creature takes double damage and full persistent damage, and the claw moves it up to 20 feet in a direction of your choice."),
-                    // S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+2){/b} The initial damage increases by 2d8, and the persistent acid damage increases by 1d6."),
+                        "The creature takes double damage and full persistent damage, and the claw moves it up to 20 feet in a direction of your choice.") +
+                    S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+2){/b} The initial damage increases by 2d8, and the persistent acid damage increases by 1d6."),
                     Target.Ranged(24), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
                 .WithSoundEffect(SfxName.AcidSplash)
                 .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)((t.OwnerAction.SpellLevel - 1) * 2) * 4.5f)
@@ -103,13 +103,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             RemasterSpells.RegisterNewSpell("BlazingBolt", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 Func<CreatureTarget> func = () => Target.Ranged(12, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 14f, tg.OwnerAction));
-                return Spells.CreateModern(IllustrationName.BurningHands, "Blazing Bolt", new[] { Trait.Attack, Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.BurningHands, "Blazing Bolt", [Trait.Attack, Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You fire a ray of heat and flame.",
                     "{b}Range{/b} 60 feet\n{b}Targets{/b} 1 or more creatures\n\n" +
                     "Make a spell attack roll against a single creature. On a hit, the target takes " + S.HeightenedVariable(spellLevel, 2) + "d6 fire damage, and on a critical hit, the target takes double damage.\n\n" +
                     "For each additional action you use when Casting the Spell, you can fire an additional ray at a different target, to a maximum of three rays targeting three different targets for 3 actions.\n\n" +
-                    "These attacks each increase your multiple attack penalty, but you don't increase your multiple attack penalty until after you make all the spell attack rolls for blazing bolt. If you spend 2 or more actions Casting the Spell, the damage increases to " + S.HeightenedVariable(2 * spellLevel, 4) + "d6 fire damage on a hit, and it still deals double damage on a critical hit.",
-                    //S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+1){/b} The damage to each target increases by 1d6 for the 1-action version, or by 2d6 for the 2- and 3-action versions."),
+                    "These attacks each increase your multiple attack penalty, but you don't increase your multiple attack penalty until after you make all the spell attack rolls for blazing bolt. If you spend 2 or more actions Casting the Spell, the damage increases to " + S.HeightenedVariable(2 * spellLevel, 4) + "d6 fire damage on a hit, and it still deals double damage on a critical hit." +
+                    S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+1){/b} The damage to each target increases by 1d6 for the 1-action version, or by 2d6 for the 2- and 3-action versions."),
                     Target.DependsOnActionsSpent(
                         Target.MultipleCreatureTargets(func()).WithMustBeDistinct().WithOverriddenTargetLine("1 creature", plural: false),
                         Target.MultipleCreatureTargets(func(), func()).WithMustBeDistinct().WithOverriddenTargetLine("1 or 2 creatures", plural: true),
@@ -146,7 +146,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Calm (formerly Calm Emotions)
             RemasterSpells.ReplaceLegacySpell(SpellId.CalmEmotions, "Calm", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.CalmEmotions, "Calm", new[] { Trait.Concentrate, Trait.Emotion, Trait.Incapacitation, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.CalmEmotions, "Calm", [Trait.Concentrate, Trait.Emotion, Trait.Incapacitation, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You forcibly calm creatures in the area, soothing them into a nonviolent state; each creature must attempt a Will save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The creature is unaffected.", "Calming urges impose a –1 status penalty to the creature's attack rolls.",
                     "Any emotion effects that would affect the creature are suppressed and the creature can't use hostile actions. If the target is subject to hostility from any other creature, it ceases to be affected by {i}calm{/i}.", "As failure, but hostility doesn't end the effect.")),
@@ -207,7 +207,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Entangling Flora (formerly Entangle)
             RemasterSpells.RegisterNewSpell("EntanglingFlora", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.FlourishingFlora, "Entangling Flora", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.FlourishingFlora, "Entangling Flora", [Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "Plants and fungi burst out or quickly grow, entangling creatures.",
                     "All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it’s also immobilized for 1 round. Creatures can attempt to Escape to remove these effects." + "\n\n{i}Dismiss Entangling Flora is in Other maneuvers menu.{/i}",
                     Target.Burst(24, 4), spellLevel, null).WithSoundEffect(SfxName.Boneshaker)
@@ -284,13 +284,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // False Vitality (handle like Mystic Armor)
             RemasterSpells.RegisterNewSpell("FalseVitality", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                CombatAction falseVitality = Spells.CreateModern(IllustrationName.Soothe, "False Vitality", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                CombatAction falseVitality = Spells.CreateModern(IllustrationName.Soothe, "False Vitality", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You augment your flesh with the energies typically used to manipulate the undead.",
-                    "You gain 10 temporary Hit Points." +
+                    "You gain " + S.HeightenedVariable(10 + (spellLevel - 2) * 3, 10) + " temporary Hit Points." +
+                    S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+1){/b} The temporary Hit Points increase by 3.") +
                     "\n\n{b}Special{/b} You can cast this spell as a free action at the beginning of the encounter.", Target.Self(), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(2)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    caster.GainTemporaryHP(10);
+                    caster.GainTemporaryHP(10 + (spellLevel - 2) * 3);
                     // Add a marker so we don't prompt them to cast it more than once
                     caster.AddQEffect(new QEffect("False Vitality", "").WithExpirationAtStartOfOwnerTurn());
                 });
@@ -314,13 +315,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Floating Flame (formerly Flaming Sphere)
             RemasterSpells.ReplaceLegacySpell(SpellId.FlamingSphere, "FloatingFlame", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return CreateFloatingFlameSpell(spellLevel);
+                return CreateFloatingFlameSpell(spellLevel, inCombat);
             });
 
             // Laughing Fit (formerly Hideous Laughter)
             RemasterSpells.ReplaceLegacySpell(SpellId.HideousLaughter, "LaughingFit", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.HideousLaughter, "Laughing Fit", new[] { Trait.Concentrate, Trait.Emotion, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.HideousLaughter, "Laughing Fit", [Trait.Concentrate, Trait.Emotion, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "The target is overtaken with uncontrollable laughter.",
                     "It must attempt a Will save." +
                     S.FourDegreesOfSuccess("The target is unaffected.", "The target is plagued with uncontrollable laughter. It can't use reactions.",
@@ -368,13 +369,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Mist (formerly Obscuring Mist)
             RemasterSpells.ReplaceLegacySpell(SpellId.ObscuringMist, "Mist", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ObscuringMist, "Mist", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.ObscuringMist, "Mist", [Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You call forth a cloud of mist.",
                     "All creatures within the mist become concealed, and all creatures outside the mist become concealed to creatures within it. You can Dismiss the cloud." + "\n\n{i}Dismiss Mist is in Other maneuvers menu.{/i}",
                     Target.Burst(24, 4), spellLevel, null).WithSoundEffect(SfxName.GaleBlast).WithActionCost(3)
                 .WithEffectOnChosenTargets(async (Creature caster, ChosenTargets targets) =>
                 {
-                    List<TileQEffect> effects = new List<TileQEffect>();
+                    List<TileQEffect> effects = [];
                     foreach (Tile tile in targets.ChosenTiles)
                     {
                         TileQEffect item = new TileQEffect(tile)
@@ -389,13 +390,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
                     caster.AddQEffect(new QEffect
                     {
-                        ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ? null : new ActionPossibility(new CombatAction(caster, IllustrationName.ObscuringMist, "Dismiss Mist", new[] { Trait.Concentrate }, "Dismiss this effect.", Target.Self())
+                        ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ? null : new ActionPossibility(new CombatAction(caster, IllustrationName.ObscuringMist, "Dismiss Mist", [Trait.Concentrate], "Dismiss this effect.", Target.Self())
                         .WithEffectOnSelf((_) =>
                         {
                             foreach (TileQEffect tileEffect in effects)
                             {
                                 tileEffect.ExpiresAt = ExpirationCondition.Immediately;
                             }
+                            effect.ExpiresAt = ExpirationCondition.Immediately;
                         }))
                     });
                 });
@@ -404,20 +406,21 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Noise Blast (formerly Sound Burst)
             RemasterSpells.ReplaceLegacySpell(SpellId.SoundBurst, "NoiseBlast", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.SoundBurst, "Noise Blast", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.SoundBurst, "Noise Blast", [Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "A cacophonous noise blasts out dealing " + S.HeightenedVariable(spellLevel, 2) + "d10 sonic damage.",
                     "Each creature must attempt a Fortitude save." +
-                    S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.", "The creature takes full damage is deafened for 1 round.", "The creature takes double damage and is deafened for 1 minute, and stunned 1."),
+                    S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.", "The creature takes full damage is deafened for 1 round.", "The creature takes double damage and is deafened for 1 minute, and stunned 1.") + 
+                    S.HeightenedDamageIncrease(spellLevel, inCombat, "1d10"),
                     Target.Burst(6, 2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
                 .WithSoundEffect(SfxName.SoundBurst)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, "2d10", DamageKind.Sonic);
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, spellLevel + "d10", DamageKind.Sonic);
                     if (checkResult == CheckResult.Failure)
                     {
                         target.AddQEffect(QEffect.Deafened().WithExpirationAtStartOfSourcesTurn(caster, 1));
                     }
-                    if (checkResult == CheckResult.CriticalFailure)
+                    else if (checkResult == CheckResult.CriticalFailure)
                     {
                         target.AddQEffect(QEffect.Deafened().WithExpirationNever());
                         target.AddQEffect(QEffect.Stunned(1));
@@ -428,13 +431,15 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Oaken Resilience (formerly Barkskin)
             RemasterSpells.ReplaceLegacySpell(SpellId.Barkskin, "OakenResilience", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Barkskin, "Oaken Resilience", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                int resistanceTier = 1 + (spellLevel - 2) / 2;
+                return Spells.CreateModern(IllustrationName.Barkskin, "Oaken Resilience", [Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "The target's skin becomes tough, with a consistency like bark or wood.",
-                    "The target gains resistance 2 to bludgeoning and piercing damage and weakness 3 to fire. After the target takes fire damage, it can Dismiss the spell as a free action triggered by taking the damage; doing so doesn't reduce the fire damage the target was dealt.",
+                    "The target gains resistance " + S.HeightenedVariable(2 * resistanceTier, 2) + " to bludgeoning and piercing damage and weakness " + S.HeightenedVariable(3 * resistanceTier, 3) + " to fire. After the target takes fire damage, it can Dismiss the spell as a free action triggered by taking the damage; doing so doesn't reduce the fire damage the target was dealt." +
+                    S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+2){/b} The resistances increase by 2, and the weakness increases by 3."),
                     Target.AdjacentFriendOrSelf((Target tg, Creature a, Creature d) => (a == d && !a.HasEffect(QEffectId.Barkskin) && !a.HasEffect(QEffectId.EndedBarkskin)) ? 15 : int.MinValue), spellLevel, null).WithSoundEffect(SfxName.ArmorDon)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    QEffect updatedEffect = QEffect.Barkskin();
+                    QEffect updatedEffect = QEffect.Barkskin(resistanceTier);
                     updatedEffect.Name = "Oaken Resilience";
                     target.AddQEffect(updatedEffect);
                 });
@@ -443,37 +448,30 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Revealing Light (formerly Faerie Fire)
             RemasterSpells.RegisterNewSpell("RevealingLight", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.AncientDust, "Revealing Light", new[] { Trait.Concentrate, Trait.Light, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.AncientDust, "Revealing Light", [Trait.Concentrate, Trait.Light, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "A wave of magical light washes over the area.",
                     "You choose the appearance of the light, such as colorful, heatless flames or sparkling motes. A creature affected by revealing light is dazzled. If the creature was invisible, it becomes concealed instead. If the creature was already concealed for any other reason, it is no longer concealed." +
                     S.FourDegreesOfSuccess("The target is unaffected.", "The light affects the creature for 2 rounds.", "The light affects the creature for 1 minute.", "The light affects the creature for 10 minutes."),
                     Target.Burst(24, 2), spellLevel, SpellSavingThrow.Standard(Defense.Reflex)).WithSoundEffect(SfxName.AncientDust)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    switch (checkResult)
+                    target = checkResult switch
                     {
-                        case CheckResult.CriticalSuccess:
-                            break;
-                        case CheckResult.Success:
-                            target.AddQEffect(QEffect.Dazzled().WithExpirationAtStartOfSourcesTurn(caster, 2));
-                            break;
-                        case CheckResult.Failure:
-                        case CheckResult.CriticalFailure:
-                            target.AddQEffect(QEffect.Dazzled().WithExpirationNever());
-                            break;
-                    }
-                    if (checkResult <= CheckResult.Success) {
-                        // This isn't perfect, but it's mostly right.
-                        if (target.HasEffect(QEffectId.Invisible)) {
-                            QEffect invisibleEffect = target.QEffects.First((qEffect) => qEffect.Id == QEffectId.Invisible);
-                            target.RemoveAllQEffects((qEffect) => qEffect.Id == QEffectId.Invisible);
-                            target.AddQEffect(new QEffect("Concealed", "You are concealed. {i}(Everyone has an extra 20% miss chance against you.){/i}", invisibleEffect.ExpiresAt, caster, (Illustration)IllustrationName.Blur)
-                            {
-                                RoundsLeft = invisibleEffect.RoundsLeft,
-                                CountsAsABuff = true,
-                                Id = QEffectId.Blur
-                            });
-                        }
+                        CheckResult.Success => target.AddQEffect(QEffect.Dazzled().WithExpirationAtStartOfSourcesTurn(caster, 2)),
+                        CheckResult.Failure => target.AddQEffect(QEffect.Dazzled().WithExpirationNever()),
+                        CheckResult.CriticalFailure => target.AddQEffect(QEffect.Dazzled().WithExpirationNever()),
+                        _ => target,
+                    };
+                    // This isn't perfect, but it's mostly right.
+                    if (checkResult <= CheckResult.Success && target.HasEffect(QEffectId.Invisible)) {
+                        QEffect invisibleEffect = target.QEffects.First((qEffect) => qEffect.Id == QEffectId.Invisible);
+                        target.RemoveAllQEffects((qEffect) => qEffect.Id == QEffectId.Invisible);
+                        target.AddQEffect(new QEffect("Concealed", "You are concealed. {i}(Everyone has an extra 20% miss chance against you.){/i}", invisibleEffect.ExpiresAt, caster, (Illustration)IllustrationName.Blur)
+                        {
+                            RoundsLeft = invisibleEffect.RoundsLeft,
+                            CountsAsABuff = true,
+                            Id = QEffectId.Blur
+                        });
                     }
                 });
             });
@@ -481,7 +479,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // See the Unseen (formerly See Invisible)
             RemasterSpells.RegisterNewSpell("SeeTheUnseen", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Seek, "See the Unseen", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Revelation, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Seek, "See the Unseen", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Revelation, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "Your gaze pierces through illusions and finds invisible creatures and spirits.",
                     "You can see invisible creatures as though they weren't invisible, although their features are blurred, making them concealed and difficult to identify. You can also see incorporeal creatures, like ghosts, phased through an object from within 10 feet of an object's surface as blurry shapes seen through those objects. Subtler clues also grant you a +2 status bonus to checks you make to disbelieve illusions.",
                     Target.Self(), spellLevel, null).WithSoundEffect(SfxName.BitOfLuck)
@@ -499,40 +497,35 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Spiritual Armament(formerly Spiritual Weapon)
             RemasterSpells.ReplaceLegacySpell(SpellId.SpiritualWeapon, "SpiritualArmament", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return CreateSpiritualArmamentSpell(spellId, spellLevel);
+                return CreateSpiritualArmamentSpell(spellId, spellLevel, inCombat);
             });
 
             // Stupefy (formerly Touch of Idiocy)
             RemasterSpells.ReplaceLegacySpell(SpellId.TouchOfIdiocy, "Stupefy", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.TouchOfIdiocy, "Stupefy", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.TouchOfIdiocy, "Stupefy", [Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You dull the target's mind, depending on its Will save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target is stupefied 1 until the start of your next turn.", "The target is stupefied 2 for 1 minute.", "The target is stupefied 3 for 1 minute.")),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.Mental)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    switch (checkResult) {
-                        case CheckResult.CriticalSuccess:
-                            break;
-                        case CheckResult.Success:
-                            target.AddQEffect(QEffect.Stupefied(1).WithExpirationAtStartOfSourcesTurn(caster, 1));
-                            break;
-                        case CheckResult.Failure:
-                            target.AddQEffect(QEffect.Stupefied(2).WithExpirationNever());
-                            break;
-                        case CheckResult.CriticalFailure:
-                            target.AddQEffect(QEffect.Stupefied(3).WithExpirationNever());
-                            break;
-                    }
+                    target = checkResult switch
+                    {
+                        CheckResult.Success => target.AddQEffect(QEffect.Stupefied(1).WithExpirationAtStartOfSourcesTurn(caster, 1)),
+                        CheckResult.Failure => target.AddQEffect(QEffect.Stupefied(2).WithExpirationNever()),
+                        CheckResult.CriticalFailure => target.AddQEffect(QEffect.Stupefied(3).WithExpirationNever()),
+                        _ => target
+                    };
                 });
             });
 
             // This is a level 1 spell, but we don't have any -1 creatures. To prevent it from being a trap, we treat it like a level 2 spell.
             RemasterSpells.RegisterNewSpell("SummonConstruct", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
-                return Spells.CreateModern(IllustrationName.AnimatedStatue256, "Summon Construct", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, RemasterSpells.Trait.Remaster },
-                    "You summon a creature that has the construct trait.", "You summon a creature that has the construct trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                int maximumCreatureLevel = spellLevel switch { 2 => 1, 3 => 2, 4 => 3, _ => -1 };
+                return Spells.CreateModern(IllustrationName.AnimatedStatue256, "Summon Construct", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, RemasterSpells.Trait.Remaster],
+                    "You summon a creature that has the construct trait.", "You summon a creature that has the construct trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1.\n\n{b}Heightened (3rd){/b} The maximum level of the summoned creature is 2.\n\n{b}Heightened (4th){/b} The maximum level of the summoned creature is 3."),
                     Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
                     .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Construct) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
                     {
@@ -543,9 +536,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // This is a level 1 spell, but we don't have any -1 creatures. To prevent it from being a trap, we treat it like a level 2 spell.
             RemasterSpells.RegisterNewSpell("SummonPlantOrFungus", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
-                return Spells.CreateModern(IllustrationName.WoodMephit256, "Summon Plant or Fungus", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Primal, RemasterSpells.Trait.Remaster },
-                    "You summon a creature that has the plant or fungus trait.", "You summon a creature that has the plant or fungus trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                int maximumCreatureLevel = spellLevel switch { 2 => 1, 3 => 2, 4 => 3, _ => -1};
+                return Spells.CreateModern(IllustrationName.WoodMephit256, "Summon Plant or Fungus", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "You summon a creature that has the plant or fungus trait.", "You summon a creature that has the plant or fungus trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + 
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1.\n\n{b}Heightened (3rd){/b} The maximum level of the summoned creature is 2.\n\n{b}Heightened (4th){/b} The maximum level of the summoned creature is 3."),
                     Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
                     .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Plant) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
                     {
@@ -601,11 +595,12 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         /// </summary>
         /// <param name="spellLevel"></param>
         /// <returns></returns>
-        private static CombatAction CreateFloatingFlameSpell(int spellLevel)
+        private static CombatAction CreateFloatingFlameSpell(int spellLevel, bool inCombat)
         {
-            return Spells.CreateModern(IllustrationName.FlamingSphere, "Floating Flame", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.FlamingSphere, "Floating Flame", [Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You create a fire that burns without fuel and moves to your commands.",
-                "The flame deals 3d6 fire damage to each creature in the square in which it appears, with a basic Reflex save. When you Sustain this spell, you can levitate the flame up to 10 feet. It then deals damage to each creature whose space it shared at any point during its flight. This uses the same damage and save, and you roll the damage once each time you Sustain. A given creature can take damage from floating flame only once per round.",
+                "The flame deals " + S.HeightenedVariable(3 + spellLevel - 2, 3) + "d6 fire damage to each creature in the square in which it appears, with a basic Reflex save. When you Sustain this spell, you can levitate the flame up to 10 feet. It then deals damage to each creature whose space it shared at any point during its flight. This uses the same damage and save, and you roll the damage once each time you Sustain. A given creature can take damage from floating flame only once per round." +
+                S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
                 RangedTileTarget(6), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
             .WithSoundEffect(SfxName.RejuvenatingFlames).WithProjectileCone((Illustration)IllustrationName.SpiritualWeapon, 0, ProjectileKind.None)
             .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
@@ -637,7 +632,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         string name = !qEffect.CannotExpireThisTurn ? "Sustain, move and damage" : "Move and damage";
                         string description = !qEffect.CannotExpireThisTurn ? "The duration of the spell continues until the end of your next turn." : "";
                         description += "Move the Floating Flame 10-feet and damage any creatures whose space it shared at any point during its movement.";
-                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.FlamingSphere256, name, new[] { Trait.Concentrate, Trait.SustainASpell, Trait.Spell, Trait.AlwaysHits }, description, newTarget)
+                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.FlamingSphere256, name, [Trait.Concentrate, Trait.SustainASpell, Trait.Spell, Trait.AlwaysHits], description, newTarget)
                         {
                             SpellId = SpellId.FlamingSphere,
                             SpellcastingSource = spell.SpellcastingSource
@@ -694,14 +689,15 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         /// </summary>
         /// <param name="spellLevel"></param>
         /// <returns></returns>
-        private static CombatAction CreateSpiritualArmamentSpell(SpellId spellId, int spellLevel)
+        private static CombatAction CreateSpiritualArmamentSpell(SpellId spellId, int spellLevel, bool inCombat)
         {
             int heightenIncrements = (spellLevel - 2) / 2;
             string damage = (2 + heightenIncrements) + "d8";
-            return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(IllustrationName.SpiritualWeapon, "Spiritual Armament", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Sanctified, RemasterSpells.Trait.Spirit, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                 "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it.",
                 "Attempt a spell attack roll against the target's AC, dealing " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well.\n\n" +
-                "Each time you Sustain the spell, you can repeat the attack against any creature within 120 feet.",
+                "Each time you Sustain the spell, you can repeat the attack against any creature within 120 feet." +
+                S.HeightenText(spellLevel, 2, inCombat, "{b}Heightened (+2){/b} The damage increases by 1d8."),                    
                 Target.Ranged(24), spellLevel, null)
             .WithSoundEffect(SfxName.RejuvenatingFlames).WithProjectileCone((Illustration)IllustrationName.SpiritualWeapon, 0, ProjectileKind.None).WithSpellAttackRoll()
             .WithEffectOnSelf(async (CombatAction spell, Creature caster) =>
@@ -717,7 +713,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         string name = "Sustain and attack";
                         string description = !qEffect.CannotExpireThisTurn ? "The duration of the spell continues until the end of your next turn." : "";
                         description += "Attack a creature within 120 feet.";
-                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.SpiritualWeapon, name, new[] { Trait.Attack, Trait.Concentrate, Trait.SustainASpell, Trait.Spell }, description, newTarget)
+                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.SpiritualWeapon, name, [Trait.Attack, Trait.Concentrate, Trait.SustainASpell, Trait.Spell], description, newTarget)
                         {
                             SpellId = spellId,
                             SpellcastingSource = spell.SpellcastingSource
@@ -739,7 +735,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         private static ActionPossibility EscapeAction(Creature creature, QEffect qEffect, SpellcastingSource source)
         {
-            CombatAction combatAction = new CombatAction(creature, IllustrationName.Escape, "Escape from " + qEffect.Name, new[] { Trait.Attack, Trait.AttackDoesNotTargetAC },
+            CombatAction combatAction = new CombatAction(creature, IllustrationName.Escape, "Escape from " + qEffect.Name, [Trait.Attack, Trait.AttackDoesNotTargetAC],
                 "Acrobatics check or Athletics check aganst the Spell DC of the effect restraining you.", Target.Self((_, ai) => ai.EscapeFrom(qEffect.Source ?? creature)))
             {
                 ActionId = ActionId.Escape
@@ -748,14 +744,9 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             return new ActionPossibility(combatAction.WithActiveRollSpecification(activeRollSpecification).WithSoundEffect(combatAction.Owner.HasTrait(Trait.Female) ? SfxName.TripFemale : SfxName.TripMale)
                 .WithEffectOnEachTarget(async (spell, creature, d, checkResult) =>
                 {
-                    switch (checkResult)
+                    if (checkResult == CheckResult.Success || checkResult == CheckResult.CriticalSuccess)
                     {
-                        case CheckResult.Success:
-                            qEffect.ExpiresAt = ExpirationCondition.Immediately;
-                            break;
-                        case CheckResult.CriticalSuccess:
-                            qEffect.ExpiresAt = ExpirationCondition.Immediately;
-                            break;
+                        qEffect.ExpiresAt = ExpirationCondition.Immediately;
                     }
                 }));
         }

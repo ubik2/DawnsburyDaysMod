@@ -11,19 +11,19 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
     {
         public static IEnumerable<Feat> LoadAll()
         {
-            yield return PatchBloodline(FeatName.ImperialBloodline, Trait.Arcane, SpellId.UnravelingBlast, SpellId.AncientDust, SpellId.MagicMissile, SpellId.Invisibility,
+            yield return PatchBloodline(FeatName.ImperialBloodline, Trait.Arcane, SpellId.UnravelingBlast, SpellId.Thunderburst, [SpellId.AncientDust, SpellId.MagicMissile, SpellId.Invisibility, SpellId.Haste, SpellId.DimensionDoor],
                 "You and the target, if friendly, each get a +1 status bonus to all skill checks for 1 round.");
-            yield return PatchBloodline(FeatName.AngelicBloodline, Trait.Divine, SpellId.AngelicHalo, SpellId.DivineLance, SpellId.Heal, SpellId.SpiritualWeapon,
+            yield return PatchBloodline(FeatName.AngelicBloodline, Trait.Divine, SpellId.AngelicHalo, SpellId.AngelicWings, [SpellId.DivineLance, SpellId.Heal, SpellId.SpiritualWeapon, SpellId.SearingLight, SpellId.DivineWrath],
                 "You and all friendly targets each get a +1 status bonus to all saving throws for 1 round.");
-            yield return PatchBloodline(FeatName.DemonicBloodline, Trait.Divine, SpellId.GluttonsJaw, SpellId.AcidSplash, SpellId.Fear, SpellId.HideousLaughter,
+            yield return PatchBloodline(FeatName.DemonicBloodline, Trait.Divine, SpellId.GluttonsJaw, SpellId.SwampOfSloth, [SpellId.AcidSplash, SpellId.Fear, SpellId.HideousLaughter, SpellId.Slow, SpellId.DivineWrath],
                 "All enemy targets get a -1 status penalty to AC for 1 round, and you get a +1 status bonus to Intimidation for 1 round.");
-            yield return PatchBloodline(FeatName.InfernalBloodline, Trait.Divine, SpellId.RejuvenatingFlames, SpellId.ProduceFlame, SpellId.BurningHands, SpellId.FlamingSphere,
+            yield return PatchBloodline(FeatName.InfernalBloodline, Trait.Divine, SpellId.RejuvenatingFlames, SpellId.ShieldOfDivineFire, [SpellId.ProduceFlame, SpellId.BurningHands, SpellId.FlamingSphere, SpellId.CrisisOfFaith, SpellId.DivineWrath],
                 "All enemy targets take 1 extra fire damage per spell level.");
-            yield return PatchBloodline(FeatName.DraconicBloodline, Trait.Arcane, SpellId.DragonClaws, SpellId.Shield, SpellId.TrueStrike, SpellId.ResistEnergy,
+            yield return PatchBloodline(FeatName.DraconicBloodline, Trait.Arcane, SpellId.DragonClaws, SpellId.DragonBreath, [SpellId.Shield, SpellId.TrueStrike, SpellId.ResistEnergy, SpellId.Haste, SpellId.SpellImmunity],
                 "You and the target each get a +1 status bonus to AC for 1 round."); // FIXME: Need to address the OnSheet
-            yield return PatchBloodline(FeatName.HagBloodline, Trait.Occult, SpellId.JealousHex, SpellId.Daze, SpellId.Fear, SpellId.TouchOfIdiocy,
+            yield return PatchBloodline(FeatName.HagBloodline, Trait.Occult, SpellId.JealousHex, SpellId.HorrificVisage, [SpellId.Daze, SpellId.Fear, SpellId.TouchOfIdiocy, SpellId.Blindness, SpellId.BestowCurse],
                 "The first creature that deals damage to you before the end of your next turn takes 2 mental damage per spell level (basic Will save mitigates).");
-            yield return PatchBloodline(FeatName.FireElementalBloodline, Trait.Primal, SpellId.ElementalToss, SpellId.ProduceFlame, SpellId.BurningHands, SpellId.ResistEnergy,
+            yield return PatchBloodline(FeatName.FireElementalBloodline, Trait.Primal, SpellId.ElementalToss, SpellId.FieryWings, [SpellId.ProduceFlame, SpellId.BurningHands, SpellId.ResistEnergy, SpellId.Fireball, SpellId.FireShield],
                 "All enemy targets take 1 extra fire damage per spell level, and you get a +1 status bonus to Intimidation for 1 round.");
 
             PatchClassBloodlines();
@@ -34,7 +34,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         /// </summary>
         public static void PatchClassBloodlines()
         {
-            FeatName[] bloodlineFeatNames = new[] { FeatName.ImperialBloodline, FeatName.AngelicBloodline, FeatName.DemonicBloodline, FeatName.InfernalBloodline, FeatName.DraconicBloodline, FeatName.HagBloodline, FeatName.FireElementalBloodline };
+            FeatName[] bloodlineFeatNames = [FeatName.ImperialBloodline, FeatName.AngelicBloodline, FeatName.DemonicBloodline, FeatName.InfernalBloodline, FeatName.DraconicBloodline, FeatName.HagBloodline, FeatName.FireElementalBloodline];
             ClassSelectionFeat classFeat = (ClassSelectionFeat)AllFeats.All.First((feat) => feat.FeatName == FeatName.Sorcerer);
             classFeat.Subfeats = AllFeats.All.Where((feat) => bloodlineFeatNames.Contains(feat.FeatName)).ToList();
         }
@@ -43,18 +43,22 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
         // I can't directly pull the WithBloodMagic, but I can replicate the changes to both the RulesText and capture the existing feat's functionality
         // through the OnCreature function.
         // In the case of the DraconicBloodline, I also need to add the OnSheet hook that sets up the dragon type. I can't just copy this, because we've changed other bits.
-        private static Bloodline PatchBloodline(FeatName bloodlineFeatName, Trait spellList, SpellId focusSpellId, SpellId cantripSpellId, SpellId level1SpellId, SpellId level2SpellId, string bloodMagicDescription)
+        private static Bloodline PatchBloodline(FeatName bloodlineFeatName, Trait spellList, SpellId focusSpellId, SpellId advancedFocusSpellId, SpellId[] grantedSpells, string bloodMagicDescription)
         {
             Bloodline existingFeat = (Bloodline)AllFeats.All.First((feat) => feat.FeatName == bloodlineFeatName);
             focusSpellId = RemasterFeats.GetUpdatedSpellId(focusSpellId);
-            cantripSpellId = RemasterFeats.GetUpdatedSpellId(cantripSpellId);
-            level1SpellId = RemasterFeats.GetUpdatedSpellId(level1SpellId);
-            level2SpellId = RemasterFeats.GetUpdatedSpellId(level2SpellId);
+            advancedFocusSpellId = RemasterFeats.GetUpdatedSpellId(advancedFocusSpellId);
+            grantedSpells = grantedSpells.Select(RemasterFeats.GetUpdatedSpellId).ToArray();
             string basicRulesText = "• Spell list: {b}" + spellList.ToString() + "{/b} {i}" + ExplainSpellList(spellList) + "{/i}\n" +
                 "• Focus spell: " + AllSpells.CreateModernSpellTemplate(focusSpellId, Trait.Sorcerer).ToSpellLink() + "\n" +
-                "• Bloodline-granted spells: cantrip: " + AllSpells.CreateModernSpellTemplate(cantripSpellId, Trait.Sorcerer).ToSpellLink() + ", 1st: " + AllSpells.CreateModernSpellTemplate(level1SpellId, Trait.Sorcerer).ToSpellLink() + ", 2nd: " + AllSpells.CreateModernSpellTemplate(level2SpellId, Trait.Sorcerer).ToSpellLink() + "\n" +
+                "• Bloodline-granted spells: cantrip: " + AllSpells.CreateModernSpellTemplate(grantedSpells[0], Trait.Sorcerer).ToSpellLink() + 
+                (grantedSpells.Length >= 1 ? ", 1st: " + AllSpells.CreateModernSpellTemplate(grantedSpells[1], Trait.Sorcerer).ToSpellLink() : "") +
+                (grantedSpells.Length >= 2 ? ", 2nd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[2], Trait.Sorcerer).ToSpellLink() : "") +
+                (grantedSpells.Length >= 3 ? ", 3rd: " + AllSpells.CreateModernSpellTemplate(grantedSpells[3], Trait.Sorcerer).ToSpellLink() : "") +
+                (grantedSpells.Length >= 4 ? ", 4th: " + AllSpells.CreateModernSpellTemplate(grantedSpells[4], Trait.Sorcerer).ToSpellLink() : "") +
+                "\n" +
                 "• Blood magic effect: " + bloodMagicDescription + " {i}(Your blood magic effect activates whenever you use your focus spell or a non-cantrip bloodline-granted spell.){/i}";
-            Bloodline newFeat = new Bloodline(existingFeat.FeatName, existingFeat.FlavorText ?? "", spellList, focusSpellId, cantripSpellId, level1SpellId, level2SpellId)
+            Bloodline newFeat = new Bloodline(existingFeat.FeatName, existingFeat.FlavorText ?? "", spellList, focusSpellId, advancedFocusSpellId, grantedSpells )
             {
                 RulesText = basicRulesText,
                 OnCreature = existingFeat.OnCreature
