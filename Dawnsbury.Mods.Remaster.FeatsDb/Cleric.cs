@@ -44,6 +44,9 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
             // Update the heal spell to enable our Panic the Dead feat.
             ClericClassFeatures.PatchHeal();
 
+            // Update to grant expert proficiency with martial weapons as part of the warpriest's third doctrune at level 7
+            ClericClassFeatures.PatchDoctrine();
+
             // We treat a good aligmnent as being sanctified holy, and an evil alignment as being sanctified unholy.
             // This feat should also impact the harm spell, but we don't fight many holy creatures (there is a Lantern Archon in S1E5 which could be converted to a Cassisian).
             // I don't hide the Holy Castigation feat like I should.

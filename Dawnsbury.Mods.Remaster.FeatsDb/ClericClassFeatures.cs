@@ -78,6 +78,21 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             });
         }
 
+        public static void PatchDoctrine()
+        {
+            Feat warpriestDoctrine = AllFeats.All.First((feat) => feat.FeatName == FeatName.Warpriest);
+            warpriestDoctrine.RulesText = warpriestDoctrine.RulesText.Replace("You become expert with your deity's favored weapon, simple weapons, and unarmed attacks.",
+                "You gain expert proficiency with your deity's favored weapon, martial weapons, simple weapons, and unarmed attacks.");
+            warpriestDoctrine.WithOnSheet((Action<CalculatedCharacterSheetValues>)Delegate.Combine(warpriestDoctrine.OnSheet, 
+                (CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.AddAtLevel(7, (values) =>
+                {
+                    values.SetProficiency(Trait.Martial, Proficiency.Expert);
+                });
+            }));
+        }
+
         public static SubmenuPossibility CreateSmiteSpellcastingMenu(Creature caster, Item weapon, string caption)
         {
             List<CombatAction> smiteSpells = new List<CombatAction>();
