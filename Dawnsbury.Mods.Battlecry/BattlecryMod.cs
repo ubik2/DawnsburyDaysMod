@@ -12,13 +12,21 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.Mechanics.Enumerations.Trait Commander = ModManager.RegisterTrait("Commander", new TraitProperties("Commander", relevant: true) { IsClassTrait = true });
             public static readonly Core.Mechanics.Enumerations.Trait Guardian = ModManager.RegisterTrait("Guardian", new TraitProperties("Guardian", relevant: true) { IsClassTrait = true });
 
-            public static readonly Core.Mechanics.Enumerations.Trait CommanderTactic = ModManager.RegisterTrait("CommanderTactic");
+            public static readonly Core.Mechanics.Enumerations.Trait Tactic = ModManager.RegisterTrait("Tactic");
+            public static readonly Core.Mechanics.Enumerations.Trait Banner = ModManager.RegisterTrait("Banner");
+
         }
 
         public class FeatName
         {
             public static readonly Core.CharacterBuilder.Feats.FeatName Commander = ModManager.RegisterFeatName("CommanderClass", "Commander");
             public static readonly Core.CharacterBuilder.Feats.FeatName Guardian = ModManager.RegisterFeatName("GuardianClass", "Guardian");
+
+            public static readonly Core.CharacterBuilder.Feats.FeatName CombatMedic = ModManager.RegisterFeatName("CombatMedic", "Combat Medic");
+            public static readonly Core.CharacterBuilder.Feats.FeatName CommandersSteed = ModManager.RegisterFeatName("CommandersSteed", "Commander's Steed");
+            
+            public static readonly Core.CharacterBuilder.Feats.FeatName PincerAttack = ModManager.RegisterFeatName("PincerAttack", "Pincer Attack");
+            public static readonly Core.CharacterBuilder.Feats.FeatName StrikeHard = ModManager.RegisterFeatName("StrikeHard", "Strike Hard");
 
             public static readonly Core.CharacterBuilder.Feats.FeatName GuardiansArmor = ModManager.RegisterFeatName("GuardiansArmor", "Guardian's Armor");
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptStrike = ModManager.RegisterFeatName("InterceptStrike", "Intercept Strike");

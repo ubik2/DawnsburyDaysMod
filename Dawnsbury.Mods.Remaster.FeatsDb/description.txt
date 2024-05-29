@@ -16,6 +16,7 @@ This doesn't remove any feats, but if you were using a legacy version, you shoul
  [*]Healing Font (updated to grant 4 font slots)
  [*]Harmful Font (updated to grant 4 font slots)
  [*]Cleric Deities updated to use the Remaster spells
+ [*]Warpriest updated to grant expert proficiency with martial weapons at level 7
 [/list]
 
 [h3]Fighter[/h3]
@@ -52,6 +53,5 @@ Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url]
  [*]Thief still can't add dex modifier to unarmed attacks
  [*]Ruffian weapon restrictions for sneak attack are not updated
  [*]Wizard curriculum for Battle Magic and Civic Wizardry have alternative cantrip selection
- [*]The Wizard spell preparation shows a number instead of the school
 [/list]
 

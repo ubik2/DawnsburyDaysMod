@@ -33,8 +33,21 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Shielded Attrition - I probably won't do this one
 [/list]
 
-[h3]Commander[/h3]
-Only the base class is implemented. No class features or feats.
+[h2]Commander[/h2]
+[h3]Features[/h3]
+[list]
+ [*] Commander's Banner - this is just an emanation from the character, and the other modes aren't available
+ [*] Drilled Reactions - this will automatically be used if it is available
+ [*] Pincer Attack
+ [*] Strike Hard
+ [*] Combat Medic
+ [*] Commander's Steed - this is implemented as a standard animal companion with the same choices as the Ranger and Druid.
+[/list]
+
+[h3]Missing Features[/h3]
+[list]
+ [*] Commander's Steed - the banner functionality isn't included, and mounts are not supported.
+[/list]
 
 [h2]Code[/h2]
 Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
