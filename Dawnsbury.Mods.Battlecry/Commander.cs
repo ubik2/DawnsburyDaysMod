@@ -11,17 +11,11 @@ using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Possibilities;
-using Dawnsbury.Display.Text;
-using Dawnsbury.Core.Tiles;
-using Dawnsbury.Core.Creatures.Parts;
-using System.ComponentModel.Design;
-using Dawnsbury.Display.Illustrations;
-using System.Diagnostics;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
-using System;
-using Dawnsbury.Core.Mechanics.Treasure;
-using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using Dawnsbury.Core.Creatures.Parts;
+using Dawnsbury.Core.Animations;
+using Microsoft.Xna.Framework;
 
 namespace Dawnsbury.Mods.Battlecry
 {
@@ -62,7 +56,7 @@ namespace Dawnsbury.Mods.Battlecry
                 });
 
             yield return new TrueFeat(BattlecryMod.FeatName.CommandersSteed, 1, "You gain the service of a young animal companion as a mount.",
-                "You can affix your \r\nbanner to your mount’s saddle or barding, determining the \r\neffects of your commander’s banner and other abilities that \r\nuse your banner from your mount’s space, even if you are not \r\ncurrently riding your mount. Typically, the steed is an animal \r\ncompanion with the mount ability (such as a horse).",
+                "You can affix your banner to your mount's saddle or barding, determining the effects of your commander's banner and other abilities that use your banner from your mount's space, even if you are not currently riding your mount. Typically, the steed is an animal companion with the mount ability (such as a horse).",
                 [BattlecryMod.Trait.Commander],
                 [
                     CommanderAnimalCompanion.CreateAnimalCompanionFeat(FeatName.AnimalCompanionBat, "Your companion is a particularly large bat."),
@@ -71,6 +65,25 @@ namespace Dawnsbury.Mods.Battlecry
                     CommanderAnimalCompanion.CreateAnimalCompanionFeat(FeatName.AnimalCompanionPangolin, "Your companion is an unusually large hard-scaled beast, such as a pangolin."),
                     CommanderAnimalCompanion.CreateAnimalCompanionFeat(FeatName.AnimalCompanionCapybara, "Your companion is a capybara, a giant rodent common in the forests of the Blooming South.")
                 ]).WithPrerequisite((values) => values.Sheet.Class?.ClassTrait == BattlecryMod.Trait.Commander, "You must be a commander.");
+
+            yield return new TrueFeat(BattlecryMod.FeatName.DeceptiveTactics, 1, "Your training has taught you that the art of war is the art of deception.",
+                "You can use your Warfare Lore modifier in place of your Deception modifier for Deception checks to Create a Diversion or Feint, and can use your proficiency rank in Warfare Lore instead of your proficiency rank in Deception to meet the prerequisites of feats that modify the Create a Diversion or Feint actions (such as Lengthy Diversion).",
+                [BattlecryMod.Trait.Commander])
+                .WithOnCreature((sheet, creature) =>
+                {
+                    int baseMod = sheet.FinalAbilityScores.TotalModifier(Skills.GetSkillAbility(Skill.Deception)) + sheet.GetProficiency(Trait.Deception).ToNumber(creature.Level);
+                    int warfareLoreProficiency = creature.Level switch { < 3 => 2, < 7 => 4, < 15 => 6, _ => 8 };
+                    int newMod = sheet.FinalAbilityScores.TotalModifier(Ability.Intelligence) + warfareLoreProficiency;
+                    if (newMod > baseMod)
+                    {
+                        creature.AddQEffect(new QEffect()
+                        {
+                            BonusToSkills = ((skill) => (skill == Skill.Deception) ? new Bonus(newMod - baseMod, BonusType.Untyped, "Deceptive Tactics", true) : null)
+                        });
+                    }
+                });
+
+
         }
 
         public static IEnumerable<Feat> LoadAll()
@@ -85,6 +98,8 @@ namespace Dawnsbury.Mods.Battlecry
                 yield return feat;
             }
 
+            yield return CommandersBanner();
+
             yield return new ClassSelectionFeat(BattlecryMod.FeatName.Commander,
                 "You approach battle with the knowledge that tactics and strategy are every bit as crucial as brute strength or numbers. You may have trained in classical theories of warfare and strategy at a military school or you might have refined your techniques through hard-won experience as part of an army or mercenary company. Regardless of how you came by your knowledge, you have a gift for signaling your allies from across the battlefield and shouting commands to rout even the most desperate conflicts, allowing your squad to exceed their limits and claim victory.",
                 BattlecryMod.Trait.Commander, new EnforcedAbilityBoost(Ability.Intelligence), 8,
@@ -92,12 +107,13 @@ namespace Dawnsbury.Mods.Battlecry
                 [Trait.Reflex, Trait.Will, Trait.Perception],
                 2,
                 "{b}1. Commander's Banner{/b} A commander needs a battle standard so their allies can locate them on the field. You start play with a custom banner that you can use to signal allies when using tactics or to deploy specific abilities.\n\n" +
-                "{b}2. Tactics{/b}By studying and practicing the strategic arts of war, you can guide your allies to victory.\n\n" +
-                "{b}3. Drilled Reactions{/b}\n\n" +
-                "{b}4. Shield Block {icon:Reaction}.{/b}You gain the Shield Block general feat.",
+                "{b}2. Tactics{/b} By studying and practicing the strategic arts of war, you can guide your allies to victory.\n\n" +
+                "{b}3. Drilled Reactions{/b} Your time spent training with your allies allows them to respond quickly and instinctively to your commands.\n\n" +
+                "{b}4. Shield Block {icon:Reaction}.{/b} You gain the Shield Block general feat.",
                 null)
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
                 {
+                    sheet.GrantFeat(BattlecryMod.FeatName.CommandersBanner);
                     sheet.GrantFeat(FeatName.ShieldBlock);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("CommanderFeat1", "Commander feat", 1, (feat) => feat.HasTrait(BattlecryMod.Trait.Commander)));
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("CommanderTactics1", "Commander tactics", 1, (feat) => feat.HasTrait(BattlecryMod.Trait.Tactic)));
@@ -154,7 +170,11 @@ namespace Dawnsbury.Mods.Battlecry
                         return;
                     }
                     // Option to take a free step
+#if V3
                     bool stepped = await target.StepAsync(target.Name + ": Pincer Attack Step", allowPass: true);
+#else
+                    bool stepped = await target.StrideAsync(target.Name + ": Pincer Attack Step", allowStep: true, maximumFiveFeet: true, allowPass: true);
+#endif
                     if (stepped)
                     {
                         target.AddQEffect(new QEffect("Responded to Tactic", "You have responded to a Commander Tactic this round.").WithExpirationAtStartOfSourcesTurn(caster, 1));
@@ -218,7 +238,43 @@ namespace Dawnsbury.Mods.Battlecry
                 });
             return strikeHard;
         }
-        
+
+        private static Feat CommandersBanner()
+        {
+            int radius = 5;
+            return new Feat(BattlecryMod.FeatName.CommandersBanner, "A commander needs a battle standard so their allies can locate them on the field.",
+                "As long as your banner is visible, you and all allies in a 30-foot emanation gain a +1 status bonus to Will saves and DCs against fear effects.",
+                [BattlecryMod.Trait.Commander], null)
+                .WithOnCreature((sheet, caster) =>
+                {
+                    AuraAnimation auraAnimation = caster.AnimationData.AddAuraAnimation(IllustrationName.BlessCircle, radius);
+                    auraAnimation.Color = Color.Coral;
+                    caster.AddQEffect(new QEffect("Commander's Banner", "You and all allies in a 30-foot emanation gain a +1 status bonus to Will saves and DCs against fear effects.")
+                    {
+                        StateCheck = (qfBanner) =>
+                        {
+                            foreach (Creature friend in qfBanner.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBanner.Owner) <= radius && cr.FriendOf(qfBanner.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
+                            {
+                                friend.AddQEffect(new QEffect("Commander's Banner", "You gain a +1 status bonus to Will saves and DCs against fear effects.", ExpirationCondition.Ephemeral, qfBanner.Owner)
+                                {
+                                    CountsAsABuff = true,
+                                    BonusToDefenses = (qEffect, combatAction, defense) =>
+                                    {
+                                        if (combatAction != null && combatAction.HasTrait(Trait.Fear) && defense == Defense.Will)
+                                        {
+                                            return new Bonus(1, BonusType.Status, "Commander's Banner", true);
+                                        }
+                                        return null;
+                                    }
+                                });
+                            }
+                        },
+                        ExpiresAt = ExpirationCondition.Never,
+                        WhenExpires = (qfBanner) => auraAnimation.MoveTo(0.0f)
+                    });
+                });
+        }
+
         #region Extra Targeting Requirement Classes
         public class ReactionRequirement : CreatureTargetingRequirement
         {
@@ -226,7 +282,7 @@ namespace Dawnsbury.Mods.Battlecry
             {
                 if (source.QEffects.Any((qEffect) => qEffect.Name == "Drilled Reactions Expended") && target.Actions.IsReactionUsedUp)
                 {
-                    return Usability.NotUsable("You have used your Driled Reactions already, and your target doesn't have a reaction available.");
+                    return Usability.NotUsableOnThisCreature("You have used your Driled Reactions already, and your target doesn't have a reaction available.");
                 }
                 return Usability.Usable;
             }
@@ -237,7 +293,7 @@ namespace Dawnsbury.Mods.Battlecry
             {
                 if (target.QEffects.Any((qEffect) => qEffect.Name == "Responded to Tactic"))
                 {
-                    return Usability.NotUsable(target.Name + " has already responded to a tactic this round.");
+                    return Usability.NotUsableOnThisCreature(target.Name + " has already responded to a tactic this round.");
                 }
                 return Usability.Usable;
             }
@@ -249,7 +305,7 @@ namespace Dawnsbury.Mods.Battlecry
             {
                 if (target.PrimaryWeapon == null)
                 {
-                    return Usability.NotUsable(target.Name + " does not have a valid weapon.");
+                    return Usability.NotUsableOnThisCreature(target.Name + " does not have a valid weapon.");
                 }
                 return Usability.Usable;
             }
