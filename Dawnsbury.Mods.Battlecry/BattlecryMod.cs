@@ -28,8 +28,9 @@ namespace Dawnsbury.Mods.Battlecry
             public static readonly Core.CharacterBuilder.Feats.FeatName CommandersSteed = ModManager.RegisterFeatName("CommandersSteed", "Commander's Steed");
             public static readonly Core.CharacterBuilder.Feats.FeatName DeceptiveTactics = ModManager.RegisterFeatName("DeceptiveTactics", "Deceptive Tactics");
 
+            public static readonly Core.CharacterBuilder.Feats.FeatName FormUp = ModManager.RegisterFeatName("FormUp", "Form Up!");
             public static readonly Core.CharacterBuilder.Feats.FeatName PincerAttack = ModManager.RegisterFeatName("PincerAttack", "Pincer Attack");
-            public static readonly Core.CharacterBuilder.Feats.FeatName StrikeHard = ModManager.RegisterFeatName("StrikeHard", "Strike Hard");
+            public static readonly Core.CharacterBuilder.Feats.FeatName StrikeHard = ModManager.RegisterFeatName("StrikeHard", "Strike Hard!");
 
             public static readonly Core.CharacterBuilder.Feats.FeatName GuardiansArmor = ModManager.RegisterFeatName("GuardiansArmor", "Guardian's Armor");
             public static readonly Core.CharacterBuilder.Feats.FeatName InterceptStrike = ModManager.RegisterFeatName("InterceptStrike", "Intercept Strike");

@@ -135,6 +135,14 @@ namespace Dawnsbury.Mods.Battlecry
         // Strike Hard! - TODO
         public static IEnumerable<Feat> LoadTactics()
         {
+            yield return new Feat(BattlecryMod.FeatName.FormUp, "You signal your team to move into position together.",
+                "Signal all squadmates affected by your commander's banner; each can immediately Stride as a reaction, though each must end their movement inside your banner’s aura.",
+                [BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander], null)
+            .WithPermanentQEffect("You signal an aggressive formation designed to exploit enemies' vulnerabilities.", (qEffect) => qEffect.ProvideMainAction = (qfTactic) =>
+            {
+                return new ActionPossibility(FormUp(qEffect.Owner)).WithPossibilityGroup(nameof(Commander));
+            });
+
             yield return new Feat(BattlecryMod.FeatName.PincerAttack, "You signal an aggressive formation designed to exploit enemies' vulnerabilities.",
                 "Signal all squadmates affected by your commander's banner; each can Step as a free action. If any of your allies end this movement adjacent to an opponent, that opponent is off-guard to melee attacks from you and all other squadmates who responded to Pincer Attack until the start of your next turn.",
                 [BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander], null)
@@ -152,6 +160,40 @@ namespace Dawnsbury.Mods.Battlecry
             });
 
             yield break;
+        }
+
+        private static CombatAction FormUp(Creature owner)
+        {
+            // We'll automatically use Drilled Reactions if available
+            CombatAction tactic = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Form Up!", [BattlecryMod.Trait.Banner, BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander],
+                "You signal your team to move into position together." +
+                "Signal all squadmates affected by your commander's banner; each can immediately Stride as a reaction, though each must end their movement inside your banner’s aura.",
+                Target.Emanation(6).WithIncludeOnlyIf((area, t) => t.FriendOfAndNotSelf(owner)))
+                .WithActionCost(1)
+                .WithSoundEffect(SfxName.BeastRoar)
+                .WithEffectOnEachTarget(async delegate (CombatAction action, Creature caster, Creature target, CheckResult checkResult)
+                {
+                    if (new TacticResponseRequirement().Satisfied(caster, target) != Usability.Usable)
+                    {
+                        return;
+                    }
+                    // Option to take a free stride
+                    bool moved = await target.StrideAsync(target.Name + ": Pincer Attack Step", allowPass: true);
+                    if (moved)
+                    {
+                        bool useDrilledReactions = !caster.QEffects.Any((qEffect) => qEffect.Name == "Drilled Reactions Expended");
+                        if (useDrilledReactions)
+                        {
+                            caster.AddQEffect(new QEffect("Drilled Reactions Expended", "Drilled Reactions has already been used.").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        }
+                        target.AddQEffect(new QEffect("Responded to Tactic", "You have responded to a Commander Tactic this round.").WithExpirationAtStartOfSourcesTurn(caster, 1));
+                        if (!useDrilledReactions)
+                        {
+                            target.Actions.UseUpReaction();
+                        }
+                    }
+                });
+            return tactic;
         }
 
         private static CombatAction PincerAttack(Creature owner)
@@ -208,7 +250,7 @@ namespace Dawnsbury.Mods.Battlecry
         private static CombatAction StrikeHard(Creature owner)
         {
             // We'll automatically use Drilled Reactions if available
-            CombatAction strikeHard = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Strike Hard", [BattlecryMod.Trait.Banner, BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander],
+            CombatAction strikeHard = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Strike Hard!", [BattlecryMod.Trait.Banner, BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander],
                 "You signal an aggressive formation designed to exploit enemies' vulnerabilities." +
                 "Choose a squadmate who can see or hear your signal. That ally immediately attempts a Strike as a reaction.",
                 new CreatureTarget(RangeKind.Ranged, 
@@ -241,7 +283,7 @@ namespace Dawnsbury.Mods.Battlecry
 
         private static Feat CommandersBanner()
         {
-            int radius = 5;
+            int radius = 6;
             return new Feat(BattlecryMod.FeatName.CommandersBanner, "A commander needs a battle standard so their allies can locate them on the field.",
                 "As long as your banner is visible, you and all allies in a 30-foot emanation gain a +1 status bonus to Will saves and DCs against fear effects.",
                 [BattlecryMod.Trait.Commander], null)
