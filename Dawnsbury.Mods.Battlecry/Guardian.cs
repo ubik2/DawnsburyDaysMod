@@ -333,7 +333,7 @@ namespace Dawnsbury.Mods.Battlecry
 
         public static int GetClassDC(Creature? caster)
         {
-            return 10 + (caster != null ? caster.Abilities.Intelligence : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
+            return 10 + (caster != null ? caster.Abilities.Strength : 0) + (caster != null ? caster.Proficiencies.Get(BattlecryMod.Trait.Guardian).ToNumber(caster.Level) : 0);
         }
 
         private static CombatAction Taunt(Creature owner)
