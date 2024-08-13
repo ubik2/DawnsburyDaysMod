@@ -74,7 +74,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Renamed from Burning Hands. Updated traits and description.
             RemasterSpells.ReplaceLegacySpell(SpellId.BurningHands, "BreatheFire", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.BurningHands, "Breathe Fire", new[] { Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.BurningHands, "Breathe Fire", [Trait.Concentrate, Trait.Fire, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "A gout of flame sprays from your mouth.",
                     "You deal " + S.HeightenedVariable(2 * spellLevel, 2) + "d6 fire damage to creatures in the area with a basic Reflex save." +
                     S.HeightenedDamageIncrease(spellLevel, inCombat, "2d6"),
@@ -88,7 +88,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Renamed from Color Spray. Updated traits and short description.
             RemasterSpells.ReplaceLegacySpell(SpellId.ColorSpray, "DizzyingColors", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ColorSpray, "Dizzying Colors", new[] { Trait.Concentrate, Trait.Illusion, Trait.Incapacitation, Trait.Manipulate, Trait.Visual, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.ColorSpray, "Dizzying Colors", [Trait.Concentrate, Trait.Illusion, Trait.Incapacitation, Trait.Manipulate, Trait.Visual, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You unleash a swirling multitude of colors that overwhelms creatures based on their Will saves.",
                     "Each target makes a Will save.\n\n{b}Critical success{/b} The creature is unaffected.\n{b}Success{/b} The creature is dazzled for 1 round.\n{b}Failure{/b} The creature is stunned 1, blinded for 1 round, and dazzled for the rest of the encounter.\n{b}Critical failure{/b} The creature is stunned for 1 round and blinded for the rest of the encounter.",
                     Target.FifteenFootCone(), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.MagicMissile).WithProjectileCone(IllustrationName.Pixel, 25, ProjectileKind.ColorSpray)
@@ -116,7 +116,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Ray of Enfeeblement wasn't included, and this remastered version is useful.
             RemasterSpells.RegisterNewSpell("Enfeeble", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Enfeebled, "Enfeeble", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Enfeebled, "Enfeeble", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You sap the target's strength, depending on its Fortitude save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target is enfeebled 1 until the start of your next turn.",
                                            "The target is enfeebled 2 for 1 minute.", "The target is enfeebled 3 for 1 minute.")),
@@ -141,13 +141,38 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Renamed from Magic Missile. Updated traits and short description.
             RemasterSpells.ReplaceLegacySpell(SpellId.MagicMissile, "ForceBarrage", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
+                int shardsPerAction = 1 + (spellLevel - 1)/2;
                 Func<CreatureTarget> func = () => Target.Ranged(24, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 3.5f, tg.OwnerAction));
-                return Spells.CreateModern(IllustrationName.MagicMissile, "Force Barrage", new[] { Trait.Concentrate, Trait.Force, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                string[] creaturesPerAction = shardsPerAction switch
+                {
+                    1 => ["1 creature", "1 or 2 creatures", "1 to 3 creatures"],
+                    2 => ["1 or 2 creatures", "1 to 4 creatures", "1 to 6 creatures"],
+                    _ => ["1 to " + shardsPerAction + " creatures", "1 to " + (shardsPerAction * 2) + " creatures", "1 to " + (shardsPerAction * 3) + " creatures"]
+                };
+                string maxTargets = shardsPerAction switch
+                {
+                    1 => "three",
+                    2 => "six",
+                    3 => "nine",
+                    _ => (shardsPerAction * 3).ToString()
+                };
+                CreatureTarget[][] creatureTargets = [new CreatureTarget[shardsPerAction], new CreatureTarget[shardsPerAction * 2], new CreatureTarget[shardsPerAction * 3]];
+                for (int i = 0; i < creatureTargets.Length; i++)
+                {
+                    for(int j = 0; j < creatureTargets[i].Length; j++)
+                    {
+                        creatureTargets[i][j] = func();
+                    }
+                }
+                return Spells.CreateModern(IllustrationName.MagicMissile, "Force Barrage", [Trait.Concentrate, Trait.Force, Trait.Manipulate, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You fire a shard of solidified magic toward a creature that you can see",
-                    "{b}Range{/b} 120 feet\n{b}Targets{/b} 1, 2 or 3 creatures\n\nYou send up to three darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.){/i}\n\nYou can spend 1–3 actions on this spell:\n{icon:Action} You send out 1 dart.\n{icon:TwoActions}You send out 2 darts.\n{icon:ThreeActions}You send out 3 darts.{/i}",
-                    Target.DependsOnActionsSpent(Target.MultipleCreatureTargets(func()).WithOverriddenTargetLine("1 creature", plural: false), Target.MultipleCreatureTargets(func(), func()).WithOverriddenTargetLine("1 or 2 creatures", plural: true), Target.MultipleCreatureTargets(func(), func(), func()).WithOverriddenTargetLine("1, 2 or 3 creatures", plural: true)), spellLevel, null).WithActionCost(-1).WithSoundEffect(SfxName.MagicMissile)
+                    "{b}Range{/b} 120 feet\n{b}Targets{/b} " + creaturesPerAction[2] + " creatures\n\nYou send up to " + maxTargets + " shards of force. They each automatically hit and deal 1d4+1 force damage. {i}(All shards against a single target count as a single damage event.){/i}\n\nYou can spend 1–3 actions on this spell:\n{icon:Action} You send out 1 dart.\n{icon:TwoActions}You send out 2 darts.\n{icon:ThreeActions}You send out 3 darts.{/i}",
+                    Target.DependsOnActionsSpent(
+                        Target.MultipleCreatureTargets(creatureTargets[0]).WithOverriddenTargetLine(creaturesPerAction[0], plural: shardsPerAction != 1),
+                        Target.MultipleCreatureTargets(creatureTargets[1]).WithOverriddenTargetLine(creaturesPerAction[1], plural: true),
+                        Target.MultipleCreatureTargets(creatureTargets[2]).WithOverriddenTargetLine(creaturesPerAction[2], plural: true)), spellLevel, null).WithActionCost(-1).WithSoundEffect(SfxName.MagicMissile)
                 .WithProjectileCone(IllustrationName.MagicMissile, 15, ProjectileKind.Ray)
-                .WithCreateVariantDescription((int actionCost, SpellVariant? variant) => (actionCost != 1) ? ("You send out " + actionCost + " darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.)") : "You send out 1 dart of force. It automatically hits and deals 1d4+1 force damage.")
+                .WithCreateVariantDescription((int actionCost, SpellVariant? variant) => (shardsPerAction * actionCost != 1) ? ("You send out " + shardsPerAction * actionCost + " darts of force. They each automatically hit and deal 1d4+1 force damage. {i}(All darts against a single target count as a single damage event.)") : "You send out 1 dart of force. It automatically hits and deals 1d4+1 force damage.")
                 .WithEffectOnChosenTargets(async (CombatAction action, Creature caster, ChosenTargets targets) =>
                 {
                     List<Task> list = new List<Task>();
@@ -179,21 +204,24 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 })
                 .WithTargetingTooltip((CombatAction power, Creature creature, int index) =>
                 {
-                    string text7 = index switch
+                    string ordinal = index switch
                     {
                         0 => "first",
                         1 => "second",
                         2 => "third",
+                        3 => "fourth",
+                        4 => "fifth",
+                        5 => "sixth",
                         _ => index + "th",
                     };
-                    return "Send the " + text7 + " magic missile at " + creature?.ToString() + ". (" + (index + 1) + "/" + power.SpentActions + ")";
+                    return "Send the " + ordinal + " magic missile at " + creature?.ToString() + ". (" + (index + 1) + "/" + (shardsPerAction * power.SpentActions) + ")";
                 });
             });
 
             // Goblin Pox
             RemasterSpells.RegisterNewSpell("GoblinPox", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.SuddenBlight, "Goblin Pox", new[] { Trait.Concentrate, RemasterSpells.Trait.Disease, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.SuddenBlight, "Goblin Pox", [Trait.Concentrate, RemasterSpells.Trait.Disease, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "Your touch afflicts the target with goblin pox, an irritating allergenic rash.",
                     "The target must attempt a Fortitude save. " +
                     S.FourDegreesOfSuccess("The target is unaffected.", "The target is sickened 1.",
@@ -223,7 +251,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     else
                     {
                         Affliction affliction = GoblinPoxAffliction(caster, spell.SpellcastingSource.GetSpellSaveDC());
-                        CombatAction diseaseAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new[] { RemasterSpells.Trait.Disease }, "", Target.Self());
+                        CombatAction diseaseAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, [RemasterSpells.Trait.Disease], "", Target.Self());
                         await target.AddAffliction(affliction.MaximumStage, EnterStage, new QEffect(affliction.Name + ", Stage", affliction.StagesDescription, ExpirationCondition.Never, caster, IllustrationName.AcidSplash)
                         {
                             Id = affliction.Id,
@@ -252,13 +280,18 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Mystic Armor (formerly Mage Armor)
             RemasterSpells.ReplaceLegacySpell(SpellId.MageArmor, "MysticArmor", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                CombatAction mageArmor = Spells.CreateModern(IllustrationName.MageArmor, "Mystic Armor", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                CombatAction mageArmor = Spells.CreateModern(IllustrationName.MageArmor, "Mystic Armor", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You ward yourself with shimmering magical energy, gaining a +1 item bonus to AC and a maximum Dexterity modifier of +5.",
                     "While wearing mystic armor, you use your unarmored proficiency to calculate your AC." +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (4th){/b} You gain a +1 item bonus to saving throws.") +
                     "\n\n{b}Special{/b} You can cast this spell as a free action at the beginning of the encounter.", Target.Self().WithAdditionalRestriction((Creature self) => (!self.HasEffect(QEffectId.MageArmor) && !self.PersistentUsedUpResources.CastMageArmor) ? null : "You're already wearing {i}mystic armor{/i}."), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(2)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
+#if V3
+                    caster.AddQEffect(QEffect.MageArmor(spellLevel >= 4));
+#else
                     caster.AddQEffect(QEffect.MageArmor());
+#endif
                     caster.PersistentUsedUpResources.CastMageArmor = true;
                 });
                 mageArmor.WhenCombatBegins = (Creature self) =>
@@ -280,12 +313,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Phantom Pain
             RemasterSpells.RegisterNewSpell("PhantomPain", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.MageArmor, "Phantom Pain", new[] { Trait.Concentrate, Trait.Illusion, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.MageArmor, "Phantom Pain", [Trait.Concentrate, Trait.Illusion, Trait.Manipulate, Trait.Mental, Trait.Nonlethal, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "Illusory pain wracks the target, dealing " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 mental damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent mental damage with a Will save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.",
                                            "The target takes full initial damage but no persistent damage, and the spell ends immediately.",
                                            "The target takes full initial and persistent damage, and the target is sickened 1. If the target recovers from being sickened, the persistent damage ends and the spell ends.",
-                                           "As failure, but the target is sickened 2.")),
+                                           "As failure, but the target is sickened 2.")) +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 2d4 and the persistent damage by 1d4."),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will))
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
@@ -307,34 +341,48 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Protection
             ModManager.ReplaceExistingSpell(SpellId.Protection, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ForbiddingWard, "Protection", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.ForbiddingWard, "Protection", [Trait.Concentrate, Trait.Manipulate, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "You ward a creature against harm.",
-                    "The target gains a +1 status bonus to Armor Class and saving throws.",
+                    "The target gains a +1 status bonus to Armor Class and saving throws." +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (3rd){/b} You can choose to have the benefits also affect all your allies in a 10-foot emanation around the target."),
                     Target.AdjacentFriendOrSelf(), spellLevel, null)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    // As usual for Dawnsbury, we treat 1 minute as not expiring.
-                    target.AddQEffect(new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.ForbiddingWard)
+                    QEffect qfProtection = new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Never, null, IllustrationName.ForbiddingWard)
                     {
-                        DoNotShowUpOverhead = true,
-                        BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null),
-                        CountsAsABuff = true
-                    });
+                        CountsAsABuff = true,
+                        BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null)
+                    };
+                    // As usual for Dawnsbury, we treat 1 minute as not expiring.
+                    if (spellLevel >= 3)
+                    {
+                        AuraAnimation auraAnimation = target.AnimationData.AddAuraAnimation(IllustrationName.BlessCircle, 2);
+                        auraAnimation.Color = Color.Blue;
+                        qfProtection.Description = qfProtection.Description + " These benefits also affect all your allies in a 10-foot emanation around you.";
+                        qfProtection.StateCheck = (QEffect qfProtection) =>
+                        {
+                            int emanationSize = 2;
+                            foreach (Creature ally in qfProtection.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfProtection.Owner) <= emanationSize && cr.FriendOfAndNotSelf(qfProtection.Owner) && !cr.HasTrait(Trait.Object)))
+                            {
+                                ally.AddQEffect(new QEffect("Protection", "You have a +1 status bonus to Armor Class and saving throws.", ExpirationCondition.Ephemeral, qfProtection.Owner, IllustrationName.ForbiddingWard)
+                                {
+                                    CountsAsABuff = true,
+                                    BonusToDefenses = (QEffect _, CombatAction? _, Defense defense) => (CheckDefense(defense) ? new Bonus(1, BonusType.Status, "Protection") : null),
+                                });
+                            }
+                        };
+                    }
+                    target.AddQEffect(qfProtection);
                 });
 
                 // Helper function
                 bool CheckDefense(Defense defense)
                 {
-                    switch (defense)
+                    return defense switch
                     {
-                        case Defense.AC:
-                        case Defense.Fortitude:
-                        case Defense.Reflex:
-                        case Defense.Will:
-                            return true;
-                        default:
-                            return false;
-                    }
+                        Defense.AC or Defense.Fortitude or Defense.Reflex or Defense.Will => true,
+                        _ => false,
+                    };
                 }
             });
 
@@ -354,7 +402,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     return false;
                 }
 
-                return Spells.CreateModern(IllustrationName.KineticRam, "Runic Body", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.KineticRam, "Runic Body", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "Glowing runes appear on the target’s body.",
                     "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
                     Target.AdjacentFriendOrSelf()
@@ -390,7 +438,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     return false;
                 }
 
-                return Spells.CreateModern(IllustrationName.MagicWeapon, "Runic Weapon", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.MagicWeapon, "Runic Weapon", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "The weapon glimmers with magic as temporary runes carve down its length.",
                     "The target becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two. The target becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two.",
                     Target.AdjacentFriendOrSelf()
@@ -428,7 +476,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Spider Sting
             RemasterSpells.RegisterNewSpell("SpiderSting", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.VenomousSnake256, "Spider Sting", new[] { Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.VenomousSnake256, "Spider Sting", [Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You magically duplicate a spider's venomous sting.",
                     "You deal 1d4 piercing damage to the touched creature and afflict it with spider venom. The target must attempt a Fortitude save. " +
                     S.FourDegreesOfSuccess("The target is unaffected.", "The target takes 1d4 poison damage.",
@@ -452,7 +500,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     {
                         if (checkResult == CheckResult.Success)
                         {
-                            await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, new[] { new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison) }, false, false));
+                            await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison)], false, false));
                         }
                     }
                     else
@@ -490,9 +538,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
             RemasterSpells.RegisterNewSpell("SummonUndead", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                int maximumCreatureLevel = spellLevel == 1 ? -1 : 1;
-                return Spells.CreateModern(IllustrationName.Skeleton256, "Summon Undead", new[] { Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
-                    "You summon a creature that has the undead trait.", "You summon a creature that has the undead trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1."),
+                int maximumCreatureLevel = spellLevel switch { 2 => 1, 3 => 2, 4 => 3, _ => -1 };
+                return Spells.CreateModern(IllustrationName.Skeleton256, "Summon Undead", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Arcane, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
+                    "You summon a creature that has the undead trait.", "You summon a creature that has the undead trait and whose level is " + S.HeightenedVariable(maximumCreatureLevel, -1) + " or less to fight for you." + Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText + 
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1.\n\n{b}Heightened (3rd){/b} The maximum level of the summoned creature is 2.\n\n{b}Heightened (4th){/b} The maximum level of the summoned creature is 3."),
                     Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
                     .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => creature.HasTrait(Trait.Undead) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
                     {
@@ -503,7 +552,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Sure Strike (formerly True Strike)
             RemasterSpells.ReplaceLegacySpell(SpellId.TrueStrike, "SureStrike", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.TrueStrike, "Sure Strike", new[] { Trait.Concentrate, Trait.Fortune, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.TrueStrike, "Sure Strike", [Trait.Concentrate, Trait.Fortune, Trait.Arcane, Trait.Occult, RemasterSpells.Trait.Remaster],
                     "A glimpse into the future ensures your next blow strikes true.",
                     "The next time you make an attack roll before the end of your turn, roll the attack twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden.",
                     Target.Self(), spellLevel, null)
@@ -525,7 +574,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // The extra effect on targets wearing metal armor or made of metal is not implemented
             RemasterSpells.ReplaceLegacySpell(SpellId.ShockingGrasp, "Thunderstrike", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ShockingGrasp, "Thunderstrike", new[] { Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.ShockingGrasp, "Thunderstrike", [Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Sonic, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You call down a tendril of lightning that cracks with thunder, dealing " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 sonic damage to the target with a basic Reflex save.",
                     // "A target wearing metal armor or made of metal takes a –1 circumstance bonus to its save, and if damaged by the spell is clumsy 1 for 1 round."
                     S.HeightenedDamageIncrease(spellLevel, inCombat, "1d12 electricity and 1d4 sonic"),
@@ -613,7 +662,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         public static CombatAction Bless(int level, bool _inCombat, IllustrationName illustration, bool isBless)
         {
-            return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", new[] { Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster },
+            return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
                 isBless ? "Blessings from beyond help your companions strike true." :
                     "You fill the minds of your enemies with doubt.",
                 "{b}Area{/b} 15-foot emanation\n\n" +

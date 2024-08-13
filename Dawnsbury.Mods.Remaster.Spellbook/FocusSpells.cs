@@ -23,9 +23,18 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 {
     public static class FocusSpells
     {
+        // Force Bolt needs heightened entry
+        
+        // Rune of Observation - probably not worth it
+        // Energy Absorbtion - reaction for resistance 15
+        // Spiral of Horrors - strong spell
+        // Community Restoration - temporary hp
+        // Invisibility Cloak - basically invisibility
+        // Shifting Form - maybe? bunch of buffs
+        // Interdisciplinary Incantation - maybe too much of a hassle and super-niche
+
         public static void RegisterSpells()
         {
-
             RegisterClericSpells();
             RegisterDruidSpells();
             RegisterWizardSpells();
@@ -38,7 +47,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 const int heightenStep = 1;
                 int heightenIncrements = spellLevel - 1;
-                return Spells.CreateModern(IllustrationName.FireRay, "Fire Ray", new[] { Trait.Uncommon, Trait.Attack, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.FireRay, "Fire Ray", [Trait.Uncommon, Trait.Attack, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster],
                     "A blazing band of fire arcs through the air, lighting your opponent and the ground they stand upon on fire.",
                     "Make a spell attack roll against the target's AC. The ray deals " + S.HeightenedVariable(2 + 2 * heightenIncrements, 2) + "d6 fire damage on a hit (or double damage on a critical hit).\n" +
                     "On any result other than a critical failure, the ground in the target's space catches fire, dealing " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d6 fire damage to each creature that ends its turn in one of the squares." +
@@ -94,7 +103,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             ModManager.ReplaceExistingSpell(SpellId.Moonbeam, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 int heightenIncrements = spellLevel - 1;
-                return Spells.CreateModern(IllustrationName.Moonbeam, "Moonbeam", new[] { Trait.Uncommon, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Light, Trait.Manipulate, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Moonbeam, "Moonbeam", [Trait.Uncommon, Trait.Cleric, Trait.Concentrate, Trait.Fire, Trait.Focus, Trait.Light, Trait.Manipulate, RemasterSpells.Trait.Remaster],
                     "You shine a ray of moonlight.",
                     "Make a spell attack roll. The beam of light deals " + S.HeightenedVariable(2 + heightenIncrements, 2) + "d6 fire damage." + S.FourDegreesOfSuccess("The beam deals double damage, and the target is dazzled for 1 minute.", "The beam deals full damage, and the target is dazzled for 1 round.", null, null) +
                     S.HeightenedDamageIncrease(1, inCombat, "1d6"),
@@ -122,7 +131,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Touch of Undeath just has some wording changes to reflect the change from Positive/Negative to Vitality/Void
             ModManager.ReplaceExistingSpell(SpellId.TouchOfUndeath, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ChillTouch, "Touch of Undeath", new[] { Trait.Uncommon, Trait.Cleric, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Void },
+                return Spells.CreateModern(IllustrationName.ChillTouch, "Touch of Undeath", [Trait.Uncommon, Trait.Cleric, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Void],
                     "You attack the target's life force with undeath, dealing 1d6 void damage.",
                     "The target must attempt a Fortitude save." + S.FourDegreesOfSuccess("The target is unaffected.", "The target takes half damage.", "The target takes full damage, and vitality effects heal it only half as much as normal for 1 round.", "The target takes double damage, and vitality effects heal it only half as much as normal for 1 minute.") +
                     S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
@@ -147,7 +156,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Tempest Surge loses the persistent damage in the remaster
             ModManager.ReplaceExistingSpell(SpellId.TempestSurge, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.TempestSurge, "Tempest Surge", new[] { Trait.Uncommon, Trait.Air, Trait.Concentrate, Trait.Druid, Trait.Electricity, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.TempestSurge, "Tempest Surge", [Trait.Uncommon, Trait.Air, Trait.Concentrate, Trait.Druid, Trait.Electricity, Trait.Focus, Trait.Manipulate, RemasterSpells.Trait.Remaster],
                     "You surround a foe in a swirling storm of violent winds, roiling clouds, and crackling lightning.",
                     "The storm deals " + S.HeightenedVariable(spellLevel, 1) + "d12 electricity damage to the target with a basic Reflex save. On a failure, the target is also clumsy 2 for 1 round." +
                     S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The initial damage increases by 1d12."),
@@ -168,7 +177,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Protective Wards is essentially the same as Protective Ward
             RemasterSpells.ReplaceLegacySpell(SpellId.ProtectiveWard, "ProtectiveWards", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Abjuration, "Protective Wards", new[] { Trait.Uncommon, Trait.Aura, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Abjuration, "Protective Wards", [Trait.Uncommon, Trait.Aura, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "You expand a ring of glyphs that shields your allies.",
                     "You and any allies in the area gain a +1 status bonus to AC. Each time you Sustain the spell, the emanation's radius increases by 5 feet, to a maximum of 30 feet.",
                     Target.Self(), spellLevel, null).WithSoundEffect(SfxName.Abjuration).WithActionCost(1)
@@ -232,9 +241,10 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Earthworks
             RemasterSpells.RegisterNewSpell("Earthworks", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.PummelingRubble, "Earth Works", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Earth, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.PummelingRubble, "Earth Works", [Trait.Uncommon, Trait.Concentrate, Trait.Earth, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "With a ripple of earth, you raise small barriers from the ground.",
-                    "The ground in the area becomes difficult terrain. The spell's area is a 5-foot burst if you spent 1 action to cast it, a 10-foot burst if you spent 2 actions, or a 15-foot burst if you spent 3 actions. A creature can Interact to clear the barriers from one 5-foot square adjacent to it.",
+                    "The ground in the area becomes difficult terrain. The spell's area is a 5-foot burst if you spent 1 action to cast it, a 10-foot burst if you spent 2 actions, or a 15-foot burst if you spent 3 actions. A creature can Interact to clear the barriers from one 5-foot square adjacent to it." +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (4th){/b} You pull the barriers to float in the air, causing the spell to function as difficult terrain for flying creatures."),
                     Target.DependsOnActionsSpent(Target.Burst(12, 1), Target.Burst(12, 2), Target.Burst(12, 3)), 1, null)
                 .WithActionCost(-1).WithSoundEffect(SfxName.ElementalBlastEarth)
                 .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
@@ -262,7 +272,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Charming Push is mostly just a rename of Charming Words
             RemasterSpells.ReplaceLegacySpell(SpellId.CharmingWords, "CharmingPush", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Enchantment, "Charming Push", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Enchantment, "Charming Push", [Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "You push at the target's mind to deflect their ire. The target must attempt a Will save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.", "The target takes a –1 circumstance penalty to attack rolls and damage rolls against you.", "The target can't use hostile actions against you.", "The target is stunned 1 and can't use hostile actions against you.")),
                     Target.Ranged(6), spellLevel, SpellSavingThrow.Standard(Defense.Will)).WithSoundEffect(SfxName.Bless).WithActionCost(1)
@@ -288,7 +298,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
             RemasterSpells.RegisterNewSpell("ScrambleBody", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Transmutation, "Scramble Body", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Transmutation, "Scramble Body", [Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Incapacitation, Trait.Mental, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "Your magic throws the creature's biology into disarray, inducing nausea, fever, and other unpleasant conditions.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess(null, "The target is unaffected.", "The target becomes sickened 1.", "The target becomes sickened 2 and slowed 1 as long as it's sickened.")),
                     Target.Ranged(6).WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()), spellLevel, SpellSavingThrow.Standard(Defense.Fortitude)).WithSoundEffect(SfxName.Boneshaker).WithActionCost(2)
@@ -313,7 +323,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Fortify Summoning is mostly just a rename of Augment Summoning
             RemasterSpells.ReplaceLegacySpell(SpellId.AugmentSummoning, "FortifySummoning", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.Conjuration, "Fortify Summoning", new[] { Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Wizard, RemasterSpells.Trait.Remaster },
+                return Spells.CreateModern(IllustrationName.Conjuration, "Fortify Summoning", [Trait.Uncommon, Trait.Concentrate, Trait.Focus, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "As you call a creature to your side, your magic transforms its body, heightening its ferocity and fortifying its resilience.",
                     "The target gains a +1 status bonus to all checks and DCs (including its AC) for the duration of its summoning, up to 1 minute.",
                     Target.RangedFriend(6).WithAdditionalConditionOnTargetCreature((a, d) => !d.QEffects.Any((qf) => (qf.Id == QEffectId.SummonedBy && qf.Source == a)) ? Usability.NotUsableOnThisCreature("not your summon") : Usability.Usable), spellLevel, null).WithSoundEffect(SfxName.MinorAbjuration).WithActionCost(1)

@@ -33,8 +33,40 @@ The Guardian can be used now, but the Commander doesn't have enough implemented 
  [*] Shielded Attrition - I probably won't do this one
 [/list]
 
-[h3]Commander[/h3]
-Only the base class is implemented. No class features or feats.
+[h2]Commander[/h2]
+[h3]Features[/h3]
+[list]
+ [*] Commander's Banner - this is just an emanation from the character, and the other modes aren't available
+ [*] Drilled Reactions - this will automatically be used if it is available
+ [*] Form Up!
+ [*] Pincer Attack
+ [*] Strike Hard!
+ [*] Combat Medic
+ [*] Deceptive Tactics
+ [*] Commander's Steed - this is implemented as a standard animal companion with the same choices as the Ranger and Druid.
+[/list]
+
+[h3]Missing Features[/h3]
+[list]
+ [*] Armored Regiment Training - not useful in game
+ [*] Most of the tactics are missing (other than Form Up!, Pincer Attack, and Strike Hard!)
+ [*] Form Up! does not require squadmates to end their turn within the banner radius
+ [*] Combat Assessment - not useful in game, since this info is already available
+ [*] Deceptive Tactics - you don't gain the Lengthy Diversion feat, since that's not useful in the game. The ability to use Warfare Lore applies to all uses of Deception (though only Create a Diversion and Feint are options in the game).
+ [*] Plant Banner - I'm not going to implement the variant banner systems
+ [*] Commander's Steed - the banner functionality isn't included, and mounts are not supported.
+ [*] Adaptive Stratagem - not useful enough in game -- while the campaign doesn't let you swap tactics freely, you can in free encounter mode
+ [*] Defensive Swap
+ [*] Guiding Shot
+ [*] Set-up Strike
+ [*] Tactical Expansion - to avoid a tactic preparation interface, I only allow the two tactics
+ [*] Rapid Assessment - not useful in game, since this info is already available
+ [*] Banner Twirl - not implemented, since there's no easy way to grant concealment only vs. ranged attacks
+ [*] Observational Knowledge - not useful in game, since this info is already available
+ [*] Shielded Recovery
+ [*] Unsteady Strike
+ [*] Wave the Flag
+[/list]
 
 [h2]Code[/h2]
 Code is available at [url=https://github.com/ubik2/DawnsburyDaysMod]Github[/url].
