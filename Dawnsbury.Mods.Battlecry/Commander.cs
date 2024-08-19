@@ -15,6 +15,7 @@ using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Core.Animations;
+using Dawnsbury.Display;
 using Microsoft.Xna.Framework;
 
 namespace Dawnsbury.Mods.Battlecry
@@ -135,30 +136,33 @@ namespace Dawnsbury.Mods.Battlecry
         // Strike Hard! - TODO
         public static IEnumerable<Feat> LoadTactics()
         {
-            yield return new Feat(BattlecryMod.FeatName.FormUp, "You signal your team to move into position together.",
+            yield return new ActionFeat(BattlecryMod.FeatName.FormUp, "You signal your team to move into position together.",
                 "Signal all squadmates affected by your commander's banner; each can immediately Stride as a reaction, though each must end their movement inside your banner’s aura.",
                 [BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander], null)
+            .WithActionCost(1)
             .WithPermanentQEffect("You signal an aggressive formation designed to exploit enemies' vulnerabilities.", (qEffect) => qEffect.ProvideMainAction = (qfTactic) =>
             {
                 return new ActionPossibility(FormUp(qEffect.Owner)).WithPossibilityGroup(nameof(Commander));
             });
 
-            yield return new Feat(BattlecryMod.FeatName.PincerAttack, "You signal an aggressive formation designed to exploit enemies' vulnerabilities.",
+            yield return new ActionFeat(BattlecryMod.FeatName.PincerAttack, "You signal an aggressive formation designed to exploit enemies' vulnerabilities.",
                 "Signal all squadmates affected by your commander's banner; each can Step as a free action. If any of your allies end this movement adjacent to an opponent, that opponent is off-guard to melee attacks from you and all other squadmates who responded to Pincer Attack until the start of your next turn.",
                 [BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander], null)
+            .WithActionCost(1)
             .WithPermanentQEffect("You signal an aggressive formation designed to exploit enemies' vulnerabilities.", (qEffect) => qEffect.ProvideMainAction = (qfTactic) =>
             {
                 return new ActionPossibility(PincerAttack(qEffect.Owner)).WithPossibilityGroup(nameof(Commander));
             });
 
-            yield return new Feat(BattlecryMod.FeatName.StrikeHard, "You command an ally to attack.",
+            yield return new ActionFeat(BattlecryMod.FeatName.StrikeHard, "You command an ally to attack.",
                 "Choose a squadmate who can see or hear your signal. That ally immediately attempts a Strike as a reaction.",
                 [BattlecryMod.Trait.Tactic, BattlecryMod.Trait.Commander], null)
+            .WithActionCost(2)
             .WithPermanentQEffect("You command an ally to attack.", (qEffect) => qEffect.ProvideMainAction = (qfTactic) =>
             {
                 return new ActionPossibility(StrikeHard(qEffect.Owner)).WithPossibilityGroup(nameof(Commander));
             });
-
+        
             yield break;
         }
 
@@ -178,7 +182,7 @@ namespace Dawnsbury.Mods.Battlecry
                         return;
                     }
                     // Option to take a free stride
-                    bool moved = await target.StrideAsync(target.Name + ": Pincer Attack Step", allowPass: true);
+                    bool moved = await target.StrideAsync(target.Name + ": Form Up Stride", allowPass: true);
                     if (moved)
                     {
                         bool useDrilledReactions = !caster.QEffects.Any((qEffect) => qEffect.Name == "Drilled Reactions Expended");
@@ -354,6 +358,19 @@ namespace Dawnsbury.Mods.Battlecry
         }
         #endregion
 
+
+        public class ActionFeat(FeatName featName, string? flavorText, string rulesText, List<Trait> traits, List<Feat>? subfeats) : Feat(featName, flavorText, rulesText, traits, subfeats)
+        {
+            public int? ActionCost { get; set; }
+
+            protected override string Autoname => base.Autoname + (ActionCost.HasValue ? (" " + RulesBlock.GetIconTextFromNumberOfActions(ActionCost.Value)) : "");
+
+            public ActionFeat WithActionCost(int actionCost)
+            {
+                ActionCost = actionCost;
+                return this;
+            }
+        }
 
     }
 }
