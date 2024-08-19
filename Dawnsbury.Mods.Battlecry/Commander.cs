@@ -123,7 +123,7 @@ namespace Dawnsbury.Mods.Battlecry
         }
 
         // Defensive Retreat - not too strict on movement
-        // Form Up - TODO
+        // Form Up
         // Mountaineering Training - not useful in game
         // Naval Training - not useful in game
         // Passage of Lines - maybe? might be complicated
@@ -133,7 +133,7 @@ namespace Dawnsbury.Mods.Battlecry
         // Pincer Attack
         // Reload - TODO
         // Shields Up! - TODO
-        // Strike Hard! - TODO
+        // Strike Hard!
         public static IEnumerable<Feat> LoadTactics()
         {
             yield return new ActionFeat(BattlecryMod.FeatName.FormUp, "You signal your team to move into position together.",
