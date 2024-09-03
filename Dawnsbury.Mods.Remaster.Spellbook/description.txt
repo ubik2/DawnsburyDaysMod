@@ -9,8 +9,13 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Divine Lance
  [*]Electric Arc
  [*]Frostbite (replaces Ray of Frost)
+ [*]Gale Blast
  [*]Gouging Claw
+ [*]Live Wire
  [*]Ignition (replaces Produce Flame)
+ [*]Puff of Poison
+ [*]Scatter Scree
+ [*]Spout (the improved area in water is not implemented)
  [*]Telekinetic Projectile
  [*]Tangle Vine
  [*]Vitality Lash (replaces Disrupt Undead)

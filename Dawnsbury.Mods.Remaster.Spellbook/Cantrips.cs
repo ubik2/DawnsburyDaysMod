@@ -15,6 +15,9 @@ using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
+using Dawnsbury.Core.Mechanics.Damage;
+using Dawnsbury.Auxiliary;
+using Dawnsbury.Core.Tiles;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook;
 
@@ -23,6 +26,7 @@ public class Cantrips
     public static void RegisterSpells()
     {
         // The following spells are excluded because they aren't useful enough in gameplay
+        // * Bullhorn
         // * Detect Magic
         // * Figment (previously Ghost Sound)
         // * Know the Way (previously Know Direction)
@@ -35,7 +39,7 @@ public class Cantrips
         // The following spells are from RoE, and I consider them low priority
         // * Slashing Gust
         // * Timber
-        
+
         // Caustic Blast (formerly Acid Splash)
         RemasterSpells.ReplaceLegacySpell(SpellId.AcidSplash, "CausticBlast", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
@@ -142,6 +146,26 @@ public class Cantrips
             });
         });
 
+        // Gale Blast
+        ModManager.ReplaceExistingSpell(SpellId.GaleBlast, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
+        {
+            return Spells.CreateModern(IllustrationName.GaleBlast, "Gale Blast", [Trait.Air, Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                "Wind flows from your outstretched hands and whirls around you in a 5-foot emanation.",
+                "Each creature in the area takes " + S.HeightenedVariable(spellLevel, 1) + "d6 bludgeoning damage, with a Fortitude save" +
+                S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.", "The creature takes full damage and is pushed 5 feet away from you.", "The creature takes double damage and is pushed 10 feet away from you.") +
+                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 1d6."),
+                Target.SelfExcludingEmanation(1), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
+            .WithSoundEffect(SfxName.GaleBlast)
+            .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(spellLevel * 3.5f))
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+            {
+              await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, DiceFormula.FromText(spellLevel.ToString() + "d6", "Gale Blast"), DamageKind.Bludgeoning);
+              if (checkResult > CheckResult.Failure)
+                  return;
+              await caster.PushCreature(target, checkResult == CheckResult.CriticalFailure ? 2 : 1);
+            });
+        });
+
         RemasterSpells.RegisterNewSpell("GougingClaw", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
@@ -165,7 +189,6 @@ public class Cantrips
             });
         });
 
-
         // Ignition (formerly Produce Flame)
         RemasterSpells.ReplaceLegacySpell(SpellId.ProduceFlame, "Ignition", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
@@ -187,6 +210,106 @@ public class Cantrips
                     target.AddQEffect(QEffect.PersistentDamage(spell.SpellLevel + dieSize, DamageKind.Fire));
                 }
             });
+        });
+
+        // Live Wire
+        RemasterSpells.RegisterNewSpell("Live Wire", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        {
+            const int heightenStep = 1;
+            return Spells.CreateModern(IllustrationName.ElectricArc, "Live Wire", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Metal, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                "You conjure up a length of sharp copper filament humming with electrical current that strikes out at your foe.",
+                "The wire deals " + S.HeightenedVariable(spellLevel, 1) + "d4 slashing damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 electricity damage, depending on your spell attack roll against the target’s AC." +
+                S.FourDegreesOfSuccess("The target takes double damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent electricity damage.",
+                        "The target takes full damage.", "The target takes the electricity damage, but not the slashing damage.", "The target is unaffected.") +
+                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The slashing damage, initial electricity damage, and persistent electricity damage on a critical hit each increase by 1d4."),
+                Target.Ranged(6), spellLevel, null)
+            .WithSpellAttackRoll()
+            .WithSoundEffect(SfxName.ElectricArc)
+            .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(spellLevel * 5f))
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+            {
+                await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult,
+                    new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Slashing),
+                    new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity));
+                if (checkResult == CheckResult.CriticalSuccess)
+                {
+                    target.AddQEffect(QEffect.PersistentDamage((spellLevel + "d4").ToString(), DamageKind.Electricity));
+                }
+                if (checkResult == CheckResult.Failure)
+                {
+                    await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity)], false));
+                }
+            });
+        });
+
+        // Puff of Poison
+        RemasterSpells.RegisterNewSpell("Puff of Poison", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        {
+            const int heightenStep = 2;
+            int heightenIncrements = (spellLevel - 1) / heightenStep;
+            return Spells.CreateModern(IllustrationName.AncientDust, "Puff of Poison", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                "You exhale a shimmering cloud of toxic breath at an enemy's face.",
+                "The target takes " + S.HeightenedVariable(spellLevel, 1) + "d4 poison damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent poison damage, depending on its Fortitude save." +
+                S.FourDegreesOfSuccess("The creature is unaffected.", "The target takes half initial damage and no persistent damage.", "The target takes full initial and persistent damage.", "The target takes double initial and persistent damage.") +
+                S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The initial poison damage increases by 1d4, and the persistent poison damage increases by 1d4."),
+                Target.Ranged(2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
+            .WithSoundEffect(SfxName.AncientDust)
+            .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)((1 + heightenIncrements) * 5.0f))
+            .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+            {
+                await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (1 + heightenIncrements) + "d4", DamageKind.Poison);
+                if (checkResult == CheckResult.Failure || checkResult == CheckResult.CriticalFailure)
+                {
+                    await CommonSpellEffects.DealBasicPersistentDamage(target, checkResult, (1 + heightenIncrements) + "d4", DamageKind.Poison);
+                }
+            });
+        });
+
+        // Scatter Scree
+        RemasterSpells.RegisterNewSpell("Scatter Scree", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        {
+            return Spells.CreateModern(IllustrationName.PummelingRubble, "Scatter Scree", [Trait.Cantrip, Trait.Concentrate, Trait.Earth, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                "A jumble of rocks cascades into the area.",
+                "The scattering rocks deal " + S.HeightenedVariable(1 + spellLevel, 2) + "d4 bludgeoning damage (basic Reflex save). The ground in the area becomes difficult terrain for the duration of the spell. A creature can Interact to clear a square of this scree.\n\n" +
+                "If you cast this spell again, any previous {i}scatter scree{/i} you've cast ends." +
+                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 1d4."),
+                new ContiguousSquaresTarget(6, 2), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+            .WithSoundEffect(SfxName.ElementalBlastEarth)
+            .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
+            {
+                List<TileQEffect> effects = new List<TileQEffect>();
+                foreach (Tile tile in targets.ChosenTiles)
+                {
+                    TileQEffect item = new TileQEffect(tile)
+                    {
+                        StateCheck = (_) => { tile.DifficultTerrain = true; },
+                        Illustration = new[] { IllustrationName.Rubble, IllustrationName.Rubble2 }.GetRandom(),
+                        ExpiresAt = ExpirationCondition.Never
+                    };
+                    effects.Add(item);
+                    tile.QEffects.Add(item);
+                }
+            })
+            .WithEffectOnEachTarget((async (spell, caster, target, checkResult) =>
+            {
+                await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (1 + spellLevel) + "d4", DamageKind.Bludgeoning);
+            })); 
+        });
+
+        // Spout
+        RemasterSpells.RegisterNewSpell("Spout", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        {
+            return Spells.CreateModern(IllustrationName.HydraulicPush, "Spout", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                "Water blasts upward, coming out of the ground, rising from a pool, or even manifesting from thin air.",
+                "Any creatures in the area take " + S.HeightenedVariable(1 + spellLevel, 2) + "d4 bludgeoning damage, with a basic Reflex saving throw. A creature that critically fails its save is disoriented by the explosion of water, becoming off-guard until the end of your next turn.\n\n" +
+                "You can change this spell's area to a 5-foot burst, provided you center the burst in a body of water. This body of water can be as small as a pond or creek, but not as small as a puddle or bathtub." +
+                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 1d4."),
+                 RangedTile(6).WithAlsoSelectCreatures(), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+            .WithSoundEffect(SfxName.ElementalBlastWater)
+            .WithEffectOnEachTarget((async (spell, caster, target, checkResult) =>
+            {
+                await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, (1 + spellLevel) + "d4", DamageKind.Bludgeoning);
+            }));
         });
 
         ModManager.ReplaceExistingSpell(SpellId.TelekineticProjectile, 0, (spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -351,5 +474,17 @@ public class Cantrips
         return combatAction;
     }
 
+    static TileTarget RangedTile(int maximumRange)
+    {
+        return new TileTarget((Creature caster, Tile tile) =>
+            {
+                Tile occupies = caster.Occupies;
+                if (occupies != null && occupies.DistanceTo(tile) <= maximumRange)
+                {
+                    return (int)caster.Occupies.HasLineOfEffectToIgnoreLesser(tile) < 4;
+                }
+                return false;
+            }, null);
+    }
 
 }
