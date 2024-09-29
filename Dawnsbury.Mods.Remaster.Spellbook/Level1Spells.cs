@@ -21,6 +21,8 @@ using Dawnsbury.Core.Mechanics.Treasure;
 using Humanizer;
 using Dawnsbury.Core.StatBlocks;
 using Dawnsbury.Display;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Display.Illustrations;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -30,6 +32,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Air Bubble
         // * Alarm
         // * Ant Haul
+        // * Carryall
         // * Charm
         // * Cleanse Cuisine (formerly Purify Food and Drink)
         // * Create Water
@@ -37,11 +40,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Gentle Landing (formerly Feather Fall)
         // * Illusory Disguise
         // * Illusory Object
+        // * Imprint Message
+        // * Invisible Item
         // * Item Facade
         // * Jump
         // * Lock
         // * Mending
         // * Mindlink
+        // * Object Reading
         // * Pest Form - this was replaced with Insect Form, since the exploration aspects aren't useful
         // * Pet Cache
         // * Sleep
@@ -52,6 +58,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Summon Construct
         // * Summon Plant or Fungus
         // The following spells are excluded because of their difficulty
+        // * Deja Vu
         // * Ill Omen
         // * Phantasmal Minion
         // * Summon Fey - no creatures exist with this trait
@@ -60,6 +67,17 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // ? Harm/Heal - these are already in game, but could be modified for vitality/void instead of positive/negative
         // ? Infuse Vitality - should be able to hook into YouDealDamageWithStrike
         // ? Spirit Link
+        // ? Thoughtful Gift
+
+        // Chilling Spray
+        // Concordant Choir
+        // Leaden Steps
+        // Mud Pit
+        // Noxious Vapors
+        // Protector Tree (depending on difficulty)
+        // Schadenfreude
+        // Summon Lesser Servitor - must be holy
+
         public static void RegisterSpells()
         {
             ModManager.ReplaceExistingSpell(SpellId.Bless, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -273,6 +291,35 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             qEffect.WithExpirationAtStartOfSourcesTurn(caster, 2);
                             return;
                         }
+                    }
+                });
+            });
+
+            // Grease - I wanted to shift to the contiguous squares target
+            ModManager.ReplaceExistingSpell(SpellId.Grease, 1, (sspellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Grease, "Grease", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "You conjure grease.", "Each creature standing on the target area must make a Reflex save against your spell DC or fall prone. The target area remains uneven terrain for the rest of the encounter {i}(a creature who moves into the area must make an Acrobatics check to balance){/i}.",
+                    new ContiguousSquaresTarget(6, 4), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+                .WithEffectOnEachTarget(async (spell, caster, target, result) =>
+                {
+                    if (target.HasEffect(QEffectId.Flying) || (result > CheckResult.Failure))
+                        return;
+                    await target.FallProne();
+                }).WithSoundEffect(SfxName.Grease).WithEffectOnChosenTargets(async (spell, caster, targets) =>
+                {
+                    if (spell.SavingThrow == null)
+                    {
+                        throw new Exception("Spell saving throw is null");
+                    }
+                    foreach (Tile chosenTile in targets.ChosenTiles)
+                    {
+                        chosenTile.QEffects.Add(new TileQEffect(chosenTile)
+                        {
+                            BalanceDC = spell.SavingThrow.DC(caster),
+                            BalanceAllowsReflexSave = true,
+                            Illustration = (Illustration)IllustrationName.GreaseTile
+                        });
                     }
                 });
             });
