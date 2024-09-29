@@ -45,9 +45,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Marvelous Mount
         // * One with Plants
         // * Peaceful Rest
+        // * Phantasmal Treasure
         // * Shape Wood
         // * Shatter
         // * Speak with Animals
+        // * Spirit Sense - too niche
         // * Status
         // * Sure Footing
         // * Translate
@@ -66,6 +68,12 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Illusory Creature
         // * Share Life
         // * Sound Body
+
+        // Reaper's Lantern
+        // Sudden Blight
+        // Vomit Swarm
+        // Web - maybe too difficult
+
         public static void RegisterSpells()
         {
             // Renamed from Acid Arrow. Updated traits, description, and functionality
@@ -679,11 +687,9 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 damageKinds = damageKinds.Union(caster.SecondaryItem.DetermineDamageKinds());
             }
-            if (caster.HasTrait(Trait.Cleric))
-            {
-                // TODO: this should be Spirit, potentially with Holy or Unholy depending on the caster
-                damageKinds = damageKinds.Union(new List<DamageKind> { DamageKind.Good });
-            }
+            // TODO: this should be Spirit, potentially with Holy or Unholy depending on the caster, but Good should work fine as well
+            // It's important that our list for WhatDamageKindIsBestAgainstMe contains at least one entry 
+            damageKinds = damageKinds.Union(new List<DamageKind> { DamageKind.Good });
             DamageKind damageKind = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageKinds.ToArray());
             await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult, diceExpression, damageKind);
         }
