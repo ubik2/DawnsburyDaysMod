@@ -301,12 +301,14 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 return Spells.CreateModern(IllustrationName.Grease, "Grease", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You conjure grease.", "Each creature standing on the target area must make a Reflex save against your spell DC or fall prone. The target area remains uneven terrain for the rest of the encounter {i}(a creature who moves into the area must make an Acrobatics check to balance){/i}.",
                     new ContiguousSquaresTarget(6, 4).WithIncludeOnlyIf((GeneratorTarget target, Creature creature) => !creature.HasEffect(QEffectId.Flying)), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+                .WithSoundEffect(SfxName.Grease)
                 .WithEffectOnEachTarget(async (spell, caster, target, result) =>
                 {
-                    if (target.HasEffect(QEffectId.Flying) || (result > CheckResult.Failure))
-                        return;
-                    await target.FallProne();
-                }).WithSoundEffect(SfxName.Grease).WithEffectOnChosenTargets(async (spell, caster, targets) =>
+                    if (result <= CheckResult.Failure) { 
+                        await target.FallProne();
+                    }
+                })
+                .WithEffectOnChosenTargets(async (spell, caster, targets) =>
                 {
                     if (spell.SavingThrow == null)
                     {

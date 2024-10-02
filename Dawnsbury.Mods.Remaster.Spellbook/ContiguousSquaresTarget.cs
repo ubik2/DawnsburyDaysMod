@@ -1,6 +1,8 @@
-﻿using Dawnsbury.Core.Creatures;
+﻿using Dawnsbury.Auxiliary;
+using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
+using Dawnsbury.IO;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -45,16 +47,25 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     }
 
                     return false;
-                }, null).WithAlsoSelectCreatures());
+                }, null));
             }
             if (chosenTiles.Count >= distance)
+            {
+                // Once we've chosen all our tiles, we will add all of the creatues in the tiles that match our IncludeOnlyIf filter.
+                // This could have been handled by setting the TileTarget.WithAlsoSelectCreatures if we always wanted to include them, but this gives us a filter.
+                IEnumerable<Creature> chosenTileCreatures = chosenTiles
+                    .Where((Tile tile) => tile.PrimaryOccupant != null && (IncludeOnlyIf == null || IncludeOnlyIf(this, tile.PrimaryOccupant!)))
+                    .Select((Tile tile) => tile.PrimaryOccupant!);
+                OwnerAction.ChosenTargets.ChosenCreatures.AddRange(chosenTileCreatures);
+                OwnerAction.ChosenTargets.ChosenCreatures.RemoveDuplicates();
                 return null;
+            }
             Tile from = chosenTiles.Last();
             return new GeneratedTargetInSequence(Tile((caster, tile) =>
             {
                 // We can't pass the span through walls, and we must be adjacent (not diagonal) to an existing tile, and we can't pick the same tile again
                 return !tile.AlwaysBlocksLineOfEffect && chosenTiles.Any((existingTile) => IsAdjacent(tile, existingTile) && !chosenTiles.Contains(tile));
-            }, null).WithAlsoSelectCreatures());
+            }, null));
         }
 
         public ContiguousSquaresTarget WithIncludeOnlyIf(Func<GeneratorTarget, Creature, bool>? includeOnlyIf)
