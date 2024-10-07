@@ -135,7 +135,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "You attack the target's life force with undeath, dealing 1d6 void damage.",
                     "The target must attempt a Fortitude save." + S.FourDegreesOfSuccess("The target is unaffected.", "The target takes half damage.", "The target takes full damage, and vitality effects heal it only half as much as normal for 1 round.", "The target takes double damage, and vitality effects heal it only half as much as normal for 1 minute.") +
                     S.HeightenedDamageIncrease(spellLevel, inCombat, "1d6"),
-                    Target.Melee().WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude)).WithActionCost(1).WithSoundEffect(SfxName.ChillTouch)
+                    Target.Touch().WithAdditionalConditionOnTargetCreature(new LivingCreatureTargetingRequirement()), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude)).WithActionCost(1).WithSoundEffect(SfxName.ChillTouch)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult result) =>
                 {
                     await CommonSpellEffects.DealBasicDamage(spell, caster, target, result, spell.SpellLevel + "d6", DamageKind.Negative);

@@ -56,7 +56,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         combatAction.Traits.Add(Trait.Flourish);
                         combatAction.Illustration = new SideBySideIllustration(combatAction.Illustration, IllustrationName.Trip);
                         combatAction.Name = "Slam Down";
-                        combatAction.Description = StrikeRules.CreateBasicStrikeDescription(combatAction.StrikeModifiers, null, "You can attempt an Athletics check to Trip the creature you hit.", "You can attempt an Athletics check to Trip the creature you hit.");
+                        combatAction.Description = StrikeRules.CreateBasicStrikeDescription2(combatAction.StrikeModifiers, null, "You can attempt an Athletics check to Trip the creature you hit.", "You can attempt an Athletics check to Trip the creature you hit.");
                         StrikeModifiers strikeModifiers = combatAction.StrikeModifiers;
                         strikeModifiers.OnEachTarget = (Func<Creature, Creature, CheckResult, Task>)Delegate.Combine(strikeModifiers.OnEachTarget, async (Creature caster, Creature target, CheckResult checkResult) =>
                         {

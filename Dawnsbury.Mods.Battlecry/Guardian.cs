@@ -195,8 +195,12 @@ namespace Dawnsbury.Mods.Battlecry
                 [BattlecryMod.Trait.Guardian], null).WithActionCost(1)
                 .WithPermanentQEffect("You make it difficult for enemies to move away from you once they have gotten close.", (qEffect) => qEffect.ProvideMainAction = (qfHamperingSweeps) =>
                 {
-                    CombatAction hamperingSweeps = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Hampering Sweeps", [BattlecryMod.Trait.Guardian], "You make it difficult for enemies to move away from you once they have gotten close.",
-                        Target.Melee()).WithSoundEffect(SfxName.Shove).WithActionCost(1)
+                    if (qEffect.Owner.PrimaryWeapon == null)
+                    {
+                        return null;
+                    }
+                    CombatAction hamperingSweeps = new CombatAction(qEffect.Owner, IllustrationName.GenericCombatManeuver, "Hampering Sweeps", [BattlecryMod.Trait.Guardian], "You make it difficult for enemies to move away from you once they have gotten close.", 
+                        Target.Reach(qEffect.Owner.PrimaryWeapon)).WithSoundEffect(SfxName.Shove).WithActionCost(1)
                         .WithEffectOnEachTarget(async (CombatAction action, Creature caster, Creature target, CheckResult checkResult) =>
                         {
                             QEffect hamperingEffect = new QEffect("Slowed by Hampering Sweeps", "Your speed is reduced to 5'.") { SetBaseSpeedTo = 1 }.WithExpirationAtStartOfSourcesTurn(caster, 1);
