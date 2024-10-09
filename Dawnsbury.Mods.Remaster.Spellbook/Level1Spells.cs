@@ -69,8 +69,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // ? Spirit Link
         // ? Thoughtful Gift
 
-        // Chilling Spray
-        // Concordant Choir
         // Leaden Steps
         // Mud Pit
         // Noxious Vapors
@@ -100,6 +98,54 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
                     await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, 2 * spellLevel + "d6", DamageKind.Fire);
+                });
+            });
+
+            // Chilling Spray was originally in APG, but this is the PC2 version
+            RemasterSpells.RegisterNewSpell("Chilling Spray", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.RayOfFrost, "Chilling Spray", [Trait.Cold, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "A cone of icy shards bursts from your spread hands and coats the targets in a layer of frost. You deal  " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 cold damage to creatures in the area; they must each attempt a Reflex save.",
+                    RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.",
+                                           "The creature takes full damage and takes a –5-foot status penalty to its Speeds for 2 rounds.", 
+                                           "The creature takes double damage and takes a –10-foot status penalty to its Speeds for 2 rounds.")),
+                    Target.Cone(3), spellLevel, SpellSavingThrow.Standard(Defense.Reflex)).WithSoundEffect(SfxName.RayOfFrost)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+                {
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, 2 * spellLevel + "d4", DamageKind.Cold);
+                    if (checkResult <= CheckResult.Failure)
+                    {
+                        // We can potentially have more than one of these (for example, a critical failure last round, and a regular failure this round).
+                        // Rely on the bonus combiner to resolve these.
+                        int modifier = checkResult == CheckResult.Failure ? -1 : -2;
+                        QEffect slowEffect = new QEffect("slowed by Chilling Spray", (5 * modifier) + "-foot status penalty to Speeds")
+                        {
+                            Illustration = IllustrationName.RayOfFrost,
+                            BonusToAllSpeeds = (_) => new Bonus(modifier, BonusType.Status, spell.Name, false),
+                            CountsAsADebuff = true
+                        }.WithExpirationAtStartOfSourcesTurn(caster, 2);
+                        target.AddQEffect(slowEffect);
+                    }
+                });
+            });
+
+            // Concordant Choir was originally in SoM, but this is the PC2 version.
+            RemasterSpells.RegisterNewSpell("Concordant Choir", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                // I don't have a way to only have the manipulate trait based on actions spent, so we're always going to add that tag
+                return Spells.CreateModern(IllustrationName.HauntingHymn, "Concordant Choir", [Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
+                    "You unleash a dangerous consonance of reverberating sound, focusing on a single target or spreading out to damage many foes.",
+                    "The number of actions you spend Casting this Spell determines its targets, range, area, and other parameters.\n" +
+                    "{icon:Action} The spell deals " + S.HeightenedVariable(spellLevel, 1) + "d4 sonic damage to a single enemy, with a basic Fortitude save.\n" +
+                    "{icon:TwoActions} The spell deals " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 sonic damage to all creatures in a 10-foot burst, with a basic Fortitude save.\n" +
+                    "{icon:ThreeActions} The spell deals " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 sonic damage to all creatures in a 30-foot emanation, with a basic Fortitude save." +
+                     S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 1d4 for the 1-action version, or 2d4 for the other versions."),
+                    Target.DependsOnActionsSpent(Target.Ranged(6), Target.Burst(6, 2), Target.Emanation(6)), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
+                .WithSoundEffect(SfxName.HauntingHymn).WithActionCost(-1)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+                {
+                    int damageDice = spellLevel * ((spell.SpentActions >= 2) ? 2 : 1);
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, damageDice + "d4", DamageKind.Sonic);
                 });
             });
 
