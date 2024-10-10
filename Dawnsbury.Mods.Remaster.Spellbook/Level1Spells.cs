@@ -375,7 +375,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Leaden Steps from PC2
             RemasterSpells.RegisterNewSpell("LeadenSteps", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.ElementMetal, "Leaden Steps", [Trait.Concentrate, Trait.Manipulate, Trait.Metal, Trait.Morph, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                return Spells.CreateModern(IllustrationName.Rock, "Leaden Steps", [Trait.Concentrate, Trait.Manipulate, Trait.Metal, Trait.Morph, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You partially transform a foe’s feet into unwieldy slabs of metal, slowing their steps.", "The target attempts a Fortitude saving throw" +
                         RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The target is unaffected.",
                                            "The target is encumbered and has weakness " + S.HeightenedVariable(1 + spellLevel, 2) + " to electricity until the end of your next turn. The spell can’t be sustained.",
@@ -391,43 +391,29 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         return;
                     }
                     int weakness = 1 + spellLevel + ((result == CheckResult.CriticalFailure) ? 1 : 0);
-                    QEffect clumsyEffect = QEffect.Clumsy(1);
-                    QEffect speedEffect = new QEffect("Encumbered", "-10 foot penalty all your Speeds")
-                    {
-                        Illustration = IllustrationName.Rock,
-                        BonusToAllSpeeds = (_) => new Bonus(-2, BonusType.Untyped, spell.Name, false),
-                    };
                     // NOTE: I should really have something that prevents multiple encumbered effects from applying.
+                    QEffect clumsyEffect = QEffect.Clumsy(1);
                     QEffect encumberedEffect = new QEffect("Encumbered", "You're clumsy 1 and take a -10 penalty to all your Speeds.")
                     {
+                        Illustration = IllustrationName.Slowed,
                         CountsAsADebuff = true,
-                        WhenExpires = (qEffect) => qEffect.Owner.RemoveAllQEffects((other) => other == speedEffect || other == clumsyEffect)
+                        BonusToAllSpeeds = (_) => new Bonus(-2, BonusType.Untyped, spell.Name, false),
                     };
                     QEffect weaknessEffect = QEffect.DamageWeakness(DamageKind.Electricity, weakness);
-                    QEffect mainEffect = new QEffect("affected by Leaden Steps", "Encumbered and weakness " + weakness + " to electricity.")
+                    QEffect mainEffect = new QEffect("affected by Leaden Steps", "Encumbered and weakness " + weakness + " to electricity.", ExpirationCondition.ExpiresAtEndOfSourcesTurn, caster, IllustrationName.Rock)
                     {
-                        Illustration = IllustrationName.ElementMetal,
-                        BonusToAllSpeeds = (_) => new Bonus(-2, BonusType.Status, spell.Name, false),
                         CountsAsADebuff = true,
-                        WhenExpires = (qEffect) => qEffect.Owner.RemoveAllQEffects((other) => other == encumberedEffect || other == weaknessEffect),
+                        CannotExpireThisTurn = true,
+                        WhenExpires = (qEffect) => qEffect.Owner.RemoveAllQEffects((other) => other == encumberedEffect || other == weaknessEffect || other == clumsyEffect),
                     };
-                    target.AddQEffect(clumsyEffect);
-                    target.AddQEffect(speedEffect);
-                    target.AddQEffect(encumberedEffect);
-                    target.AddQEffect(weaknessEffect);
                     target.AddQEffect(mainEffect);
+                    target.AddQEffect(weaknessEffect);
+                    target.AddQEffect(encumberedEffect);
+                    target.AddQEffect(clumsyEffect);
                     if (result <= CheckResult.Failure)
                     {
-                        caster.AddQEffect(QEffect.Sustaining(spell, mainEffect));
-                    }
-                    else
-                    {
-                        QEffect notSustaining = new QEffect("unsustainable", "")
-                        {
-                            CannotExpireThisTurn = true,
-                            WhenExpires = (qEffect) => target.RemoveAllQEffects((other) => other == mainEffect)
-                        }.WithExpirationAtEndOfOwnerTurn();
-                        caster.AddQEffect(notSustaining);
+                        QEffect sustainEffect = QEffect.Sustaining(spell, mainEffect);
+                        caster.AddQEffect(sustainEffect);
                     }
                 });
             });
@@ -486,8 +472,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             QEffect persistentDamage = QEffect.PersistentDamage(spellLevel + "d4", DamageKind.Mental);
                             QEffect sickenedEffect = QEffect.Sickened(checkResult == CheckResult.CriticalFailure ? 2 : 1, spell.SpellcastingSource.GetSpellSaveDC());
                             sickenedEffect.WhenExpires = (_) => { sickenedEffect.Owner.RemoveAllQEffects(qEffect => qEffect == persistentDamage); };
-                            target.AddQEffect(persistentDamage);
                             target.AddQEffect(sickenedEffect);
+                            target.AddQEffect(persistentDamage);
                         }
                     }
                 });
