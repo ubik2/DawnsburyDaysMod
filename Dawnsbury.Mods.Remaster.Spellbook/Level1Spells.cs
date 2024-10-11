@@ -341,36 +341,36 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             });
 
             // Grease - I wanted to shift to the contiguous squares target
-            ModManager.ReplaceExistingSpell(SpellId.Grease, 1, (sspellcaster, spellLevel, inCombat, spellInformation) =>
-            {
-                return Spells.CreateModern(IllustrationName.Grease, "Grease", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
-                    "You conjure grease.", "Each creature standing on the target area must make a Reflex save against your spell DC or fall prone. The target area remains uneven terrain for the rest of the encounter {i}(a creature who moves into the area must make an Acrobatics check to balance){/i}.",
-                    new ContiguousSquaresTarget(6, 4).WithIncludeOnlyIf((GeneratorTarget target, Creature creature) => !creature.HasEffect(QEffectId.Flying)), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
-                .WithSoundEffect(SfxName.Grease)
-                .WithEffectOnEachTarget(async (spell, caster, target, result) =>
-                {
-                    if (result <= CheckResult.Failure) { 
-                        await target.FallProne();
-                    }
-                })
-                .WithEffectOnChosenTargets(async (spell, caster, targets) =>
-                {
-                    if (spell.SavingThrow == null)
-                    {
-                        throw new Exception("Spell saving throw is null");
-                    }
-                    foreach (Tile chosenTile in targets.ChosenTiles)
-                    {
-                        chosenTile.QEffects.Add(new TileQEffect(chosenTile)
-                        {
-                            BalanceDC = spell.SavingThrow.DC(caster),
-                            BalanceAllowsReflexSave = true,
-                            Illustration = (Illustration)IllustrationName.GreaseTile,
-                            TransformsTileIntoHazardousTerrain = true
-                        });
-                    }
-                });
-            });
+            //ModManager.ReplaceExistingSpell(SpellId.Grease, 1, (sspellcaster, spellLevel, inCombat, spellInformation) =>
+            //{
+            //    return Spells.CreateModern(IllustrationName.Grease, "Grease", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+            //        "You conjure grease.", "Each creature standing on the target area must make a Reflex save against your spell DC or fall prone. The target area remains uneven terrain for the rest of the encounter {i}(a creature who moves into the area must make an Acrobatics check to balance){/i}.",
+            //        new ContiguousSquaresTarget(6, 4).WithIncludeOnlyIf((GeneratorTarget target, Creature creature) => !creature.HasEffect(QEffectId.Flying)), spellLevel, SpellSavingThrow.Basic(Defense.Reflex))
+            //    .WithSoundEffect(SfxName.Grease)
+            //    .WithEffectOnEachTarget(async (spell, caster, target, result) =>
+            //    {
+            //        if (result <= CheckResult.Failure) { 
+            //            await target.FallProne();
+            //        }
+            //    })
+            //    .WithEffectOnChosenTargets(async (spell, caster, targets) =>
+            //    {
+            //        if (spell.SavingThrow == null)
+            //        {
+            //            throw new Exception("Spell saving throw is null");
+            //        }
+            //        foreach (Tile chosenTile in targets.ChosenTiles)
+            //        {
+            //            chosenTile.QEffects.Add(new TileQEffect(chosenTile)
+            //            {
+            //                BalanceDC = spell.SavingThrow.DC(caster),
+            //                BalanceAllowsReflexSave = true,
+            //                Illustration = (Illustration)IllustrationName.GreaseTile,
+            //                TransformsTileIntoHazardousTerrain = true
+            //            });
+            //        }
+            //    });
+            //});
 
             // Leaden Steps from PC2
             RemasterSpells.RegisterNewSpell("LeadenSteps", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
