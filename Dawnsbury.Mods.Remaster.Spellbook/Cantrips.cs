@@ -213,7 +213,7 @@ public class Cantrips
         });
 
         // Live Wire
-        RemasterSpells.RegisterNewSpell("Live Wire", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("LiveWire", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 1;
             return Spells.CreateModern(IllustrationName.ElectricArc, "Live Wire", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Metal, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
@@ -243,7 +243,7 @@ public class Cantrips
         });
 
         // Puff of Poison
-        RemasterSpells.RegisterNewSpell("Puff of Poison", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("PuffOfPoison", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             const int heightenStep = 2;
             int heightenIncrements = (spellLevel - 1) / heightenStep;
@@ -266,7 +266,7 @@ public class Cantrips
         });
 
         // Scatter Scree
-        RemasterSpells.RegisterNewSpell("Scatter Scree", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+        RemasterSpells.RegisterNewSpell("ScatterScree", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
             return Spells.CreateModern(IllustrationName.PummelingRubble, "Scatter Scree", [Trait.Cantrip, Trait.Concentrate, Trait.Earth, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "A jumble of rocks cascades into the area.",

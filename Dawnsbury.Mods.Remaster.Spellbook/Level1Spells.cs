@@ -101,7 +101,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             });
 
             // Chilling Spray was originally in APG, but this is the PC2 version
-            RemasterSpells.RegisterNewSpell("Chilling Spray", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("ChillingSpray", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.RayOfFrost, "Chilling Spray", [Trait.Cold, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "A cone of icy shards bursts from your spread hands and coats the targets in a layer of frost. You deal  " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 cold damage to creatures in the area; they must each attempt a Reflex save.",
@@ -129,7 +129,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             });
 
             // Concordant Choir was originally in SoM, but this is the PC2 version.
-            RemasterSpells.RegisterNewSpell("Concordant Choir", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            RemasterSpells.RegisterNewSpell("ConcordantChoir", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 // I don't have a way to only have the manipulate trait based on actions spent, so we're always going to add that tag
                 return Spells.CreateModern(IllustrationName.HauntingHymn, "Concordant Choir", [Trait.Concentrate, Trait.Manipulate, Trait.Sonic, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],

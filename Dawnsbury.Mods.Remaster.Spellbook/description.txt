@@ -33,6 +33,7 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Enfeeble
  [*]Force Barrage (replaces Magic Missile)
  [*]Goblin Pox
+ [*]Leaden Steps
  [*]Mystic Armor (replaces Mage Armor)
  [*]Phantom Pain
  [*]Protection

@@ -241,7 +241,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Earthworks
             RemasterSpells.RegisterNewSpell("Earthworks", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Spells.CreateModern(IllustrationName.PummelingRubble, "Earth Works", [Trait.Uncommon, Trait.Concentrate, Trait.Earth, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster],
+                return Spells.CreateModern(IllustrationName.PummelingRubble, "Earthworks", [Trait.Uncommon, Trait.Concentrate, Trait.Earth, Trait.Focus, Trait.Manipulate, Trait.Wizard, RemasterSpells.Trait.Remaster],
                     "With a ripple of earth, you raise small barriers from the ground.",
                     "The ground in the area becomes difficult terrain. The spell's area is a 5-foot burst if you spent 1 action to cast it, a 10-foot burst if you spent 2 actions, or a 15-foot burst if you spent 3 actions. A creature can Interact to clear the barriers from one 5-foot square adjacent to it." +
                     S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (4th){/b} You pull the barriers to float in the air, causing the spell to function as difficult terrain for flying creatures."),
