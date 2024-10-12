@@ -72,9 +72,17 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
         public static SpellId RegisterNewSpell(string technicalSpellName, int minimumSpellLevel, Func<SpellId, Creature?, int, bool, SpellInformation, CombatAction> createSpellInstance)
         {
-            SpellId spellId = ModManager.RegisterNewSpell(technicalSpellName, minimumSpellLevel, createSpellInstance);
-            newSpells.Add(technicalSpellName, spellId);
-            return spellId;
+            try
+            {
+                SpellId spellId = ModManager.RegisterNewSpell(technicalSpellName, minimumSpellLevel, createSpellInstance);
+                newSpells.Add(technicalSpellName, spellId);
+                return spellId;
+            }
+            catch (ArgumentException ex)
+            {
+                GeneralLog.Log("Skipped registering new spell \"" + technicalSpellName + "\". This spell may already be provided by another mod.\n" + ex.ToString());
+                return SpellId.None;
+            }
         }
 
         /// <remarks>
