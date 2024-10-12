@@ -139,7 +139,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     "{icon:TwoActions} The spell deals " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 sonic damage to all creatures in a 10-foot burst, with a basic Fortitude save.\n" +
                     "{icon:ThreeActions} The spell deals " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 sonic damage to all creatures in a 30-foot emanation, with a basic Fortitude save." +
                      S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+1){/b} The damage increases by 1d4 for the 1-action version, or 2d4 for the other versions."),
-                    Target.DependsOnActionsSpent(Target.Ranged(6), Target.Burst(6, 2), Target.Emanation(6)), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
+                    Target.DependsOnActionsSpent(Target.Ranged(6), Target.Burst(6, 2), Target.SelfExcludingEmanation(6)), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
                 .WithSoundEffect(SfxName.HauntingHymn).WithActionCost(-1)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
