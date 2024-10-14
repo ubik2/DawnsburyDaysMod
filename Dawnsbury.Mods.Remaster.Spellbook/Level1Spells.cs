@@ -22,7 +22,6 @@ using Humanizer;
 using Dawnsbury.Core.StatBlocks;
 using Dawnsbury.Display;
 using Dawnsbury.Core.Tiles;
-using Dawnsbury.Display.Illustrations;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -69,8 +68,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // ? Spirit Link
         // ? Thoughtful Gift
 
-        // Mud Pit
-        // Noxious Vapors
         // Protector Tree (depending on difficulty)
         // Schadenfreude
         // Summon Lesser Servitor - must be holy
@@ -418,6 +415,32 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 });
             });
 
+            // Mud Pit from PC2
+            RemasterSpells.RegisterNewSpell("MudPit", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.Grease, "Mud Pit", [Trait.Concentrate, Trait.Earth, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "Thick, clinging mud covers the ground, 1 foot deep.", "The mud is difficult terrain.",
+                    Target.Burst(12, 3), spellLevel, null)                
+                .WithActionCost(3).WithSoundEffect(SfxName.AncientDust)
+                .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
+                {
+                    List<TileQEffect> tileEffects = new List<TileQEffect>();
+                    foreach (Tile tile in targets.ChosenTiles)
+                    {
+                        TileQEffect item = new TileQEffect(tile)
+                        {
+                            StateCheck = (_) => { tile.DifficultTerrain = true; },
+                            Illustration = IllustrationName.GreaseTile,
+                            ExpiresAt = ExpirationCondition.Never
+                        };
+                        tileEffects.Add(item);
+                        tile.QEffects.Add(item);
+                    }
+
+                    RemasterSpells.CreateDismissAction(caster, spell, null, tileEffects);
+                });
+            });           
+
             // Mystic Armor (formerly Mage Armor)
             RemasterSpells.ReplaceLegacySpell(SpellId.MageArmor, "MysticArmor", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
@@ -449,6 +472,47 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     });
                 };
                 return mageArmor;
+            });
+
+            // Noxious Vapors from PC2
+            RemasterSpells.RegisterNewSpell("NoxiousVapors", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.ObscuringMist, "Noxious Vapors", [Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "You emit a cloud of toxic smoke that temporarily obscures you from sight.", 
+                    "Each creature except you in the area when you Cast the Spell takes " + S.HeightenedVariable(spellLevel, 1) + "d6 poison damage (basic Fortitude save). " +
+                    "A creature that critically fails the saving throw also becomes sickened 1. All creatures in the area become concealed, and all creatures outside the smoke become concealed to creatures within it. This smoke can be dispersed by a strong wind.",
+                    Target.SelfExcludingEmanation(2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
+                .WithSoundEffect(SfxName.AncientDust)
+                .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
+                {
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("Spellcasting source is null");
+                    }
+                    List<TileQEffect> tileEffects = new List<TileQEffect>();
+                    foreach (Tile tile in targets.ChosenTiles)
+                    {
+                        TileQEffect item = new TileQEffect(tile)
+                        {
+                            StateCheck = (_) => { tile.FoggyTerrain = true; },
+                            Illustration = IllustrationName.Fog,
+                        };
+                        tileEffects.Add(item);
+                        tile.QEffects.Add(item);
+                    }
+                    foreach (Creature creature in targets.ChosenCreatures)
+                    {
+                        CheckResult checkResult = targets.CheckResults[creature];
+                        await CommonSpellEffects.DealBasicDamage(spell, caster, creature, checkResult, spellLevel + "d6", DamageKind.Poison);
+                        if (checkResult == CheckResult.CriticalFailure)
+                        {
+                            creature.AddQEffect(QEffect.Sickened(1, spell.SpellcastingSource.GetSpellSaveDC()));
+                        }
+                    }
+                    // Despite only existing for a single round, we should still be able to dismiss it.
+                    QEffect dismissEffect = RemasterSpells.CreateDismissAction(caster, spell, null, tileEffects).WithExpirationAtEndOfOwnerTurn();
+                    dismissEffect.CannotExpireThisTurn = true;
+                });
             });
 
             // Phantom Pain

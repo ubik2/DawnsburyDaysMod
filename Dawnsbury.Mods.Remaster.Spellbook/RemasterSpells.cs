@@ -7,6 +7,10 @@ using Dawnsbury.IO;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Dawnsbury.Core.Mechanics;
+using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Core.Mechanics.Targeting;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -143,6 +147,48 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 }
             }
             return foundMethod;
+        }
+
+        /// <summary>
+        ///  This is a utility function that attaches an effect to the caster. This effect provides an action possibility that lets the caster end 
+        ///  the spell early, and also cleans up any subeffects when it expires.
+        /// </summary>
+        /// <param name="caster"></param>
+        /// <param name="spell"></param>
+        /// <param name="subEffects"></param>
+        /// <param name="tileEffects"></param>
+        /// <returns></returns>
+        internal static QEffect CreateDismissAction(Creature caster, CombatAction spell, List<QEffect>? subEffects, List<TileQEffect>? tileEffects)
+        {
+            QEffect dismissableEffect = new QEffect()
+            {
+                ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ?
+                    null : new ActionPossibility(new CombatAction(caster, spell.Illustration, "Dismiss " + spell.Name, [Core.Mechanics.Enumerations.Trait.Concentrate], "Dismiss this effect.", Target.Self())
+                .WithEffectOnSelf((_) =>
+                {
+                    // This should also remove the effect that gave us the option to dismiss the spell
+                    effect.ExpiresAt = ExpirationCondition.Immediately;
+                })),
+                WhenExpires = (_) =>
+                {
+                    if (subEffects != null)
+                    {
+                        foreach (QEffect subEffect in subEffects)
+                        {
+                            subEffect.ExpiresAt = ExpirationCondition.Immediately;
+                        }
+                    }
+                    if (tileEffects != null)
+                    {
+                        foreach (TileQEffect tileEffect in tileEffects)
+                        {
+                            tileEffect.ExpiresAt = ExpirationCondition.Immediately;
+                        }
+                    }
+                }
+            };
+            caster.AddQEffect(dismissableEffect);
+            return dismissableEffect;
         }
 
         internal static string StripInitialWhitespace(string str)

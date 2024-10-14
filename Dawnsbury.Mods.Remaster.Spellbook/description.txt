@@ -34,7 +34,9 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]Force Barrage (replaces Magic Missile)
  [*]Goblin Pox
  [*]Leaden Steps
+ [*]Mud Pit
  [*]Mystic Armor (replaces Mage Armor)
+ [*]Noxious Vapors
  [*]Phantom Pain
  [*]Protection
  [*]Runic Body
