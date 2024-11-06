@@ -70,9 +70,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Sound Body
 
         // Reaper's Lantern
-        // Sudden Blight
-        // Vomit Swarm
-        // Web - maybe too difficult
 
         public static void RegisterSpells()
         {
@@ -537,6 +534,31 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     {
                         GoodnessModifier = (ai, original) => original + (float)(creature.Level * 20)
                     }).ToArray()).WithCreateVariantDescription((_, variant) => RulesBlock.CreateCreatureDescription(MonsterStatBlocks.MonsterExemplarsByName[variant!.Id])).WithEffectOnChosenTargets(async (spell, caster, targets) => await CommonSpellEffects.SummonMonster(spell, caster, targets.ChosenTile!));
+            });
+
+            // Vomit Swarm
+            RemasterSpells.RegisterNewSpell("VomitSwarm", 2, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.InsectForm, "Vomit Swarm", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
+                    "You belch forth a swarm of magical vermin.",
+                    "You evoke and shape the creatures from your own imagination, allowing you to change the appearance of the creatures (typically a mix of centipedes, roaches, wasps, and worms), but this doesn't change the effect of the spell. " + 
+                    "The vermin swarm over anyone in the area, their bites and stings dealing " + S.HeightenedVariable(spellLevel, 2) + "d8 piercing damage (basic Reflex save). " + 
+                    "A creature that fails its saving throw also becomes sickened 1. Once the spell ends, the swarm disappears." +
+                    S.HeightenedDamageIncrease(spellLevel, inCombat, "1d8"),
+                    Target.Cone(6), spellLevel, SpellSavingThrow.Basic(Defense.Reflex)).WithSoundEffect(SfxName.AcidSplash)
+                .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
+                {
+                    if (spell.SpellcastingSource == null)
+                    {
+                        throw new Exception("SpellcastingSource should not be null");
+                    }
+                    int spellDC = spell.SpellcastingSource.GetSpellSaveDC();
+                    await CommonSpellEffects.DealBasicDamage(spell, caster, target, checkResult, spellLevel + "d8", DamageKind.Piercing);
+                    if (checkResult == CheckResult.Failure || checkResult == CheckResult.CriticalFailure)
+                    {
+                        target.AddQEffect(QEffect.Sickened(1, spellDC));
+                    }
+                });
             });
 
         }

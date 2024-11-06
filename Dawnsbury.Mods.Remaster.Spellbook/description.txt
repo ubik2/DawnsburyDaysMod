@@ -67,6 +67,7 @@ Some of these are essentially just a rename of existing spells, but many have ne
  [*]See the Unseen
  [*]Spiritual Armament (replaces Spiritual Weapon)
  [*]Stupefy (replaces Touch of Idiocy)
+ [*]Vomit Swarm
 [/list]
 
 [h3]Focus[/h3]
