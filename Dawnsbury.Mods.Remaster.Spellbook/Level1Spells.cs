@@ -22,6 +22,7 @@ using Humanizer;
 using Dawnsbury.Core.StatBlocks;
 using Dawnsbury.Display;
 using Dawnsbury.Core.Tiles;
+using Dawnsbury.IO;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -60,6 +61,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Deja Vu
         // * Ill Omen
         // * Phantasmal Minion
+        // * Protector Tree - this could probably be done, but tricky
         // * Summon Fey - no creatures exist with this trait
         // The following are in limbo
         // ? Gust of Wind
@@ -67,10 +69,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // ? Infuse Vitality - should be able to hook into YouDealDamageWithStrike
         // ? Spirit Link
         // ? Thoughtful Gift
-
-        // Protector Tree (depending on difficulty)
-        // Schadenfreude
-        // Summon Lesser Servitor - must be holy
 
         public static void RegisterSpells()
         {
@@ -103,7 +101,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 return Spells.CreateModern(IllustrationName.RayOfFrost, "Chilling Spray", [Trait.Cold, Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "A cone of icy shards bursts from your spread hands and coats the targets in a layer of frost. You deal  " + S.HeightenedVariable(2 * spellLevel, 2) + "d4 cold damage to creatures in the area; they must each attempt a Reflex save.",
                     RemasterSpells.StripInitialWhitespace(S.FourDegreesOfSuccess("The creature is unaffected.", "The creature takes half damage.",
-                                           "The creature takes full damage and takes a –5-foot status penalty to its Speeds for 2 rounds.", 
+                                           "The creature takes full damage and takes a –5-foot status penalty to its Speeds for 2 rounds.",
                                            "The creature takes double damage and takes a –10-foot status penalty to its Speeds for 2 rounds.")),
                     Target.Cone(3), spellLevel, SpellSavingThrow.Standard(Defense.Reflex)).WithSoundEffect(SfxName.RayOfFrost)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
@@ -201,7 +199,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Renamed from Magic Missile. Updated traits and short description.
             RemasterSpells.ReplaceLegacySpell(SpellId.MagicMissile, "ForceBarrage", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                int shardsPerAction = 1 + (spellLevel - 1)/2;
+                int shardsPerAction = 1 + (spellLevel - 1) / 2;
                 Func<CreatureTarget> func = () => Target.Ranged(24, (Target tg, Creature attacker, Creature defender) => attacker.AI.DealDamage(defender, 3.5f, tg.OwnerAction));
                 string[] creaturesPerAction = shardsPerAction switch
                 {
@@ -219,7 +217,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 CreatureTarget[][] creatureTargets = [new CreatureTarget[shardsPerAction], new CreatureTarget[shardsPerAction * 2], new CreatureTarget[shardsPerAction * 3]];
                 for (int i = 0; i < creatureTargets.Length; i++)
                 {
-                    for(int j = 0; j < creatureTargets[i].Length; j++)
+                    for (int j = 0; j < creatureTargets[i].Length; j++)
                     {
                         creatureTargets[i][j] = func();
                     }
@@ -259,7 +257,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             list2.Add(DiceFormula.FromText("1d4+1", "Magic missile"));
                         }
 
-                        await caster.DealDirectDamage(new DamageEvent(action, item4.Key, CheckResult.Success, list2.Select((DiceFormula formula) => new KindedDamage(formula, DamageKind.Force)).ToArray()));
+                        await CommonSpellEffects.DealDirectDamage(new DamageEvent(action, item4.Key, CheckResult.Success, list2.Select((DiceFormula formula) => new KindedDamage(formula, DamageKind.Force)).ToArray()));
                     }
                 })
                 .WithTargetingTooltip((CombatAction power, Creature creature, int index) =>
@@ -419,8 +417,8 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             RemasterSpells.RegisterNewSpell("MudPit", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.Grease, "Mud Pit", [Trait.Concentrate, Trait.Earth, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
-                    "Thick, clinging mud covers the ground, 1 foot deep.", "The mud is difficult terrain.",
-                    Target.Burst(12, 3), spellLevel, null)                
+                    "Thick, clinging mud covers the ground, 1 foot deep.", "The mud is difficult terrain." + RemasterSpells.CreateDismissText("Mud Pit"),
+                    Target.Burst(12, 3), spellLevel, null)
                 .WithActionCost(3).WithSoundEffect(SfxName.AncientDust)
                 .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
                 {
@@ -439,7 +437,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
 
                     RemasterSpells.CreateDismissAction(caster, spell, null, tileEffects);
                 });
-            });           
+            });
 
             // Mystic Armor (formerly Mage Armor)
             RemasterSpells.ReplaceLegacySpell(SpellId.MageArmor, "MysticArmor", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
@@ -478,7 +476,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             RemasterSpells.RegisterNewSpell("NoxiousVapors", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
                 return Spells.CreateModern(IllustrationName.ObscuringMist, "Noxious Vapors", [Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
-                    "You emit a cloud of toxic smoke that temporarily obscures you from sight.", 
+                    "You emit a cloud of toxic smoke that temporarily obscures you from sight.",
                     "Each creature except you in the area when you Cast the Spell takes " + S.HeightenedVariable(spellLevel, 1) + "d6 poison damage (basic Fortitude save). " +
                     "A creature that critically fails the saving throw also becomes sickened 1. All creatures in the area become concealed, and all creatures outside the smoke become concealed to creatures within it. This smoke can be dispersed by a strong wind.",
                     Target.SelfExcludingEmanation(2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))
@@ -678,6 +676,53 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 });
             });
 
+            // Schadenfreude
+            RemasterSpells.RegisterNewSpell("Shadenfreude", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Spells.CreateModern(IllustrationName.BloodVendetta, "Shadenfreude", [Trait.Concentrate, Trait.Emotion, Trait.Mental, Trait.Arcane, Trait.Divine, Trait.Occult],
+                    "You distract your enemy with their feeling of smug pleasure when you fail catastrophically.",
+                    "It must attempt a Will save." +
+                    S.FourDegreesOfSuccess("The creature is unaffected.", "The creature is distracted by its amusement and takes a -1 status penalty on Perception checks and Will saves for 1 round.",
+                        "The creature is overcome by its amusement and is stupefied 1 for 1 round.", "The creature is lost in its amusement and is stupefied 2 for 1 round and stunned 1."),
+                    Target.Uncastable(), spellLevel, null).WithActionCost(-2).WithSoundEffect(SfxName.DeathsCall)
+                    .WithCastsAsAReaction((QEffect qEffect, CombatAction spell) =>
+                    {
+                        qEffect.AfterYouAreTargeted = async (effect, action) =>
+                        {
+                            if (action.Owner.EnemyOf(effect.Owner) && action.SavingThrow != null && action.ChosenTargets.CheckResults.TryGetValue(effect.Owner, out var result))
+                            {
+                                if (result == CheckResult.CriticalFailure)
+                                {
+                                    if (await effect.Owner.AskToUseReaction("You critically failed against " + action.Name + ". Use Schadenfreude on " + action.Owner.Name + "?"))
+                                    {
+                                        CheckResult targetResult = CommonSpellEffects.RollSavingThrow(action.Owner, spell, Defense.Will, (Creature? _) => spell.SpellcastingSource!.GetSpellSaveDC());
+                                        switch (targetResult)
+                                        {
+                                            case CheckResult.CriticalSuccess:
+                                                break;
+                                            case CheckResult.Success:
+                                                action.Owner.AddQEffect(new QEffect("Distracted", "Distracted by a feeling of smug satisfaction.", 
+                                                    ExpirationCondition.ExpiresAtStartOfSourcesTurn, effect.Owner, IllustrationName.Stupefied)
+                                                {
+                                                    BonusToDefenses = (QEffect qf, CombatAction? ca, Defense df) => df == Defense.Will || df == Defense.Perception ? new Bonus(-1, BonusType.Status, "distracted") : null,
+                                                    CountsAsADebuff = true
+                                                });
+                                                break;
+                                            case CheckResult.Failure:
+                                                action.Owner.AddQEffect(QEffect.Stupefied(1).WithExpirationAtStartOfSourcesTurn(effect.Owner, 1));
+                                                break;
+                                            case CheckResult.CriticalFailure:
+                                                action.Owner.AddQEffect(QEffect.Stupefied(2).WithExpirationAtStartOfSourcesTurn(effect.Owner, 1));
+                                                action.Owner.AddQEffect(QEffect.Stunned(1));
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                    });
+            });
+
             // Spider Sting
             RemasterSpells.RegisterNewSpell("SpiderSting", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
@@ -705,7 +750,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     {
                         if (checkResult == CheckResult.Success)
                         {
-                            await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison)], false, false));
+                            await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison)], false, false));
                         }
                     }
                     else
@@ -733,12 +778,27 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             if (text != null)
                             {
                                 DiceFormula damage = DiceFormula.FromText(text, spell.Name);
-                                await afflictionAction.Owner.DealDirectDamage(afflictionAction, damage, qEffect.Owner, CheckResult.Failure, DamageKind.Poison);
+                                await CommonSpellEffects.DealDirectDamage(afflictionAction, damage, qEffect.Owner, CheckResult.Failure, DamageKind.Poison);
                             }
                             return;
                         }
                     }
                 });
+            });
+
+            RemasterSpells.RegisterNewSpell("SummonLesserServitor", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                int maximumCreatureLevel = spellLevel switch { 2 => 1, 3 => 2, 4 => 3, _ => -1 };
+                return Spells.CreateModern(IllustrationName.LanternArchon256, "Summon Lesser Servitor", [Trait.Concentrate, Trait.Manipulate, RemasterSpells.Trait.Summon, Trait.Divine, RemasterSpells.Trait.Remaster],
+                    "You summon a celestial, fiend, or monitor to fight for you.", 
+                    "While deities jealously guard their most powerful servants from the summoning spells of those who aren't steeped in the faith, this spell allows you to conjure an inhabitant of the Outer Sphere with or without the deity's permission. You summon a celestial, fiend, or monitor of level " + S.HeightenedVariable(maximumCreatureLevel, -1) + "." +
+                    Core.CharacterBuilder.FeatsDb.Spellbook.Level1Spells.SummonRulesText +
+                    S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (2nd){/b} The maximum level of the summoned creature is 1.\n\n{b}Heightened (3rd){/b} The maximum level of the summoned creature is 2.\n\n{b}Heightened (4th){/b} The maximum level of the summoned creature is 3."),
+                    Target.RangedEmptyTileForSummoning(6), spellLevel, null).WithActionCost(3).WithSoundEffect(SfxName.Summoning)
+                    .WithVariants(MonsterStatBlocks.MonsterExemplars.Where((creature) => (creature.HasTrait(Trait.Fiend) || creature.HasTrait(Trait.Celestial)) && creature.Level <= maximumCreatureLevel).Select((creature) => new SpellVariant(creature.Name, "Summon " + creature.Name, creature.Illustration)
+                    {
+                        GoodnessModifier = (ai, original) => original + (float)(creature.Level * 20)
+                    }).ToArray()).WithCreateVariantDescription((_, variant) => RulesBlock.CreateCreatureDescription(MonsterStatBlocks.MonsterExemplarsByName[variant!.Id])).WithEffectOnChosenTargets(async (spell, caster, targets) => await CommonSpellEffects.SummonMonster(spell, caster, targets.ChosenTile!));
             });
 
             RemasterSpells.RegisterNewSpell("SummonUndead", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>

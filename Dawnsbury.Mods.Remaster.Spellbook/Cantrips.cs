@@ -237,7 +237,7 @@ public class Cantrips
                 }
                 if (checkResult == CheckResult.Failure)
                 {
-                    await caster.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity)], false));
+                    await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity)], false));
                 }
             });
         });

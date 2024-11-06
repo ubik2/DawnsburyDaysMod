@@ -191,6 +191,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             return dismissableEffect;
         }
 
+        internal static string CreateDismissText(string spellName)
+        {
+            return "\n\n{i}Dismiss " + spellName + " is in Other maneuvers menu.{/i}";
+        }
+
         internal static string StripInitialWhitespace(string str)
         {
             return Regex.Replace(str, @"^\n*", "");

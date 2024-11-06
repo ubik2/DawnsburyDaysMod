@@ -217,11 +217,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.FlourishingFlora, "Entangling Flora", [Trait.Concentrate, Trait.Manipulate, Trait.Plant, Trait.Wood, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "Plants and fungi burst out or quickly grow, entangling creatures.",
-                    "All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it’s also immobilized for 1 round. Creatures can attempt to Escape to remove these effects." + "\n\n{i}Dismiss Entangling Flora is in Other maneuvers menu.{/i}",
+                    "All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it’s also immobilized for 1 round. Creatures can attempt to Escape to remove these effects." + RemasterSpells.CreateDismissText("Entangling Flora"),
                     Target.Burst(24, 4), spellLevel, null).WithSoundEffect(SfxName.Boneshaker)
                 .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
                 {
-                    List<TileQEffect> effects = new List<TileQEffect>();
+                    List<TileQEffect> tileEffects = new List<TileQEffect>();
                     if (spell.SpellcastingSource == null)
                     {
                         throw new Exception("SpellcastingSource should not be null");
@@ -271,21 +271,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             Illustration = (new[] { IllustrationName.Spiderweb1, IllustrationName.Spiderweb2, IllustrationName.Spiderweb3, IllustrationName.Spiderweb4 }).GetRandom(),
                             ExpiresAt = ExpirationCondition.Never
                         };
-                        effects.Add(item);
+                        tileEffects.Add(item);
                         tile.QEffects.Add(item);
                     }
 
-                    caster.AddQEffect(new QEffect
-                    {
-                        ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ? null : new ActionPossibility(new CombatAction(caster, IllustrationName.FlourishingFlora, "Dismiss Entangling Flora", new[] { Trait.Concentrate }, "Dismiss this effect.", Target.Self())
-                        .WithEffectOnSelf((_) =>
-                        {
-                            foreach (TileQEffect tileEffect in effects)
-                            {
-                                tileEffect.ExpiresAt = ExpirationCondition.Immediately;
-                            }
-                        }))
-                    });
+                    RemasterSpells.CreateDismissAction(caster, spell, null, tileEffects);
                 });
             });
 
@@ -379,11 +369,12 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             {
                 return Spells.CreateModern(IllustrationName.ObscuringMist, "Mist", [Trait.Concentrate, Trait.Manipulate, Trait.Water, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "You call forth a cloud of mist.",
-                    "All creatures within the mist become concealed, and all creatures outside the mist become concealed to creatures within it. You can Dismiss the cloud." + "\n\n{i}Dismiss Mist is in Other maneuvers menu.{/i}",
+                    "All creatures within the mist become concealed, and all creatures outside the mist become concealed to creatures within it. You can Dismiss the cloud." +
+                    RemasterSpells.CreateDismissText("Mist"),
                     Target.Burst(24, 4), spellLevel, null).WithSoundEffect(SfxName.GaleBlast).WithActionCost(3)
-                .WithEffectOnChosenTargets(async (Creature caster, ChosenTargets targets) =>
+                .WithEffectOnChosenTargets(async (CombatAction spell, Creature caster, ChosenTargets targets) =>
                 {
-                    List<TileQEffect> effects = [];
+                    List<TileQEffect> tileEffects = new List<TileQEffect>();
                     foreach (Tile tile in targets.ChosenTiles)
                     {
                         TileQEffect item = new TileQEffect(tile)
@@ -392,22 +383,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             Illustration = IllustrationName.Fog,
                             ExpiresAt = ExpirationCondition.Never
                         };
-                        effects.Add(item);
+                        tileEffects.Add(item);
                         tile.QEffects.Add(item);
                     }
 
-                    caster.AddQEffect(new QEffect
-                    {
-                        ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection section) => (section.PossibilitySectionId != PossibilitySectionId.OtherManeuvers) ? null : new ActionPossibility(new CombatAction(caster, IllustrationName.ObscuringMist, "Dismiss Mist", [Trait.Concentrate], "Dismiss this effect.", Target.Self())
-                        .WithEffectOnSelf((_) =>
-                        {
-                            foreach (TileQEffect tileEffect in effects)
-                            {
-                                tileEffect.ExpiresAt = ExpirationCondition.Immediately;
-                            }
-                            effect.ExpiresAt = ExpirationCondition.Immediately;
-                        }))
-                    });
+                    RemasterSpells.CreateDismissAction(caster, spell, null, tileEffects);
                 });
             });
 

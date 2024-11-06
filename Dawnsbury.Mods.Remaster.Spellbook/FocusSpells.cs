@@ -74,7 +74,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                     {
                                         EndOfYourTurn = async (_, creature) =>
                                         {
-                                            await creature.DealDirectDamage(null, DiceFormula.FromText((1 + heightenIncrements) + "d6", "Fire Ray fire tile"), creature, CheckResult.Failure, DamageKind.Fire);
+                                            await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText((1 + heightenIncrements) + "d6", "Fire Ray fire tile"), creature, CheckResult.Failure, DamageKind.Fire);
                                         }
                                     });
                                 }
