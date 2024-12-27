@@ -62,7 +62,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
             // Emblazon Armament
             yield return new TrueFeat(RemasterFeats.FeatName.EmblazonArmament, 2, "Carefully etching a sacred image into a physical object, you steel yourself for battle.",
-                "You can spend 10 minutes emblazoning a symbol of your deity upon a weapon or shield. The symbol doesn't fade until 1 year has passed, but if you Emblazon an Armament, any symbol you previously emblazoned, and any symbol already emblazoned on that item instantly disappears. The emblazoned item is a religious symbol of your deity in addition to its normal purpose, and it gains another benefit determined by the type of item. The benefit applies only to followers of the deity the symbol represents, but others can use the item normally..",
+                "You can spend 10 minutes emblazoning a symbol of your deity upon a weapon or shield. The symbol doesn't fade until 1 year has passed, but if you Emblazon an Armament, any symbol you previously emblazoned, and any symbol already emblazoned on that item instantly disappears. The emblazoned item is a religious symbol of your deity in addition to its normal purpose, and it gains another benefit determined by the type of item. The benefit applies only to followers of the deity the symbol represents, but others can use the item normally.",
                 [Trait.Cleric]) // Also Exploration, but that's not implemented
                 .WithPermanentQEffect("Your holy symbol is emblazoned on your shield.", (QEffect qf) =>
                 {
@@ -76,7 +76,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         }
                     };
                 });
-                       
+
             // Panic the Dead (formerly Turn Undead)
             // I don't hide the Turn Undead feat like I should
             // FIXME: This is not implemented, but I don't want to remove it in case someone is using it
@@ -85,7 +85,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                 [Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental])
                 .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.AllFeats.Any(feat => feat.FeatName == FeatName.Warpriest), "You must be a warpriest.")
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.HeavyArmor, Proficiency.Trained));
-            
+
             // Warpriest's Armor
             // The bulk reduction isn't implemented, since the game uses inventory slots instead of bulk.
             // We don't advance the proficiency, since that doesn't apply until level 13, and the game doesn't go that high
@@ -121,91 +121,73 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                 .WithActionCost(1)
                 .WithPermanentQEffect("You present your religious symbol emphatically.", (QEffect qEffect) =>
                 {
-                    qEffect.ProvideMainAction = (QEffect effect) =>
+                    qEffect.ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection possibilitySection) =>
                     {
+                        Creature owner = qEffect.Owner;
                         // If we already have the effect, don't provide the action possibility
-                        if (qEffect.Owner.QEffects.Any((qEffect) => qEffect.Name == "Raise Symbol"))
+                        if (owner.QEffects.Any((qEffect) => qEffect.Name == "Symbol raised"))
                         {
                             return null;
                         }
-                        return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.GateAttenuator, "Raise Symbol", [Trait.Cleric],
-                            "You present your religious symbol emphatically." +
-                            "\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield.",
-                            Target.Self().WithAdditionalRestriction((Creature caster) =>
+                        Item? emblazonedShield = null;
+                        // Check to see if they have the Cleric Warmastered trait on their shield (from that mod's version of the feat)
+                        if (ModManager.TryParse("Emblazoned", out Trait emblazonedTrait))
+                        {
+                            emblazonedShield = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield) && item.HasTrait(emblazonedTrait));
+                        }
+                        // If we don't have that, try to see if they're using our variant
+                        if (emblazonedShield == null)
+                        {
+                            // I'm more permissive, and let them use any shield if they have the feat.
+                            // This can misbehave if they have shield1 without the emblazon, and shield2 with emblazon, since they can block with shield1 and
+                            // won't benefit from the hardness on shield2.
+                            if (owner.HasFeat(RemasterFeats.FeatName.EmblazonArmament))
                             {
-                                return caster.HasFreeHand ? null : "You must be wielding a religious symbol or have a free hand.";
-                            })).WithActionCost(1).WithEffectOnSelf((Creature caster) =>
-                            {
-                                QEffect raisedSymbolEffect = new QEffect("Raise Symbol", "Your symbol grants you a bonus to saving throws.")
+                                emblazonedShield = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                            }
+                        }
+                        // If we already have a shield raised, and have the Raise Symbol and Emblazon Armament feats, we don't need a special action
+                        if (owner.HasEffect(QEffectId.RaisingAShield) && emblazonedShield != null)
+                        {
+                            return null;
+                        }
+                        // If we don't have an emblazoned shield, this should be in the main section
+                        if (emblazonedShield == null && possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                        {
+                            return new ActionPossibility(new CombatAction(owner, IllustrationName.GateAttenuator, "Raise symbol", [Trait.Cleric],
+                                "You present your religious symbol emphatically." +
+                                "\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield.",
+                                Target.Self().WithAdditionalRestriction((Creature caster) =>
                                 {
-                                    Illustration = IllustrationName.Shield,
-                                    CountsAsABuff = true,
-                                    BonusToDefenses = (QEffect qEffect, CombatAction? action, Defense defense) =>
+                                    if (caster.HasFreeHand)
                                     {
-                                        switch (defense)
-                                        {
-                                            case Defense.Fortitude:
-                                            case Defense.Reflex:
-                                            case Defense.Will:
-                                                return new Bonus(2, BonusType.Circumstance, "raised symbol");
-                                            default:
-                                                return null;
-                                        };
-                                    },
-#if V3
-                                    AdjustSavingThrowCheckResult = (QEffect qEffect, Defense defense, CombatAction action, CheckResult checkResult) =>
-#else
-                                    AdjustSavingThrowResult = (QEffect qEffect, CombatAction action, CheckResult checkResult) =>
-#endif
-                                    {
-                                        // We use the old names here so we don't need to bring in symbols from the RemasterSpells mod.
-                                        if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Positive) || action.HasTrait(Trait.Negative)))
-                                        {
-                                            return CheckResult.CriticalSuccess;
-                                        }
-                                        return checkResult;
+                                        return null;
                                     }
-                                }.WithExpirationAtStartOfOwnerTurn();
-                                caster.AddQEffect(raisedSymbolEffect);
+                                    return "You must be wielding a religious symbol or have a free hand.";
+                                })).WithActionCost(1).WithEffectOnSelf((Creature caster) =>
+                                {
+                                    caster.AddQEffect(CreateRaiseSymbolEffect(caster));
+                                }));
+                        }
+                        // If we do have an emblazoned shield, this should be in the item section
+                        else if (emblazonedShield != null && possibilitySection.PossibilitySectionId == PossibilitySectionId.ItemActions)
+                        {
+                            // In this case, we would like to patch the normal "Raise Shield" action to add our effect
+                            PatchActionPossibility(possibilitySection, (ActionPossibility actionPossibility) =>
+                            {
+                                // There's a couple potential Raise Shield variants
+                                if (actionPossibility.CombatAction.Name.StartsWith("Raise shield", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    actionPossibility.CombatAction.EffectOnChosenTargets = Delegates.SmartCombineDelegates(actionPossibility.CombatAction.EffectOnChosenTargets, 
+                                        async (CombatAction spell, Creature caster, ChosenTargets chosenTargets) =>
+                                    {
+                                        caster.AddQEffect(CreateRaiseSymbolEffect(caster));
+                                    });
+                                }
+                            });
+                        }
+                        return null;
 
-                                Item? emblazonedShield = null;
-                                // Check to see if they have the Cleric Warmastered trait on their shield (from that mod's version of the feat)
-                                if (ModManager.TryParse("Emblazoned", out Trait emblazonedTrait))
-                                {
-                                    emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield) && item.HasTrait(emblazonedTrait));
-                                }
-                                // If we don't have that, try to see if they're using our variant
-                                if (emblazonedShield == null)
-                                {
-                                    // I'm more permissive, and let them use any shield if they have the feat.
-                                    // This can misbehave if they have shield1 without the emblazon, and shield2 with emblazon, since they can block with shield1 and
-                                    // won't benefit from the hardness on shield2.
-                                    if (caster.HasFeat(RemasterFeats.FeatName.EmblazonArmament)) {
-                                        emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
-                                    }
-                                }
-                                if (emblazonedShield != null) {
-                                    bool hasShieldBlock = caster.HasEffect(QEffectId.ShieldBlock) || emblazonedShield.HasTrait(Trait.AlwaysOfferShieldBlock);
-                                    QEffect qShieldRaised = QEffect.RaisingAShield(hasShieldBlock);
-                                    if (hasShieldBlock)
-                                    {
-                                        qShieldRaised.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damageStuff, Creature defender) =>
-                                        {
-                                            if (damageStuff.Kind == DamageKind.Bludgeoning || damageStuff.Kind == DamageKind.Piercing || damageStuff.Kind == DamageKind.Slashing)
-                                            {
-                                                int preventHowMuch = Math.Min(emblazonedShield.Hardness, damageStuff.Amount);
-                                                if (await defender.Battle.AskToUseReaction(defender, "You are about to be dealt damage by " + damageStuff.Power?.Name + ".\nUse Shield Block to resist " + preventHowMuch.ToString() + " damage?"))
-                                                {
-                                                    qShieldRaised.YouAreDealtDamage = null;
-                                                    return new ReduceDamageModification(preventHowMuch, "Shield block");
-                                                }
-                                            }
-                                            return null;
-                                        };
-                                    }
-                                    caster.AddQEffect(qShieldRaised);
-                                }
-                            }));
                     };
                 });
 
@@ -223,6 +205,56 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
             // Update the class selection feat to reflect our updated deity list
             ClericClassFeatures.PatchClassDeities();
+        }
+
+        private static QEffect CreateRaiseSymbolEffect(Creature caster)
+        {
+            return new QEffect("Symbol raised", "Your symbol grants you a bonus to saving throws.")
+            {
+                Illustration = IllustrationName.GateAttenuator,
+                CountsAsABuff = true,
+                BonusToDefenses = (QEffect qEffect, CombatAction? action, Defense defense) =>
+                {
+                    switch (defense)
+                    {
+                        case Defense.Fortitude:
+                        case Defense.Reflex:
+                        case Defense.Will:
+                            return new Bonus(2, BonusType.Circumstance, "raised symbol");
+                        default:
+                            return null;
+                    };
+                },
+#if V3
+                AdjustSavingThrowCheckResult = (QEffect qEffect, Defense defense, CombatAction action, CheckResult checkResult) =>
+#else
+                AdjustSavingThrowResult = (QEffect qEffect, CombatAction action, CheckResult checkResult) =>
+#endif
+                {
+                    // We use the old names here so we don't need to bring in symbols from the RemasterSpells mod.
+                    if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Positive) || action.HasTrait(Trait.Negative)))
+                    {
+                        return CheckResult.CriticalSuccess;
+                    }
+                    return checkResult;
+                }
+            }.WithExpirationAtStartOfOwnerTurn();
+        }
+
+        // Walk the tree of possibilities, descending into SubmenuPossibility entries, and applying our patch function to ActionPossibility entries
+        private static void PatchActionPossibility(PossibilitySection possibilitySection, Action<ActionPossibility> patch)
+        {
+            possibilitySection.Possibilities.ForEach((Possibility possibility) =>
+            {
+                if (possibility is ActionPossibility actionPossibility)
+                {
+                    patch(actionPossibility);
+                }
+                else if (possibility is SubmenuPossibility submenuPossibility)
+                {
+                    submenuPossibility.Subsections.ForEach((subsection) => PatchActionPossibility(subsection, patch));
+                }
+            });
         }
     }
 }
