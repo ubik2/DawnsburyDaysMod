@@ -22,7 +22,6 @@ using Humanizer;
 using Dawnsbury.Core.StatBlocks;
 using Dawnsbury.Display;
 using Dawnsbury.Core.Tiles;
-using Dawnsbury.IO;
 
 namespace Dawnsbury.Mods.Remaster.Spellbook
 {
@@ -70,15 +69,30 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // ? Spirit Link
         // ? Thoughtful Gift
 
+        public enum BlessVariant
+        {
+            Bless,
+            Bane,
+            Benediction,
+            Malediction
+        }
+
         public static void RegisterSpells()
         {
             ModManager.ReplaceExistingSpell(SpellId.Bless, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Bless(spellLevel, inCombat, IllustrationName.Bless, true);
+                return Bless(spellLevel, inCombat, IllustrationName.Bless, BlessVariant.Bless);
             });
+
             ModManager.ReplaceExistingSpell(SpellId.Bane, 1, (spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                return Bless(spellLevel, inCombat, IllustrationName.Bane, false);
+                return Bless(spellLevel, inCombat, IllustrationName.Bane, BlessVariant.Bane);
+            });
+
+            // Benediction from Divine Mysteries
+            RemasterSpells.RegisterNewSpell("Benediction", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Bless(spellLevel, inCombat, IllustrationName.Bless, BlessVariant.Benediction);
             });
 
             // Renamed from Burning Hands. Updated traits and description.
@@ -317,7 +331,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             StateCheck = affliction.StateCheck,
                             StartOfSourcesTurn = async (QEffect qfAffliction) =>
                             {
+#if V3
+                                CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, diseaseAction, Defense.Fortitude, affliction.DC);
+#else
                                 CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, diseaseAction, Defense.Fortitude, (Creature? _) => affliction.DC);
+#endif
                                 Affliction.AdjustValue(qfAffliction, startOfTurnResult, affliction.MaximumStage);
                                 if (qfAffliction.Value > 0)
                                 {
@@ -335,7 +353,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 });
             });
 
-            // Grease - I wanted to shift to the contiguous squares target
+            // Grease - I wanted to shift to the contiguous squares target, but replacing the usual causes issues for the scripted scenario targeting
             //ModManager.ReplaceExistingSpell(SpellId.Grease, 1, (sspellcaster, spellLevel, inCombat, spellInformation) =>
             //{
             //    return Spells.CreateModern(IllustrationName.Grease, "Grease", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
@@ -411,6 +429,12 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         caster.AddQEffect(sustainEffect);
                     }
                 });
+            });
+
+            // Malediction from Divine Mysteries
+            RemasterSpells.RegisterNewSpell("Malediction", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
+            {
+                return Bless(spellLevel, inCombat, IllustrationName.Bane, BlessVariant.Malediction);
             });
 
             // Mud Pit from PC2
@@ -592,7 +616,12 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             // Runic Body (formerly Magic Fang)
             RemasterSpells.RegisterNewSpell("RunicBody", 1, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
             {
-                static bool IsValidTargetForRunicBody(Item? item)
+                static bool IsValidTargetForRunicBody(Creature creature)
+                {
+                    return GetUnarmedStrikeItems(creature).Any((item) => IsValidItemForRunicBody(item));
+                }
+
+                static bool IsValidItemForRunicBody(Item? item)
                 {
                     if (item != null && item.HasTrait(Trait.Unarmed) && item.WeaponProperties != null)
                     {
@@ -605,19 +634,38 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     return false;
                 }
 
+                static List<Item> GetUnarmedStrikeItems(Creature creature)
+                {
+                    List<Item> unarmedStrikes = new List<Item>();
+                    if (creature.UnarmedStrike != null)
+                    {
+                        unarmedStrikes.Add(creature.UnarmedStrike);
+                    }
+                    foreach (QEffect effect in creature.QEffects)
+                    {
+                        if (effect.AdditionalUnarmedStrike != null)
+                        {
+                            unarmedStrikes.Add(effect.AdditionalUnarmedStrike);
+                        }
+                    }
+                    return unarmedStrikes;
+                }
+
                 return Spells.CreateModern(IllustrationName.KineticRam, "Runic Body", [Trait.Concentrate, Trait.Manipulate, Trait.Arcane, Trait.Divine, Trait.Occult, Trait.Primal, RemasterSpells.Trait.Remaster],
                     "Glowing runes appear on the target’s body.",
                     "All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
                     Target.AdjacentFriendOrSelf()
-                .WithAdditionalConditionOnTargetCreature((Creature a, Creature d) => IsValidTargetForRunicBody(d.UnarmedStrike) ? Usability.Usable : Usability.CommonReasons.TargetIsNotPossibleForComplexReason), spellLevel, null)
+                .WithAdditionalConditionOnTargetCreature((Creature a, Creature d) => IsValidTargetForRunicBody(d) ? Usability.Usable : Usability.CommonReasons.TargetIsNotPossibleForComplexReason), spellLevel, null)
                 .WithSoundEffect(SfxName.MagicWeapon)
                 .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
                 {
-                    Item? item = target.UnarmedStrike;
-                    if (item != null && item.WeaponProperties != null)
+                    foreach (Item item in GetUnarmedStrikeItems(target)) 
                     {
-                        item.WeaponProperties.DamageDieCount = 2;
-                        item.WeaponProperties.ItemBonus = 1;
+                        if (IsValidItemForRunicBody(item))
+                        {
+                            item.WeaponProperties!.DamageDieCount = 2;
+                            item.WeaponProperties!.ItemBonus = 1;
+                        }
                     }
                     // Expiration is long enough that we don't need to worry about restoring the item.
                     // I create a buff icon, since otherwise it's not clear that your fist is buffed.
@@ -685,7 +733,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     S.FourDegreesOfSuccess("The creature is unaffected.", "The creature is distracted by its amusement and takes a -1 status penalty on Perception checks and Will saves for 1 round.",
                         "The creature is overcome by its amusement and is stupefied 1 for 1 round.", "The creature is lost in its amusement and is stupefied 2 for 1 round and stunned 1."),
                     Target.Uncastable(), spellLevel, null).WithActionCost(-2).WithSoundEffect(SfxName.DeathsCall)
+#if V3
+                    .WithCastsAsAReaction((QEffect qEffect, CombatAction spell, Func<bool> hasResources) =>
+#else
                     .WithCastsAsAReaction((QEffect qEffect, CombatAction spell) =>
+#endif
                     {
                         qEffect.AfterYouAreTargeted = async (effect, action) =>
                         {
@@ -695,7 +747,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                 {
                                     if (await effect.Owner.AskToUseReaction("You critically failed against " + action.Name + ". Use Schadenfreude on " + action.Owner.Name + "?"))
                                     {
-                                        CheckResult targetResult = CommonSpellEffects.RollSavingThrow(action.Owner, spell, Defense.Will, (Creature? _) => spell.SpellcastingSource!.GetSpellSaveDC());
+                                        CheckResult targetResult = CommonSpellEffects.RollSpellSavingThrow(action.Owner, spell, Defense.Will);
                                         switch (targetResult)
                                         {
                                             case CheckResult.CriticalSuccess:
@@ -756,7 +808,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     else
                     {
                         Affliction affliction = CreateSpiderVenom(target, spell.SpellcastingSource.GetSpellSaveDC());
-                        CombatAction afflictionAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, new Trait[1] { Trait.Poison }, "", Target.Self());
+                        CombatAction afflictionAction = new CombatAction(caster, IllustrationName.BadUnspecified, affliction.Name, [ Trait.Poison ], "", Target.Self());
                         await target.AddAffliction(affliction.MaximumStage, EnterStage, new QEffect(affliction.Name + ", Stage", affliction.StagesDescription, ExpirationCondition.Never, caster, IllustrationName.AcidSplash)
                         {
                             Id = affliction.Id,
@@ -764,7 +816,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             StateCheck = affliction.StateCheck,
                             StartOfSourcesTurn = async (QEffect qfAffliction) =>
                             {
+#if V3
+                                CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, afflictionAction, Defense.Fortitude, affliction.DC);
+#else
                                 CheckResult startOfTurnResult = CommonSpellEffects.RollSavingThrow(target, afflictionAction, Defense.Fortitude, (Creature? _) => affliction.DC);
+#endif
                                 Affliction.AdjustValue(qfAffliction, startOfTurnResult, affliction.MaximumStage);
                                 if (qfAffliction.Value > 0)
                                 {
@@ -925,19 +981,78 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
             return qEffect;
         }
 
-        public static CombatAction Bless(int level, bool _inCombat, IllustrationName illustration, bool isBless)
+        public static CombatAction Bless(int level, bool _inCombat, IllustrationName illustration, BlessVariant variant)
         {
-            return Spells.CreateModern(illustration, isBless ? "Bless" : "Bane", [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
-                isBless ? "Blessings from beyond help your companions strike true." :
-                    "You fill the minds of your enemies with doubt.",
-                "{b}Area{/b} 15-foot emanation\n\n" +
-                (isBless ? "You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane." :
-                    "Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract bless."),            
-                Target.Self(), level, null).WithSoundEffect(isBless ? SfxName.Bless : SfxName.Fear).WithEffectOnSelf(async (CombatAction action, Creature self) => 
+            string spellName = variant switch
             {
-                int initialRadius = isBless ? 3 : 2;
-                AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(isBless ? IllustrationName.BlessCircle : IllustrationName.BaneCircle, initialRadius);
-                QEffect qEffect = new QEffect(isBless ? "Bless" : "Bane", "[this condition has no description]", ExpirationCondition.Never, self, IllustrationName.None)
+                BlessVariant.Bless => "Bless",
+                BlessVariant.Bane => "Bane",
+                BlessVariant.Benediction => "Benediction",
+                BlessVariant.Malediction => "Malediction",
+                _ => throw new NotImplementedException(),
+            };
+            string flavorText = variant switch
+            {
+                BlessVariant.Bless => "Blessings from beyond help your companions strike true.",
+                BlessVariant.Bane => "You fill the minds of your enemies with doubt.",
+                BlessVariant.Benediction => "Divine protection helps protect your companions.",
+                BlessVariant.Malediction => "You incite distress in the minds of your enemies, making it more difficult for them to defend themselves.",
+                _ => throw new NotImplementedException(),
+            };
+            string description = variant switch
+            {
+                BlessVariant.Bless => "{b}Area{/b} 15-foot emanation\n\n" + 
+                "You and your allies gain a +1 status bonus to attack rolls while within the emanation. " + 
+                "Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane.",
+                BlessVariant.Bane => "{b}Area{/b} 15-foot emanation\n\n" + 
+                "Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. " +
+                "Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract bless.",
+                BlessVariant.Benediction => "{b}Area{/b} 15-foot emanation\n\n" + 
+                "You and your allies gain a +1 status bonus to AC while within the emanation. " + 
+                "Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Benediction can counteract malediction.",
+                BlessVariant.Malediction => "{b}Area{/b} 15-foot emanation\n\n" + 
+                "Enemies in the area must succeed at a Will save or take a –1 status penalty to AC as long as they're in the area. " + 
+                "Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt a saving throw. Malediction can counteract benediction.",
+                _ => throw new NotImplementedException(),
+            };
+            Trait[] traits = variant switch
+            {
+                BlessVariant.Bless => [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],
+                BlessVariant.Bane => [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, Trait.Occult, RemasterSpells.Trait.Remaster],                
+                BlessVariant.Benediction => [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, RemasterSpells.Trait.Remaster],
+                BlessVariant.Malediction => [Trait.Aura, Trait.Concentrate, Trait.Manipulate, Trait.Mental, Trait.Divine, RemasterSpells.Trait.Remaster],
+                _ => throw new NotImplementedException(),
+            };
+            SfxName soundEffect = variant switch
+            {
+                BlessVariant.Bless => SfxName.Bless,
+                BlessVariant.Bane => SfxName.Fear,
+                BlessVariant.Benediction => SfxName.Bless,
+                BlessVariant.Malediction => SfxName.Fear,
+                _ => throw new NotImplementedException(),
+            };
+            int initialRadius = variant switch
+            {
+                BlessVariant.Bless => 3,
+                BlessVariant.Bane => 2,
+                BlessVariant.Benediction => 3,
+                BlessVariant.Malediction => 2,
+                _ => throw new NotImplementedException(),
+            };
+            IllustrationName illustrationName = variant switch
+            {
+                BlessVariant.Bless => IllustrationName.BlessCircle,
+                BlessVariant.Bane => IllustrationName.BaneCircle,
+                BlessVariant.Benediction => IllustrationName.BlessCircle,
+                BlessVariant.Malediction => IllustrationName.BaneCircle,
+                _ => throw new NotImplementedException(),
+            };
+            bool isBuff = (variant == BlessVariant.Bless || variant == BlessVariant.Malediction);
+            return Spells.CreateModern(illustration, spellName, traits, flavorText, "{b}Area{/b} 15-foot emanation\n\n" + description,          
+                Target.Self(), level, null).WithSoundEffect(soundEffect).WithEffectOnSelf(async (CombatAction action, Creature self) => 
+            {
+                AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(illustrationName, initialRadius);
+                QEffect qEffect = new QEffect(spellName, "[this condition has no description]", ExpirationCondition.Never, self, IllustrationName.None)
                 {
                     WhenExpires = (_) =>
                     {
@@ -957,13 +1072,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         if (qfBless?.Tag != null)
                         {
                             (int, bool) tag = ((int, bool))qfBless.Tag;
-                            return (!tag.Item2) ? new ActionPossibility(new CombatAction(qfBless.Owner, illustration, isBless ? "Increase Bless radius" : "Increase Bane radius", new Trait[1] { Trait.Concentrate }, "Increase the radius of the " + (isBless ? "bless" : "bane") + " emanation by 5 feet.", Target.Self())
+                            return (!tag.Item2) ? new ActionPossibility(new CombatAction(qfBless.Owner, illustration, "Increase " + spellName + " radius", new Trait[1] { Trait.Concentrate }, "Increase the radius of the " + spellName + " emanation by 5 feet.", Target.Self())
                                 .WithEffectOnSelf((_) =>
                                 {
                                     int newEmanationSize = tag.Item1 + 2;
                                     qfBless.Tag = (newEmanationSize, true);
                                     auraAnimation.MoveTo(newEmanationSize);
-                                    if (!isBless)
+                                    if (!isBuff)
                                     {
                                         foreach (Creature item in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= newEmanationSize && cr.EnemyOf(qfBless.Owner)))
                                         {
@@ -978,67 +1093,135 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                         }
                     }
                 };
-                if (isBless)
-                {
-                    auraAnimation.Color = Color.Yellow;
-                    qEffect.StateCheck = (QEffect qfBless) =>
-                    {
-                        if (qfBless?.Tag != null)
+                switch (variant) {
+                    case BlessVariant.Bless:
                         {
-                            int emanationSize2 = (((int, bool))qfBless.Tag).Item1;
-                            foreach (Creature item2 in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= emanationSize2 && cr.FriendOf(qfBless.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
+                            auraAnimation.Color = Color.Yellow;
+                            qEffect.StateCheck = (QEffect qfBless) =>
                             {
-                                item2.AddQEffect(new QEffect("Bless", "You gain a +1 status bonus to attack rolls.", ExpirationCondition.Ephemeral, qfBless.Owner, IllustrationName.Bless)
+                                if (qfBless?.Tag != null)
                                 {
-                                    CountsAsABuff = true,
-                                    BonusToAttackRolls = (QEffect qfBlessed, CombatAction attack, Creature? de) => attack.HasTrait(Trait.Attack) ? new Bonus(1, BonusType.Status, "bless") : null
-                                });
-                            }
-                        }
-                    };
-                }
-                else
-                {
-                    qEffect.StateCheckWithVisibleChanges = async (QEffect qfBane) =>
-                    {
-                        if (qfBane?.Tag != null)
-                        {
-
-                            int emanationSize = (((int, bool))qfBane.Tag).Item1;
-                            foreach (Creature item3 in qfBane.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBane.Owner) <= emanationSize && cr.EnemyOf(qfBane.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
-                            {
-                                if (!item3.QEffects.Any((QEffect qf) => qf.ImmuneToTrait == Trait.Mental))
-                                {
-                                    if (item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.FailedAgainstBane && qf.Tag == qfBane))
+                                    int emanationSize2 = (((int, bool))qfBless.Tag).Item1;
+                                    foreach (Creature item2 in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= emanationSize2 && cr.FriendOf(qfBless.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
                                     {
-                                        item3.AddQEffect(new QEffect("Bane", "You take a -1 status penalty to attack rolls.", ExpirationCondition.Ephemeral, qfBane.Owner, IllustrationName.Bane)
+                                        item2.AddQEffect(new QEffect(spellName, "You gain a +1 status bonus to attack rolls.", ExpirationCondition.Ephemeral, qfBless.Owner, illustrationName)
                                         {
-                                            Key = "BanePenalty",
-                                            BonusToAttackRolls = (QEffect qfBlessed, CombatAction attack, Creature? de) => attack.HasTrait(Trait.Attack) ? new Bonus(-1, BonusType.Status, "bane") : null
+                                            CountsAsABuff = true,
+                                            BonusToAttackRolls = (QEffect qfBlessed, CombatAction attack, Creature? de) => attack.HasTrait(Trait.Attack) ? new Bonus(1, BonusType.Status, "bless") : null
                                         });
                                     }
-                                    else if (!item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBane))
+                                }
+                            };
+                        }
+                        break;
+                    case BlessVariant.Bane: {
+                            qEffect.StateCheckWithVisibleChanges = async (QEffect qfBane) =>
+                            {
+                                if (qfBane?.Tag != null)
+                                {
+                                    int emanationSize = (((int, bool))qfBane.Tag).Item1;
+                                    foreach (Creature item3 in qfBane.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBane.Owner) <= emanationSize && cr.EnemyOf(qfBane.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
                                     {
-                                        CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(item3, action, Defense.Will);
-                                        item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        if (!item3.QEffects.Any((QEffect qf) => qf.ImmuneToTrait == Trait.Mental))
                                         {
-                                            Id = QEffectId.RolledAgainstBane,
-                                            Tag = qfBane
-                                        });
-                                        if (checkResult <= CheckResult.Failure)
-                                        {
-                                            item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                            if (item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.FailedAgainstBane && qf.Tag == qfBane))
                                             {
-                                                Id = QEffectId.FailedAgainstBane,
-                                                Tag = qfBane
-                                            });
+                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to attack rolls.", ExpirationCondition.Ephemeral, qfBane.Owner, IllustrationName.Bane)
+                                                {
+                                                    Key = "BanePenalty",
+                                                    BonusToAttackRolls = (QEffect qfBlessed, CombatAction attack, Creature? de) => attack.HasTrait(Trait.Attack) ? new Bonus(-1, BonusType.Status, "bane") : null
+                                                });
+                                            }
+                                            else if (!item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBane))
+                                            {
+                                                CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(item3, action, Defense.Will);
+                                                item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                {
+                                                    Id = QEffectId.RolledAgainstBane,
+                                                    Tag = qfBane
+                                                });
+                                                if (checkResult <= CheckResult.Failure)
+                                                {
+                                                    item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                    {
+                                                        Id = QEffectId.FailedAgainstBane,
+                                                        Tag = qfBane
+                                                    });
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
+                            };
                         }
-                    };
+                        break;
+                    case BlessVariant.Benediction:
+                        {
+                            auraAnimation.Color = Color.Yellow;
+                            qEffect.StateCheck = (QEffect qfBless) =>
+                            {
+                                if (qfBless?.Tag != null)
+                                {
+                                    int emanationSize2 = (((int, bool))qfBless.Tag).Item1;
+                                    foreach (Creature item2 in qfBless.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBless.Owner) <= emanationSize2 && cr.FriendOf(qfBless.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
+                                    {
+                                        item2.AddQEffect(new QEffect(spellName, "You gain a +1 status bonus to AC.", ExpirationCondition.Ephemeral, qfBless.Owner, illustrationName)
+                                        {
+                                            CountsAsABuff = true,
+                                            BonusToDefenses = (QEffect qfBlessed, CombatAction? _, Defense defense) => defense == Defense.AC ? new Bonus(1, BonusType.Status, "benediction") : null
+                                        });
+                                    }
+                                }
+                            };
+                        }
+                        break;
+                    case BlessVariant.Malediction:
+                        {
+                            qEffect.StateCheckWithVisibleChanges = async (QEffect qfBane) =>
+                            {
+                                if (qfBane?.Tag != null)
+                                {
+                                    int emanationSize = (((int, bool))qfBane.Tag).Item1;
+                                    foreach (Creature item3 in qfBane.Owner.Battle.AllCreatures.Where((Creature cr) => cr.DistanceTo(qfBane.Owner) <= emanationSize && cr.EnemyOf(qfBane.Owner) && !cr.HasTrait(Trait.Mindless) && !cr.HasTrait(Trait.Object)))
+                                    {
+                                        if (!item3.QEffects.Any((QEffect qf) => qf.ImmuneToTrait == Trait.Mental))
+                                        {
+                                            // We'll use the same effect id, but since the tag references our effect, we know it's Malediction instead of Bane
+                                            if (item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.FailedAgainstBane && qf.Tag == qfBane))
+                                            {
+                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to AC.", ExpirationCondition.Ephemeral, qfBane.Owner, IllustrationName.Bane)
+                                                {
+                                                    Key = "MaledictionPenalty",
+                                                    BonusToDefenses = (QEffect qfBlessed, CombatAction? _, Defense defense) => defense == Defense.AC ? new Bonus(-1, BonusType.Status, "malediction") : null
+                                                });
+                                            }
+                                            else if (!item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.RolledAgainstBane && qf.Tag == qfBane))
+                                            {
+                                                CheckResult checkResult = CommonSpellEffects.RollSpellSavingThrow(item3, action, Defense.Will);
+                                                item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                {
+                                                    Id = QEffectId.RolledAgainstBane,
+                                                    Tag = qfBane
+                                                });
+                                                if (checkResult <= CheckResult.Failure)
+                                                {
+                                                    item3.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                    {
+                                                        Id = QEffectId.FailedAgainstBane,
+                                                        Tag = qfBane
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            };
+                        }
+                        break;
+                    default:
+                        break;
                 }
+                // FIXME: this function is way too long
 
                 self.AddQEffect(qEffect);
             });

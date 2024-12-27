@@ -31,6 +31,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
             // Cleric - we also have the deity selection feats and the fonds, which aren't included here
             public static readonly Core.CharacterBuilder.Feats.FeatName DivineCastigation = ModManager.RegisterFeatName("DivineCastigation", "Divine Castigation");
             public static readonly Core.CharacterBuilder.Feats.FeatName PanicTheDead = ModManager.RegisterFeatName("PanicTheDead", "Panic the Dead");
+            public static readonly Core.CharacterBuilder.Feats.FeatName EmblazonArmament = ModManager.RegisterFeatName("EmblazonArmament", "Emblazon Armament");
             public static readonly Core.CharacterBuilder.Feats.FeatName WarpriestsArmor = ModManager.RegisterFeatName("WarpriestsArmor", "Warpriest's Armor");
             public static readonly Core.CharacterBuilder.Feats.FeatName ChannelSmite = ModManager.RegisterFeatName("ChannelSmite", "Channel Smite");
             public static readonly Core.CharacterBuilder.Feats.FeatName RaiseSymbol = ModManager.RegisterFeatName("RaiseSymbol", "Raise Symbol");

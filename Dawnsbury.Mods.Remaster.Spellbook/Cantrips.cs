@@ -215,10 +215,11 @@ public class Cantrips
         // Live Wire
         RemasterSpells.RegisterNewSpell("LiveWire", 0, (spellId, spellcaster, spellLevel, inCombat, spellInformation) =>
         {
-            const int heightenStep = 1;
+            const int heightenStep = 2;
+            int heightenIncrements = (spellLevel - 1) / heightenStep;
             return Spells.CreateModern(IllustrationName.ElectricArc, "Live Wire", [Trait.Attack, Trait.Cantrip, Trait.Concentrate, Trait.Electricity, Trait.Manipulate, Trait.Metal, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You conjure up a length of sharp copper filament humming with electrical current that strikes out at your foe.",
-                "The wire deals " + S.HeightenedVariable(spellLevel, 1) + "d4 slashing damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 electricity damage, depending on your spell attack roll against the target’s AC." +
+                "The wire deals " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d4 slashing damage and " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d4 electricity damage, depending on your spell attack roll against the target’s AC." +
                 S.FourDegreesOfSuccess("The target takes double damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent electricity damage.",
                         "The target takes full damage.", "The target takes the electricity damage, but not the slashing damage.", "The target is unaffected.") +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The slashing damage, initial electricity damage, and persistent electricity damage on a critical hit each increase by 1d4."),
@@ -228,16 +229,17 @@ public class Cantrips
             .WithGoodnessAgainstEnemy((Target t, Creature a, Creature d) => (float)(spellLevel * 5f))
             .WithEffectOnEachTarget(async (CombatAction spell, Creature caster, Creature target, CheckResult checkResult) =>
             {
+                int dice = 1 + heightenIncrements;
                 await CommonSpellEffects.DealAttackRollDamage(spell, caster, target, checkResult,
-                    new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Slashing),
-                    new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity));
+                    new KindedDamage(DiceFormula.FromText(dice + "d4", spell.Name), DamageKind.Slashing),
+                    new KindedDamage(DiceFormula.FromText(dice + "d4", spell.Name), DamageKind.Electricity));
                 if (checkResult == CheckResult.CriticalSuccess)
                 {
-                    target.AddQEffect(QEffect.PersistentDamage((spellLevel + "d4").ToString(), DamageKind.Electricity));
+                    target.AddQEffect(QEffect.PersistentDamage((dice + "d4"), DamageKind.Electricity));
                 }
                 if (checkResult == CheckResult.Failure)
                 {
-                    await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText(spellLevel + "d4", spell.Name), DamageKind.Electricity)], false));
+                    await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText(dice + "d4", spell.Name), DamageKind.Electricity)], false));
                 }
             });
         });
@@ -249,7 +251,7 @@ public class Cantrips
             int heightenIncrements = (spellLevel - 1) / heightenStep;
             return Spells.CreateModern(IllustrationName.AncientDust, "Puff of Poison", [Trait.Cantrip, Trait.Concentrate, Trait.Manipulate, Trait.Poison, Trait.Arcane, Trait.Primal, RemasterSpells.Trait.Remaster],
                 "You exhale a shimmering cloud of toxic breath at an enemy's face.",
-                "The target takes " + S.HeightenedVariable(spellLevel, 1) + "d4 poison damage and " + S.HeightenedVariable(spellLevel, 1) + "d4 persistent poison damage, depending on its Fortitude save." +
+                "The target takes " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d4 poison damage and " + S.HeightenedVariable(1 + heightenIncrements, 1) + "d4 persistent poison damage, depending on its Fortitude save." +
                 S.FourDegreesOfSuccess("The creature is unaffected.", "The target takes half initial damage and no persistent damage.", "The target takes full initial and persistent damage.", "The target takes double initial and persistent damage.") +
                 S.HeightenText(spellLevel, 1, inCombat, "{b}Heightened (+" + heightenStep + "){/b} The initial poison damage increases by 1d4, and the persistent poison damage increases by 1d4."),
                 Target.Ranged(2), spellLevel, SpellSavingThrow.Basic(Defense.Fortitude))

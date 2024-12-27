@@ -61,6 +61,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Enlarge (creature sizes not supported)
         // * Ghostly Carrier (creature management)
         // * Paranoia
+        // * Reaper's Lantern (not sure how to halve healing)
         // * Shrink (creature sizes not supported)
         // * Silence
         // The following are in limbo
@@ -69,7 +70,6 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
         // * Share Life
         // * Sound Body
 
-        // Reaper's Lantern
 
         public static void RegisterSpells()
         {
@@ -99,7 +99,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     int moveDistance = checkResult switch { CheckResult.Success => 1, CheckResult.Failure => 2, CheckResult.CriticalFailure => 4, _ => 0 };
                     if (moveDistance > 0)
                     {
+#if V3
+                        await CommonSpellEffects.Slide(caster, target, moveDistance, null);
+#else
                         await CommonSpellEffects.Slide(caster, target, moveDistance);
+#endif
                     }
                 });
             });
@@ -231,7 +235,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                             StateCheck = (_) => { tile.DifficultTerrain = true; },
                             AfterCreatureBeginsItsTurnHere = async (Creature creature) =>
                             {
+#if V3
+                                CheckResult checkResult = CommonSpellEffects.RollSavingThrow(creature, CombatAction.CreateSimple(creature, "Push Through Entangling Flora"), Defense.Reflex, spellDC);
+#else
                                 CheckResult checkResult = CommonSpellEffects.RollSavingThrow(creature, CombatAction.CreateSimple(creature, "Push Through Entangling Flora"), Defense.Reflex, (_) => spellDC);
+#endif
                                 QEffect? entangledEffect = null;
                                 if (checkResult == CheckResult.Failure)
                                 {

@@ -63,7 +63,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                             // TODO: also need to check to see if we do damage
                             if (checkResult >= CheckResult.Success)
                             {
-                                CombatAction tripAction = Possibilities.CreateTrip(caster);
+                                CombatAction tripAction = CombatManeuverPossibilities.CreateTripAction(caster, item);
                                 tripAction.ChosenTargets = new ChosenTargets
                                 {
                                     ChosenCreature = target

@@ -9,6 +9,7 @@ using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 {
@@ -59,16 +60,35 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                     qf.Id = QEffectId.HolyCastigation;
                 });
 
+            // Emblazon Armament
+            yield return new TrueFeat(RemasterFeats.FeatName.EmblazonArmament, 2, "Carefully etching a sacred image into a physical object, you steel yourself for battle.",
+                "You can spend 10 minutes emblazoning a symbol of your deity upon a weapon or shield. The symbol doesn't fade until 1 year has passed, but if you Emblazon an Armament, any symbol you previously emblazoned, and any symbol already emblazoned on that item instantly disappears. The emblazoned item is a religious symbol of your deity in addition to its normal purpose, and it gains another benefit determined by the type of item. The benefit applies only to followers of the deity the symbol represents, but others can use the item normally..",
+                [Trait.Cleric]) // Also Exploration, but that's not implemented
+                .WithPermanentQEffect("Your holy symbol is emblazoned on your shield.", (QEffect qf) =>
+                {
+                    qf.Description = "The shield gains a +1 status bonus to its Hardness.";
+                    qf.StartOfCombat = async (QEffect qf2) =>
+                    {
+                        Item? shield = qf2.Owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                        if (shield != null)
+                        {
+                            shield.Hardness += 1;
+                        }
+                    };
+                });
+                       
             // Panic the Dead (formerly Turn Undead)
             // I don't hide the Turn Undead feat like I should
+            // FIXME: This is not implemented, but I don't want to remove it in case someone is using it
             yield return new TrueFeat(RemasterFeats.FeatName.PanicTheDead, 2, "Vitality strikes terror in the undead.",
                 "When you use a {i}heal{/i} spell to damage undead, any undead that fails its saving throw is also frightened 1. If it critically failed, the creature also gains the fleeing condition until the start of your next turn. Mindless undead are not immune to this effect due to being mindless.",
                 [Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental])
                 .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.AllFeats.Any(feat => feat.FeatName == FeatName.Warpriest), "You must be a warpriest.")
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.HeavyArmor, Proficiency.Trained));
-
+            
             // Warpriest's Armor
             // The bulk reduction isn't implemented, since the game uses inventory slots instead of bulk.
+            // We don't advance the proficiency, since that doesn't apply until level 13, and the game doesn't go that high
             yield return new TrueFeat(RemasterFeats.FeatName.WarpriestsArmor, 2, "Your training has helped you adapt to ever - heavier armor.",
                 "You are trained in heavy armor. Whenever you gain a class feature that grants you expert or greater proficiency in medium armor, you also gain that proficiency in heavy armor. You treat armor you wear of 2 Bulk or higher as though it were 1 Bulk lighter (to a minimum of 1 Bulk).",
                 [Trait.Cleric])
@@ -109,8 +129,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                             return null;
                         }
                         return new ActionPossibility(new CombatAction(qEffect.Owner, IllustrationName.GateAttenuator, "Raise Symbol", [Trait.Cleric],
-                            "You present your religious symbol emphatically.",
-                            // "\n\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield." +
+                            "You present your religious symbol emphatically." +
+                            "\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield.",
                             Target.Self().WithAdditionalRestriction((Creature caster) =>
                             {
                                 return caster.HasFreeHand ? null : "You must be wielding a religious symbol or have a free hand.";
@@ -122,7 +142,8 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                     CountsAsABuff = true,
                                     BonusToDefenses = (QEffect qEffect, CombatAction? action, Defense defense) =>
                                     {
-                                        switch (defense) {
+                                        switch (defense)
+                                        {
                                             case Defense.Fortitude:
                                             case Defense.Reflex:
                                             case Defense.Will:
@@ -146,6 +167,44 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                     }
                                 }.WithExpirationAtStartOfOwnerTurn();
                                 caster.AddQEffect(raisedSymbolEffect);
+
+                                Item? emblazonedShield = null;
+                                // Check to see if they have the Cleric Warmastered trait on their shield (from that mod's version of the feat)
+                                if (ModManager.TryParse("Emblazoned", out Trait emblazonedTrait))
+                                {
+                                    emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield) && item.HasTrait(emblazonedTrait));
+                                }
+                                // If we don't have that, try to see if they're using our variant
+                                if (emblazonedShield == null)
+                                {
+                                    // I'm more permissive, and let them use any shield if they have the feat.
+                                    // This can misbehave if they have shield1 without the emblazon, and shield2 with emblazon, since they can block with shield1 and
+                                    // won't benefit from the hardness on shield2.
+                                    if (caster.HasFeat(RemasterFeats.FeatName.EmblazonArmament)) {
+                                        emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                                    }
+                                }
+                                if (emblazonedShield != null) {
+                                    bool hasShieldBlock = caster.HasEffect(QEffectId.ShieldBlock) || emblazonedShield.HasTrait(Trait.AlwaysOfferShieldBlock);
+                                    QEffect qShieldRaised = QEffect.RaisingAShield(hasShieldBlock);
+                                    if (hasShieldBlock)
+                                    {
+                                        qShieldRaised.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damageStuff, Creature defender) =>
+                                        {
+                                            if (damageStuff.Kind == DamageKind.Bludgeoning || damageStuff.Kind == DamageKind.Piercing || damageStuff.Kind == DamageKind.Slashing)
+                                            {
+                                                int preventHowMuch = Math.Min(emblazonedShield.Hardness, damageStuff.Amount);
+                                                if (await defender.Battle.AskToUseReaction(defender, "You are about to be dealt damage by " + damageStuff.Power?.Name + ".\nUse Shield Block to resist " + preventHowMuch.ToString() + " damage?"))
+                                                {
+                                                    qShieldRaised.YouAreDealtDamage = null;
+                                                    return new ReduceDamageModification(preventHowMuch, "Shield block");
+                                                }
+                                            }
+                                            return null;
+                                        };
+                                    }
+                                    caster.AddQEffect(qShieldRaised);
+                                }
                             }));
                     };
                 });
