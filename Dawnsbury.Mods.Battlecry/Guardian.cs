@@ -131,7 +131,7 @@ namespace Dawnsbury.Mods.Battlecry
                                     // We only take damage if the amount is greater than zero (no healing and no minimum 1 for 0 damage).
                                     if (protectorDamage > 0)
                                     {
-                                        await protector.DealDirectDamage(new DamageEvent(damageStuff.Power, protector, CheckResult.Success, [new KindedDamage(DiceFormula.FromText(protectorDamage.ToString()), damageStuff.Kind)]));
+                                        await CommonSpellEffects.DealDirectDamage(new DamageEvent(damageStuff.Power, protector, CheckResult.Success, [new KindedDamage(DiceFormula.FromText(protectorDamage.ToString()), damageStuff.Kind)]));
                                     }
                                     return new SetToTargetNumberModification(0, "An ally used Intercept Strike to take the damage instead of you.");
                                 }
@@ -166,7 +166,7 @@ namespace Dawnsbury.Mods.Battlecry
                 [BattlecryMod.Trait.Guardian], null)
                 .WithPermanentQEffect("When you push a foe away, you put the entire force of your armored form into it.", (qEffect) => qEffect.ProvideMainAction = (qfUnkindShove) =>
                 {
-                    CombatAction unkindShove = Possibilities.CreateShove(qEffect.Owner);
+                    CombatAction unkindShove = CombatManeuverPossibilities.CreateShoveAction(qEffect.Owner, qEffect.Owner.UnarmedStrike);
                     int damage = Math.Max(0, qEffect.Owner.Abilities.Strength);
                     unkindShove.Name = "Unkind Shove";
                     unkindShove.Description = "You have at least one hand free. The target can't be more than one size larger than you. You push a creature away from you. Attempt an Athletics check against your target's Fortitude DC." +
@@ -178,7 +178,7 @@ namespace Dawnsbury.Mods.Battlecry
                     {
                         if (checkResult >= CheckResult.Success && caster.Abilities.Strength >= 0)
                         {
-                            await caster.DealDirectDamage(new DamageEvent(action, target, checkResult,
+                            await CommonSpellEffects.DealDirectDamage(new DamageEvent(action, target, checkResult,
                                 [new KindedDamage(DiceFormula.FromText(caster.Abilities.Strength.ToString()), DamageKind.Bludgeoning)], checkResult == CheckResult.CriticalSuccess));
                         }
                     };
@@ -312,7 +312,7 @@ namespace Dawnsbury.Mods.Battlecry
                 "Stride and then Leap. If you end your movement adjacent to a foe, you can attempt to Trip that foe. If you succeed at the Athletics check, you get a critical success. You can use Flying Tackle while Burrowing, Climbing, Flying, or Swimming instead of Striding if you have the corresponding movement type.",
                 [Trait.Flourish, BattlecryMod.Trait.Guardian], null).WithActionCost(2)
                 .WithPermanentQEffect("Stride twice, then make a melee Strike.", (qf) => qf.ProvideMainAction = (qfSelf) => new ActionPossibility(new CombatAction(qfSelf.Owner, IllustrationName.FleetStep, "Flying Tackle", [Trait.Flourish, Trait.Move, BattlecryMod.Trait.Guardian],
-                    "Stride and then Leap. If you end your movement adjacent to a foe, you can attempt to Trip that foe. If you succeed at the Athletics check, you get a critical succes", Target.Self()).WithActionCost(2).WithSoundEffect(SfxName.Footsteps)
+                    "Stride and then Leap. If you end your movement adjacent to a foe, you can attempt to Trip that foe. If you succeed at the Athletics check, you get a critical success.", Target.Self()).WithActionCost(2).WithSoundEffect(SfxName.Footsteps)
                     .WithEffectOnSelf(async (action, self) =>
                     {
                         if (!await self.StrideAsync("Choose where to Stride with Flying Tackle.", allowCancel: true))
@@ -390,7 +390,7 @@ namespace Dawnsbury.Mods.Battlecry
         private static async Task TripAdjacentCreature(Creature creature, Func<CombatAction, CheckResult, CheckResult>? adjustCheckResult = null)
         {
             List<Option> list = new List<Option>();
-            CombatAction baseTrip = Possibilities.CreateTrip(creature);
+            CombatAction baseTrip = CombatManeuverPossibilities.CreateTripAction(creature, creature.UnarmedStrike);
             Delegates.EffectOnEachTarget? baseEffectOnOneTarget = baseTrip.EffectOnOneTarget;
             CombatAction combatAction = baseTrip.WithActionCost(0).WithEffectOnEachTarget(async (CombatAction power, Creature a, Creature t, CheckResult sk) =>
             {

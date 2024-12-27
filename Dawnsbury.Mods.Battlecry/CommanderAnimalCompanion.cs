@@ -7,6 +7,7 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
+using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
@@ -170,7 +171,8 @@ namespace Dawnsbury.Mods.Battlecry
                                     if (!action.HasTrait(Trait.Strike) || !defender.IsAdjacentTo(companion))
                                         return;
                                     await companion.FictitiousSingleTileMove(defender.Occupies);
-                                    await companion.DealDirectDamage(null, DiceFormula.FromText("1d8", "Bear maul"), defender, CheckResult.Failure, DamageKind.Slashing);
+                                    await CommonSpellEffects.DealDirectDamage(new DamageEvent(null, defender, CheckResult.Failure, 
+                                        [new KindedDamage(DiceFormula.FromText("1d8", "Bear maul"), DamageKind.Slashing)]));
                                     await companion.FictitiousSingleTileMove(companion.Occupies);
                                 }
                             });
