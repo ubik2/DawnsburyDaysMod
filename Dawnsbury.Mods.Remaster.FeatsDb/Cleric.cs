@@ -78,13 +78,11 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                 });
 
             // Panic the Dead (formerly Turn Undead)
-            // I don't hide the Turn Undead feat like I should
-            // FIXME: This is not implemented, but I don't want to remove it in case someone is using it
+            // I don't hide the Turn Undead feat like I should.
+            // This is implemented similarly to the Turn Undead feat, where it's the Heal spell that's actually modified to check for this feat.
             yield return new TrueFeat(RemasterFeats.FeatName.PanicTheDead, 2, "Vitality strikes terror in the undead.",
                 "When you use a {i}heal{/i} spell to damage undead, any undead that fails its saving throw is also frightened 1. If it critically failed, the creature also gains the fleeing condition until the start of your next turn. Mindless undead are not immune to this effect due to being mindless.",
-                [Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental])
-                .WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.AllFeats.Any(feat => feat.FeatName == FeatName.Warpriest), "You must be a warpriest.")
-                .WithOnSheet((CalculatedCharacterSheetValues sheet) => sheet.SetProficiency(Trait.HeavyArmor, Proficiency.Trained));
+                [Trait.Cleric, Trait.Emotion, Trait.Fear, Trait.Mental]);
 
             // Warpriest's Armor
             // The bulk reduction isn't implemented, since the game uses inventory slots instead of bulk.

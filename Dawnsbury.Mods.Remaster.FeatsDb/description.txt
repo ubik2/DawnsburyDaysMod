@@ -6,9 +6,10 @@ This doesn't remove any feats, but if you were using a legacy version, you shoul
 [list]
  [*]Divine Castigation (formerly Holy Castigation)
  [*]Panic the Dead (formerly Turn Undead)
+ [*]Emblazon Armament (only for shield)
  [*]Warpriest's Armor
  [*]Channel Smite
- [*]Raise Symbol
+ [*]Raise Symbol (with an emblazoned shield, this is included with the Raise Shield action)
 [/list]
 
 [h3]Cleric - Internals[/h3]
