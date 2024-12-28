@@ -90,6 +90,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         }
                         StrikeModifiers strikeModifiers = new StrikeModifiers()
                         {
+#if V3
                             AdditionalWeaponDamageDice = 1,
                             OnEachTarget = async (Creature a, Creature d, CheckResult result) =>
                             {
@@ -98,6 +99,10 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                                     a.Actions.AttackedThisManyTimesThisTurn++;
                                 }
                             }
+#else
+                            PowerAttack = true,
+                            OnEachTarget = async (Creature a, Creature d, CheckResult result) => ++a.Actions.AttackedThisManyTimesThisTurn
+#endif
                         };
                         CombatAction strike = qEffect.Owner.CreateStrike(item, strikeModifiers: strikeModifiers);
                         strike.Name = "Vicious Swing";
