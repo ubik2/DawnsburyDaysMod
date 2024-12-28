@@ -97,9 +97,13 @@ namespace Dawnsbury.Mods.Battlecry
                         qEffect.Owner.Battle.AllCreatures.ForEach((creature) =>
                         {
                             // Check to see if this is a valid ally
+#if V3
+                            if (creature == qEffect.Owner || !(creature.OwningFaction.IsGaiaFriends || creature.OwningFaction.IsControlledByHumanUser))
+#else
                             if (creature == qEffect.Owner || !(creature.OwningFaction.IsGaiaFriends || creature.OwningFaction.IsHumanControlled))
-                            {
-                                return;
+#endif
+                                {
+                                    return;
                             }
                             creature.AddQEffect(new QEffect("Intercept Strike candidate", "An ally stands ready to intercept strikes.")
                             {
@@ -260,7 +264,11 @@ namespace Dawnsbury.Mods.Battlecry
                         {
                             BonusToDefenses = (effect, action, defense) => (action?.Name == "Taunt" || action?.Name == "Shielded Taunt") ? new Bonus(-1, BonusType.Circumstance, "Shielded Taunt", false) : null
                         }.WithExpirationEphemeral());
+#if V3
+                        CheckResult checkResult = CommonSpellEffects.RollSavingThrow(target, action, Defense.Will, GetClassDC(action.Owner));
+#else
                         CheckResult checkResult = CommonSpellEffects.RollSavingThrow(target, action, Defense.Will, (_) => GetClassDC(action.Owner));
+#endif
                         if (checkResult == CheckResult.CriticalSuccess)
                         {
                             return;

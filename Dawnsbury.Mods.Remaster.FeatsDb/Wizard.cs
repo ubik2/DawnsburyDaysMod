@@ -143,12 +143,21 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb
                 SlotName = slotName;
             }
 
+#if V3
+            public override string? DisallowsSpellBecause(Spell preparedSpell, CharacterSheet sheet, PreparedSpellSlots preparedSpellSlots)
+            {
+                // These spells may not have gone through the ActionOnEachSpell pipe, so patch them manually
+                AddCurriculumTraits(preparedSpell.CombatActionSpell);
+                return base.DisallowsSpellBecause(preparedSpell, sheet, preparedSpellSlots);
+            }
+#else
             public override bool AdmitsSpell(Spell preparedSpell, CharacterSheet sheet, PreparedSpellSlots preparedSpellSlots)
             {
                 // These spells may not have gone through the ActionOnEachSpell pipe, so patch them manually
                 AddCurriculumTraits(preparedSpell.CombatActionSpell);
                 return base.AdmitsSpell(preparedSpell, sheet, preparedSpellSlots);
             }
+#endif
         }
 
         public class CurriculumFeat : Feat

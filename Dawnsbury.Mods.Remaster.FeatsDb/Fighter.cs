@@ -90,8 +90,14 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         }
                         StrikeModifiers strikeModifiers = new StrikeModifiers()
                         {
-                            PowerAttack = true,
-                            OnEachTarget = async (Creature a, Creature d, CheckResult result) => ++a.Actions.AttackedThisManyTimesThisTurn
+                            AdditionalWeaponDamageDice = 1,
+                            OnEachTarget = async (Creature a, Creature d, CheckResult result) =>
+                            {
+                                if (!item.HasTrait(Trait.TwoHanded) || !a.HasEffect(QEffectId.FuriousFocus))
+                                {
+                                    a.Actions.AttackedThisManyTimesThisTurn++;
+                                }
+                            }
                         };
                         CombatAction strike = qEffect.Owner.CreateStrike(item, strikeModifiers: strikeModifiers);
                         strike.Name = "Vicious Swing";

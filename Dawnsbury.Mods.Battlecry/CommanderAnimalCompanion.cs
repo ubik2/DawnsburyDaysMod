@@ -31,7 +31,11 @@ namespace Dawnsbury.Mods.Battlecry
                 if (stateCheck != null)
                     stateCheck(qeffect);
             }
+#if V3
+            creature.RecalculateLandSpeedAndInitiative();
+#else
             creature.RecalculateLandSpeed();
+#endif
             return new Feat(featName, flavorText, "Your animal companion has the following characteristics at level 1:\n\n" + RulesBlock.CreateCreatureDescription(creature), new List<Trait>(), null).WithIllustration(creature.Illustration).WithOnCreature(((sheet, ranger) => ranger.AddQEffect(new QEffect()
             {
                 StartOfCombat = async (qfRangerTechnical) =>
