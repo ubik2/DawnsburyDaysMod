@@ -119,7 +119,7 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                 .WithActionCost(1)
                 .WithPermanentQEffect("You present your religious symbol emphatically.", (QEffect qEffect) =>
                 {
-                    qEffect.ProvideActionIntoPossibilitySection = (QEffect effect, PossibilitySection possibilitySection) =>
+                    qEffect.ProvideMainAction = (QEffect effect) =>
                     {
                         Creature owner = qEffect.Owner;
                         // If we already have the effect, don't provide the action possibility
@@ -127,65 +127,35 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                         {
                             return null;
                         }
-                        Item? emblazonedShield = null;
-                        // Check to see if they have the Cleric Warmastered trait on their shield (from that mod's version of the feat)
-                        if (ModManager.TryParse("Emblazoned", out Trait emblazonedTrait))
-                        {
-                            emblazonedShield = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield) && item.HasTrait(emblazonedTrait));
-                        }
-                        // If we don't have that, try to see if they're using our variant
-                        if (emblazonedShield == null)
-                        {
-                            // I'm more permissive, and let them use any shield if they have the feat.
-                            // This can misbehave if they have shield1 without the emblazon, and shield2 with emblazon, since they can block with shield1 and
-                            // won't benefit from the hardness on shield2.
-                            if (owner.HasFeat(RemasterFeats.FeatName.EmblazonArmament))
-                            {
-                                emblazonedShield = owner.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
-                            }
-                        }
-                        // If we already have a shield raised, and have the Raise Symbol and Emblazon Armament feats, we don't need a special action
-                        if (owner.HasEffect(QEffectId.RaisingAShield) && emblazonedShield != null)
+                        // If we already have an emblazoned shield, we don't need a special action since it will happen with our Raise shield
+                        if (GetEmblazonedShield(owner) != null)
                         {
                             return null;
                         }
-                        // If we don't have an emblazoned shield, this should be in the main section
-                        if (emblazonedShield == null && possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
-                        {
-                            return new ActionPossibility(new CombatAction(owner, IllustrationName.GateAttenuator, "Raise symbol", [Trait.Cleric],
-                                "You present your religious symbol emphatically." +
-                                "\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield.",
-                                Target.Self().WithAdditionalRestriction((Creature caster) =>
-                                {
-                                    if (caster.HasFreeHand)
-                                    {
-                                        return null;
-                                    }
-                                    return "You must be wielding a religious symbol or have a free hand.";
-                                })).WithActionCost(1).WithEffectOnSelf((Creature caster) =>
-                                {
-                                    caster.AddQEffect(CreateRaiseSymbolEffect(caster));
-                                }));
-                        }
-                        // If we do have an emblazoned shield, this should be in the item section
-                        else if (emblazonedShield != null && possibilitySection.PossibilitySectionId == PossibilitySectionId.ItemActions)
-                        {
-                            // In this case, we would like to patch the normal "Raise Shield" action to add our effect
-                            PatchActionPossibility(possibilitySection, (ActionPossibility actionPossibility) =>
+                        return new ActionPossibility(new CombatAction(owner, IllustrationName.GateAttenuator, "Raise symbol", [Trait.Cleric],
+                            "You present your religious symbol emphatically." +
+                            "\nIf the religious symbol you’re raising is a shield, such as with Emblazon Armaments, you gain the effects of Raise a Shield when you use this action and the effects of this action when you Raise a Shield.",
+                            Target.Self().WithAdditionalRestriction((Creature caster) =>
                             {
-                                // There's a couple potential Raise Shield variants
-                                if (actionPossibility.CombatAction.Name.StartsWith("Raise shield", StringComparison.OrdinalIgnoreCase))
+                                if (caster.HasFreeHand)
                                 {
-                                    actionPossibility.CombatAction.EffectOnChosenTargets = Delegates.SmartCombineDelegates(actionPossibility.CombatAction.EffectOnChosenTargets, 
-                                        async (CombatAction spell, Creature caster, ChosenTargets chosenTargets) =>
-                                    {
-                                        caster.AddQEffect(CreateRaiseSymbolEffect(caster));
-                                    });
+                                    return null;
                                 }
-                            });
-                        }
-                        return null;
+                                return "You must be wielding a religious symbol or have a free hand.";
+                            })).WithActionCost(1).WithEffectOnSelf((Creature caster) =>
+                            {
+                                caster.AddQEffect(CreateRaiseSymbolEffect(caster));
+                            }));
 
+                    };
+                    qEffect.AfterYouTakeAction = async (QEffect self, CombatAction action) =>
+                    {
+                        // There's a couple potential Raise Shield variants, and we need to have an emblazoned shield
+                        if (action.Name.StartsWith("Raise shield", StringComparison.OrdinalIgnoreCase) && 
+                            GetEmblazonedShield(action.Owner) != null)
+                        {
+                            action.Owner.AddQEffect(CreateRaiseSymbolEffect(action.Owner));
+                        }
                     };
                 });
 
@@ -203,6 +173,28 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
 
             // Update the class selection feat to reflect our updated deity list
             ClericClassFeatures.PatchClassDeities();
+        }
+
+        private static Item? GetEmblazonedShield(Creature caster)
+        {
+            Item? emblazonedShield = null;
+            // Check to see if they have the Cleric Warmastered trait on their shield (from that mod's version of the feat)
+            if (ModManager.TryParse("Emblazoned", out Trait emblazonedTrait))
+            {
+                emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield) && item.HasTrait(emblazonedTrait));
+            }
+            // If we don't have that, try to see if they're using our variant
+            if (emblazonedShield == null)
+            {
+                // I'm more permissive, and let them use any shield if they have the feat.
+                // This can misbehave if they have shield1 without the emblazon, and shield2 with emblazon, since they can block with shield1 and
+                // won't benefit from the hardness on shield2.
+                if (caster.HasFeat(RemasterFeats.FeatName.EmblazonArmament))
+                {
+                    emblazonedShield = caster.HeldItems.FirstOrDefault((item) => item.HasTrait(Trait.Shield));
+                }
+            }
+            return emblazonedShield;
         }
 
         private static QEffect CreateRaiseSymbolEffect(Creature caster)
@@ -237,22 +229,6 @@ namespace Dawnsbury.Mods.Remaster.FeatsDb.TrueFeatsDb
                     return checkResult;
                 }
             }.WithExpirationAtStartOfOwnerTurn();
-        }
-
-        // Walk the tree of possibilities, descending into SubmenuPossibility entries, and applying our patch function to ActionPossibility entries
-        private static void PatchActionPossibility(PossibilitySection possibilitySection, Action<ActionPossibility> patch)
-        {
-            possibilitySection.Possibilities.ForEach((Possibility possibility) =>
-            {
-                if (possibility is ActionPossibility actionPossibility)
-                {
-                    patch(actionPossibility);
-                }
-                else if (possibility is SubmenuPossibility submenuPossibility)
-                {
-                    submenuPossibility.Subsections.ForEach((subsection) => PatchActionPossibility(subsection, patch));
-                }
-            });
         }
     }
 }
