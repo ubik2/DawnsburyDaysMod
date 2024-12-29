@@ -1058,8 +1058,13 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     {
                         auraAnimation.MoveTo(0f);
                     },
+                    // The Tag stores the radius and whether they've expanded the radius already this turn
                     Tag = (initialRadius, true),
+#if V3
+                    StartOfYourPrimaryTurn = async (QEffect qfBless, Creature _) =>
+#else
                     StartOfYourTurn = async (QEffect qfBless, Creature _) => 
+#endif
                     {
                         if (qfBless?.Tag != null)
                         {

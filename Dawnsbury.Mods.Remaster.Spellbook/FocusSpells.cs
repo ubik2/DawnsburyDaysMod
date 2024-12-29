@@ -72,7 +72,11 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                 {
                                     self.Owner.PrimaryOccupant?.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                                     {
+#if V3
+                                        EndOfYourTurnDetrimentalEffect = async (_, creature) =>
+#else
                                         EndOfYourTurn = async (_, creature) =>
+#endif
                                         {
                                             await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText((1 + heightenIncrements) + "d6", "Fire Ray fire tile"), creature, CheckResult.Failure, DamageKind.Fire);
                                         }
