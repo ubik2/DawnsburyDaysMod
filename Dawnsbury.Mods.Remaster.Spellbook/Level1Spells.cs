@@ -733,11 +733,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     S.FourDegreesOfSuccess("The creature is unaffected.", "The creature is distracted by its amusement and takes a -1 status penalty on Perception checks and Will saves for 1 round.",
                         "The creature is overcome by its amusement and is stupefied 1 for 1 round.", "The creature is lost in its amusement and is stupefied 2 for 1 round and stunned 1."),
                     Target.Uncastable(), spellLevel, null).WithActionCost(-2).WithSoundEffect(SfxName.DeathsCall)
-#if V3
                     .WithCastsAsAReaction((QEffect qEffect, CombatAction spell, Func<bool> hasResources) =>
-#else
-                    .WithCastsAsAReaction((QEffect qEffect, CombatAction spell) =>
-#endif
                     {
                         qEffect.AfterYouAreTargeted = async (effect, action) =>
                         {
