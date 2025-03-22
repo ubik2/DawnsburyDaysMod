@@ -1035,7 +1035,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 BlessVariant.Malediction => 2,
                 _ => throw new NotImplementedException(),
             };
-            IllustrationName illustrationName = variant switch
+            IllustrationName auraIllustrationName = variant switch
             {
                 BlessVariant.Bless => IllustrationName.BlessCircle,
                 BlessVariant.Bane => IllustrationName.BaneCircle,
@@ -1043,11 +1043,19 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                 BlessVariant.Malediction => IllustrationName.BaneCircle,
                 _ => throw new NotImplementedException(),
             };
+            IllustrationName illustrationName = variant switch
+            {
+                BlessVariant.Bless => IllustrationName.Bless,
+                BlessVariant.Bane => IllustrationName.Bane,
+                BlessVariant.Benediction => IllustrationName.Bless,
+                BlessVariant.Malediction => IllustrationName.Bane,
+                _ => throw new NotImplementedException(),
+            };
             bool isBuff = (variant == BlessVariant.Bless || variant == BlessVariant.Malediction);
             return Spells.CreateModern(illustration, spellName, traits, flavorText, "{b}Area{/b} 15-foot emanation\n\n" + description,          
                 Target.Self(), level, null).WithSoundEffect(soundEffect).WithEffectOnSelf(async (CombatAction action, Creature self) => 
             {
-                AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(illustrationName, initialRadius);
+                AuraAnimation auraAnimation = self.AnimationData.AddAuraAnimation(auraIllustrationName, initialRadius);
                 QEffect qEffect = new QEffect(spellName, "[this condition has no description]", ExpirationCondition.Never, self, IllustrationName.None)
                 {
                     WhenExpires = (_) =>
@@ -1127,7 +1135,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                         {
                                             if (item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.FailedAgainstBane && qf.Tag == qfBane))
                                             {
-                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to attack rolls.", ExpirationCondition.Ephemeral, qfBane.Owner, IllustrationName.Bane)
+                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to attack rolls.", ExpirationCondition.Ephemeral, qfBane.Owner, illustrationName)
                                                 {
                                                     Key = "BanePenalty",
                                                     BonusToAttackRolls = (QEffect qfBlessed, CombatAction attack, Creature? de) => attack.HasTrait(Trait.Attack) ? new Bonus(-1, BonusType.Status, "bane") : null
@@ -1190,7 +1198,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                                             // We'll use the same effect id, but since the tag references our effect, we know it's Malediction instead of Bane
                                             if (item3.QEffects.Any((QEffect qf) => qf.Id == QEffectId.FailedAgainstBane && qf.Tag == qfBane))
                                             {
-                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to AC.", ExpirationCondition.Ephemeral, qfBane.Owner, IllustrationName.Bane)
+                                                item3.AddQEffect(new QEffect(spellName, "You take a -1 status penalty to AC.", ExpirationCondition.Ephemeral, qfBane.Owner, illustrationName)
                                                 {
                                                     Key = "MaledictionPenalty",
                                                     BonusToDefenses = (QEffect qfBlessed, CombatAction? _, Defense defense) => defense == Defense.AC ? new Bonus(-1, BonusType.Status, "malediction") : null
