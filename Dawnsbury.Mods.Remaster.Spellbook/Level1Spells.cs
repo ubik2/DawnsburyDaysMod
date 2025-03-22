@@ -798,7 +798,7 @@ namespace Dawnsbury.Mods.Remaster.Spellbook
                     {
                         if (checkResult == CheckResult.Success)
                         {
-                            await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText("d4", spell.Name), DamageKind.Poison)], false, false));
+                            await CommonSpellEffects.DealDirectDamage(new DamageEvent(spell, target, checkResult, [new KindedDamage(DiceFormula.FromText("1d4", spell.Name), DamageKind.Poison)], false, false));
                         }
                     }
                     else
